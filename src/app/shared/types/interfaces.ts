@@ -84,30 +84,42 @@ export interface ProductColor {
 // Order interfaces
 export interface Order {
   _id: string;
-  user?: string;
+  user?: {
+    name: string;
+    email: string;
+    phone?: string;
+    id?: string;
+  };
   guestInfo?: { email: string; firstName: string; lastName: string; phone: string };
   orderNumber: string;
   items: OrderItem[];
   shippingAddress: ShippingAddress;
-  subtotal: number;
-  shippingCost: number;
-  tax: number;
-  total: number;
-  payment: PaymentInfo;
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
-  statusHistory: StatusHistoryEntry[];
-  notes?: string;
+  subtotal?: number;
+  shipping?: number;
+  shippingCost?: number;
+  tax?: number;
+  total?: number;
+  paymentInfo?: PaymentInfo;
+  payment?: PaymentInfo;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'confirmed' | 'returned';
+  statusHistory?: StatusHistoryEntry[];
+  notes?: Array<{ text: string; author: string; createdAt: Date }>;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface OrderItem {
-  product: string;
-  productSnapshot: { name: string; images: string[]; category: string; sku: string };
-  size: string;
+  product?: string;
+  productId?: string;
+  productName: string;
+  productSnapshot?: { name: string; images: string[]; category: string; sku: string };
+  sku: string;
+  size?: string;
+  color?: string;
   quantity: number;
-  unitPrice: number;
-  subtotal: number;
+  price: number;
+  unitPrice?: number;
+  subtotal?: number;
 }
 
 export interface ShippingAddress {
