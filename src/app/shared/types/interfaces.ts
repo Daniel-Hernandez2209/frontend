@@ -150,11 +150,12 @@ export interface Category {
   _id: string;
   slug: string;
   name: string;
-  description: string;
+  description?: string;
   image?: string;
-  subcategories: Subcategory[];
+  icon?: string;
+  subcategories?: Subcategory[];
   isActive: boolean;
-  order: number;
+  order?: number;
   seoTitle?: string;
   seoDescription?: string;
   keywords?: string[];

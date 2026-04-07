@@ -1,16 +1,22 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from '../../core/guards/auth.guard';
+import { CategoriesListComponent } from './pages/categories-list/categories-list.component';
+import { CategoryFormComponent } from './pages/category-form/category-form.component';
 
 export const CATEGORIES_ROUTES: Routes = [
   {
     path: '',
-    component: { template: '<p>Categories List Coming Soon</p>' } as any
+    component: CategoriesListComponent,
+    canActivate: [adminGuard]
   },
   {
     path: 'create',
-    component: { template: '<p>Create Category Coming Soon</p>' } as any
+    component: CategoryFormComponent,
+    canActivate: [adminGuard]
   },
   {
-    path: ':slug/edit',
-    component: { template: '<p>Edit Category Coming Soon</p>' } as any
+    path: ':id/edit',
+    component: CategoryFormComponent,
+    canActivate: [adminGuard]
   }
 ];
