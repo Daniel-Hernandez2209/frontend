@@ -1,0 +1,194 @@
+<div class="p-6 space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-gray-900">Products</h1>
+    <a
+      routerLink="/admin/products/create"
+      class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+    >
+      + New Product
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-lg shadow p-4 space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <!-- Search -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange($event)"
+          placeholder="Product name or SKU"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <!-- Category -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+        <select
+          [(ngModel)]="selectedCategory"
+          (ngModelChange)="onCategoryChange($event)"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Categories</option>
+          <option value="hombre">Hombre</option>
+          <option value="mujer">Mujer</option>
+          <option value="deportivos">Deportivos</option>
+          <option value="hoodies-sacos">Hoodies/Sacos</option>
+          <option value="chaquetas">Chaquetas</option>
+        </select>
+      </div>
+
+      <!-- Min Price -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Min Price</label>
+        <input
+          type="number"
+          [(ngModel)]="minPrice"
+          (ngModelChange)="onFilterChange()"
+          placeholder="0"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <!-- Max Price -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Max Price</label>
+        <input
+          type="number"
+          [(ngModel)]="maxPrice"
+          (ngModelChange)="onFilterChange()"
+          placeholder="∞"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <!-- Reset -->
+      <div class="flex items-end">
+        <button
+          (click)="resetFilters()"
+          class="w-full px-3 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium"
+        >
+          Reset Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="text-center py-12">
+    <div class="inline-block">
+      <div class="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      <p class="text-gray-600 mt-2">Loading products...</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error()" class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+    {{ error() }}
+  </div>
+
+  <!-- Products Table -->
+  <div *ngIf="!isLoading() && paginatedProducts().length > 0" class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50 border-b border-gray-200">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Product</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">SKU</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Category</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Price</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Stock</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Sales</th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <tr *ngFor="let product of paginatedProducts()" class="hover:bg-gray-50">
+          <td class="px-6 py-4">
+            <div class="flex items-center space-x-3">
+              <img
+                *ngIf="product.images && product.images[0]"
+                [src]="product.images[0].url"
+                alt="{{ product.name }}"
+                class="w-10 h-10 rounded object-cover"
+              />
+              <div>
+                <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
+                <p class="text-xs text-gray-500">{{ product.slug }}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-600">{{ product.sku }}</td>
+          <td class="px-6 py-4 text-sm text-gray-600 capitalize">{{ product.category }}</td>
+          <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
+            <span *ngIf="product.discountPrice" class="line-through text-gray-400 mr-1">${{ product.price }}</span>
+            ${{ product.discountPrice || product.price }}
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-600 text-right">
+            {{ getTotalStock(product) }} units
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-600 text-right">{{ product.sales }}</td>
+          <td class="px-6 py-4 text-center">
+            <div class="flex justify-center space-x-2">
+              <a
+                [routerLink]="['/admin/products', product._id, 'edit']"
+                class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition"
+              >
+                Edit
+              </a>
+              <button
+                (click)="deleteProduct(product._id)"
+                class="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition"
+              >
+                Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading() && paginatedProducts().length === 0" class="text-center py-12">
+    <p class="text-gray-600">No products found</p>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="totalPages() > 1" class="flex justify-center items-center space-x-4">
+    <button
+      (click)="previousPage()"
+      [disabled]="currentPage() === 1"
+      class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+    >
+      ← Previous
+    </button>
+
+    <div class="flex space-x-2">
+      <button
+        *ngFor="let page of getPageNumbers()"
+        (click)="goToPage(page)"
+        [class.bg-blue-600]="page === currentPage()"
+        [class.text-white]="page === currentPage()"
+        [class.border-blue-600]="page === currentPage()"
+        class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition"
+      >
+        {{ page }}
+      </button>
+    </div>
+
+    <button
+      (click)="nextPage()"
+      [disabled]="currentPage() === totalPages()"
+      class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+    >
+      Next →
+    </button>
+  </div>
+
+  <div class="text-center text-sm text-gray-600">
+    Page {{ currentPage() }} of {{ totalPages() }} | {{ totalFilteredProducts() }} products
+  </div>
+</div>

@@ -52,6 +52,9 @@ export interface Product {
   sku: string;
   tags: string[];
   material?: string;
+  careInstructions?: string;
+  metaTitle?: string;
+  metaDescription?: string;
   isActive: boolean;
   isFeatured: boolean;
   views: number;
