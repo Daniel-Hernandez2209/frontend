@@ -1,0 +1,104 @@
+/* Dashboard Styles */
+
+:host {
+  display: block;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Card hover effects */
+.bg-white {
+  animation: slideIn 0.3s ease-out;
+}
+
+.hover\:shadow-md:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Status indicators */
+.rounded-full {
+  border-radius: 9999px;
+}
+
+/* Chart animations */
+.h-16, .h-20, .h-12, .h-24, .h-14, .h-28 {
+  animation: slideIn 0.6s ease-out backwards;
+}
+
+.h-16 { animation-delay: 0.1s; }
+.h-20 { animation-delay: 0.2s; }
+.h-12 { animation-delay: 0.3s; }
+.h-24 { animation-delay: 0.4s; }
+.h-14 { animation-delay: 0.5s; }
+.h-28 { animation-delay: 0.6s; }
+
+/* Loading spinner */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Gradient cards */
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+/* Border animations */
+.border {
+  border-color: var(--tw-border-opacity, 1);
+  transition: border-color 0.3s ease;
+}
+
+/* Text shadows for better readability */
+.text-4xl, .text-3xl {
+  font-feature-settings: "kern" 1;
+  letter-spacing: -0.02em;
+}
+
+/* SVG animations */
+svg circle {
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

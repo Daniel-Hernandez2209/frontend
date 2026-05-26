@@ -16,13 +16,13 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
   uploadError = signal('');
+  isSubmitting = signal(false);
+  formError = signal<string | null>(null);
   imagePreviews: string[] = [];
   imagesToUpload: File[] = [];
   selectedSizes: Map<string, number> = new Map();
 
   get isEditMode() { return !!this.route.snapshot.paramMap.get('id'); }
-  get isSubmitting() { return this.productService.isLoading; }
-  get formError() { return this.productService.error; }
 
   constructor(
     private fb: FormBuilder,
@@ -175,8 +175,12 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   async onSubmit(): Promise<void> {
     if (this.form.invalid) {
+      this.formError.set('Please fill all required fields correctly');
       return;
     }
+
+    this.isSubmitting.set(true);
+    this.formError.set(null);
 
     try {
       // Upload images if any
@@ -210,8 +214,11 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
       // Navigate back to list
       this.router.navigate(['/admin/products']);
-    } catch (error) {
+    } catch (error: any) {
+      this.formError.set(error.message || 'Error saving product');
       console.error('Submit error:', error);
+    } finally {
+      this.isSubmitting.set(false);
     }
   }
 }

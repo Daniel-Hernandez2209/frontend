@@ -95,7 +95,7 @@ export class ProfileComponent implements OnInit {
     const u = this.user();
     if (u) {
       this.profileForm.patchValue({
-        firstName: u.firstName,
+        firstName: u.name,
         lastName: u.lastName,
         phone: u.phone ?? '',
         address: u.address ?? '',
@@ -202,7 +202,9 @@ export class ProfileComponent implements OnInit {
   getInitials(): string {
     const u = this.user();
     if (!u) return '?';
-    return `${u.firstName.charAt(0)}${u.lastName.charAt(0)}`.toUpperCase();
+    const firstName = u.name || u.name?.split(' ')[0] || 'U';
+    const lastName = u.lastName || u.name?.split(' ')[1] || 'U';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   }
 
   formatDate(date: Date | string | undefined): string {

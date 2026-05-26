@@ -1,5 +1,7 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.athenabrand.co',
-  socketUrl: 'https://api.athenabrand.co'
+  apiUrl: 'https://athena-brand-api-backend.vercel.app/api',
+  websocketUrl: 'https://athena-brand-api-backend.vercel.app',
+  jwtTokenName: 'accessToken',
+  refreshTokenName: 'refreshToken',
 };

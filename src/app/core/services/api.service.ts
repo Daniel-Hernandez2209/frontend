@@ -1,155 +1,175 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse, HttpResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import {
+  Product,
+  Category,
+  Order,
+  OrderCreateRequest,
+  PaginatedResponse,
+  ApiResponse,
+  ProductCreateRequest,
+} from '../../shared/types/api';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ApiService {
-  private readonly baseUrl = environment.apiUrl;
+  private baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Generic GET request
-   */
-  get<T = any>(
-    endpoint: string,
-    params?: HttpParams | { [param: string]: string | string[] },
-    options?: any
-  ): Observable<T> {
-    const url = this.buildUrl(endpoint);
-    return this.http.get<T>(url, { ...options, params, reportProgress: false }).pipe(
-      catchError(this.handleError)
-    ) as Observable<T>;
-  }
+  // ============= PRODUCTS =============
 
   /**
-   * Generic POST request
+   * Obtiene lista de productos con paginación
    */
-  post<T = any>(
-    endpoint: string,
-    body?: any,
-    options?: any
-  ): Observable<T> {
-    const url = this.buildUrl(endpoint);
-    return this.http.post<T>(url, body || {}, { ...options, reportProgress: false }).pipe(
-      catchError(this.handleError)
-    ) as Observable<T>;
-  }
+  getProducts(
+    page: number = 1,
+    limit: number = 12,
+    filters?: any,
+  ): Observable<PaginatedResponse<Product>> {
+    let params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
-  /**
-   * Generic PUT request
-   */
-  put<T = any>(
-    endpoint: string,
-    body?: any,
-    options?: any
-  ): Observable<T> {
-    const url = this.buildUrl(endpoint);
-    return this.http.put<T>(url, body || {}, { ...options, reportProgress: false }).pipe(
-      catchError(this.handleError)
-    ) as Observable<T>;
-  }
-
-  /**
-   * Generic PATCH request
-   */
-  patch<T = any>(
-    endpoint: string,
-    body?: any,
-    options?: any
-  ): Observable<T> {
-    const url = this.buildUrl(endpoint);
-    return this.http.patch<T>(url, body || {}, { ...options, reportProgress: false }).pipe(
-      catchError(this.handleError)
-    ) as Observable<T>;
-  }
-
-  /**
-   * Generic DELETE request
-   */
-  delete<T = any>(
-    endpoint: string,
-    options?: any
-  ): Observable<T> {
-    const url = this.buildUrl(endpoint);
-    return this.http.delete<T>(url, { ...options, reportProgress: false }).pipe(
-      catchError(this.handleError)
-    ) as Observable<T>;
-  }
-
-  /**
-   * File upload
-   */
-  uploadFile<T = any>(
-    endpoint: string,
-    file: File,
-    fieldName: string = 'file',
-    additionalData?: Record<string, string>
-  ): Observable<T> {
-    const url = this.buildUrl(endpoint);
-    const formData = new FormData();
-    formData.append(fieldName, file);
-
-    if (additionalData) {
-      Object.entries(additionalData).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
+    if (filters?.category) {
+      params = params.set('category', filters.category);
+    }
+    if (filters?.search) {
+      params = params.set('search', filters.search);
     }
 
-    return this.http.post<T>(url, formData).pipe(
-      catchError(this.handleError)
+    return this.http.get<PaginatedResponse<Product>>(`${this.baseUrl}/products`, { params });
+  }
+
+  /**
+   * Obtiene un producto por ID
+   */
+  getProduct(id: string): Observable<ApiResponse<Product>> {
+    return this.http.get<ApiResponse<Product>>(`${this.baseUrl}/products/${id}`);
+  }
+
+  /**
+   * Busca productos
+   */
+  searchProducts(query: string, page: number = 1): Observable<PaginatedResponse<Product>> {
+    const params = new HttpParams().set('q', query).set('page', page.toString());
+
+    return this.http.get<PaginatedResponse<Product>>(`${this.baseUrl}/products/search`, { params });
+  }
+
+  // ============= CATEGORIES =============
+
+  /**
+   * Obtiene todas las categorías
+   */
+  getCategories(): Observable<ApiResponse<Category[]>> {
+    return this.http.get<ApiResponse<Category[]>>(`${this.baseUrl}/categories`);
+  }
+
+  /**
+   * Obtiene una categoría por slug
+   */
+  getCategory(slug: string): Observable<ApiResponse<Category>> {
+    return this.http.get<ApiResponse<Category>>(`${this.baseUrl}/categories/${slug}`);
+  }
+
+  // ============= ORDERS =============
+
+  /**
+   * Crea una nueva orden
+   */
+  createOrder(orderData: OrderCreateRequest): Observable<ApiResponse<Order>> {
+    return this.http.post<ApiResponse<Order>>(`${this.baseUrl}/orders`, orderData);
+  }
+
+  /**
+   * Obtiene órdenes del usuario actual
+   */
+  getMyOrders(page: number = 1): Observable<PaginatedResponse<Order>> {
+    const params = new HttpParams().set('page', page.toString());
+    return this.http.get<PaginatedResponse<Order>>(`${this.baseUrl}/orders`, { params });
+  }
+
+  /**
+   * Obtiene una orden específica
+   */
+  getOrder(id: string): Observable<ApiResponse<Order>> {
+    return this.http.get<ApiResponse<Order>>(`${this.baseUrl}/orders/${id}`);
+  }
+
+  /**
+   * Cancela una orden
+   */
+  cancelOrder(id: string): Observable<ApiResponse<Order>> {
+    return this.http.put<ApiResponse<Order>>(`${this.baseUrl}/orders/${id}/cancel`, {});
+  }
+
+  // ============= ADMIN - PRODUCTS =============
+
+  /**
+   * Crea un nuevo producto (admin)
+   */
+  createProduct(formData: FormData): Observable<ApiResponse<Product>> {
+    return this.http.post<ApiResponse<Product>>(`${this.baseUrl}/admin/products`, formData);
+  }
+
+  /**
+   * Actualiza un producto (admin)
+   */
+  updateProduct(id: string, formData: FormData): Observable<ApiResponse<Product>> {
+    return this.http.put<ApiResponse<Product>>(`${this.baseUrl}/admin/products/${id}`, formData);
+  }
+
+  /**
+   * Elimina un producto (admin)
+   */
+  deleteProduct(id: string): Observable<ApiResponse<{ message: string }>> {
+    return this.http.delete<ApiResponse<{ message: string }>>(
+      `${this.baseUrl}/admin/products/${id}`,
     );
   }
 
-  /**
-   * Multiple file upload
-   */
-  uploadFiles<T = any>(
-    endpoint: string,
-    files: File[],
-    fieldName: string = 'files',
-    additionalData?: Record<string, string>
-  ): Observable<T> {
-    const url = this.buildUrl(endpoint);
-    const formData = new FormData();
+  // ============= ADMIN - ORDERS =============
 
-    files.forEach((file, index) => {
-      formData.append(`${fieldName}[${index}]`, file);
+  /**
+   * Obtiene todas las órdenes (admin)
+   */
+  getAllOrders(page: number = 1, limit: number = 20): Observable<PaginatedResponse<Order>> {
+    const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
+
+    return this.http.get<PaginatedResponse<Order>>(`${this.baseUrl}/admin/orders`, { params });
+  }
+
+  /**
+   * Actualiza estado de una orden (admin)
+   */
+  updateOrderStatus(id: string, status: string): Observable<ApiResponse<Order>> {
+    return this.http.put<ApiResponse<Order>>(`${this.baseUrl}/admin/orders/${id}/status`, {
+      status,
     });
+  }
 
-    if (additionalData) {
-      Object.entries(additionalData).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-    }
+  // ============= ADMIN - CATEGORIES =============
 
-    return this.http.post<T>(url, formData).pipe(
-      catchError(this.handleError)
+  /**
+   * Crea una categoría (admin)
+   */
+  createCategory(data: Partial<Category>): Observable<ApiResponse<Category>> {
+    return this.http.post<ApiResponse<Category>>(`${this.baseUrl}/admin/categories`, data);
+  }
+
+  /**
+   * Actualiza una categoría (admin)
+   */
+  updateCategory(id: string, data: Partial<Category>): Observable<ApiResponse<Category>> {
+    return this.http.put<ApiResponse<Category>>(`${this.baseUrl}/admin/categories/${id}`, data);
+  }
+
+  /**
+   * Elimina una categoría (admin)
+   */
+  deleteCategory(id: string): Observable<ApiResponse<{ message: string }>> {
+    return this.http.delete<ApiResponse<{ message: string }>>(
+      `${this.baseUrl}/admin/categories/${id}`,
     );
-  }
-
-  private buildUrl(endpoint: string): string {
-    return endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
-  }
-
-  private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'An error occurred';
-
-    if (error.error instanceof ErrorEvent) {
-      errorMessage = `Error: ${error.error.message}`;
-    } else {
-      if (error.status === 0) {
-        errorMessage = 'Unable to connect to server. Check your connection.';
-      } else {
-        errorMessage = error.error?.message || `Error ${error.status}: ${error.message}`;
-      }
-    }
-
-    console.error(errorMessage);
-    return throwError(() => new Error(errorMessage));
   }
 }

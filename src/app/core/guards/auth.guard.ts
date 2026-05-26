@@ -3,13 +3,13 @@ import {
   CanActivateFn,
   Router,
   ActivatedRouteSnapshot,
-  RouterStateSnapshot
+  RouterStateSnapshot,
 } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 export const authGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,
-  state: RouterStateSnapshot
+  state: RouterStateSnapshot,
 ) => {
   const authService = inject(AuthService);
   const router = inject(Router);
@@ -28,12 +28,12 @@ export const authGuard: CanActivateFn = (
 
 export const adminGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,
-  state: RouterStateSnapshot
+  state: RouterStateSnapshot,
 ) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.isAuthenticated() && authService.isAdmin()) {
+  if (authService.isAuthenticated() && authService.isAdminUser()) {
     return true;
   }
 

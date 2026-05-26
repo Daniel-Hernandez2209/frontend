@@ -1,56 +1,64 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { WebSocketService } from '../../../../core/services/websocket.service';
+import { DashboardService } from '../../services/dashboard.service';
+import { WebsocketService } from '../../../../core/services/websocket.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="p-6">
-      <h1 class="text-3xl font-bold mb-6">Dashboard</h1>
-
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-lg shadow p-6">
-          <p class="text-gray-600 text-sm font-medium">Total Orders</p>
-          <p class="text-3xl font-bold mt-2">1,234</p>
-        </div>
-        <div class="bg-white rounded-lg shadow p-6">
-          <p class="text-gray-600 text-sm font-medium">Total Revenue</p>
-          <p class="text-3xl font-bold mt-2">$45,230</p>
-        </div>
-        <div class="bg-white rounded-lg shadow p-6">
-          <p class="text-gray-600 text-sm font-medium">Active Products</p>
-          <p class="text-3xl font-bold mt-2">342</p>
-        </div>
-        <div class="bg-white rounded-lg shadow p-6">
-          <p class="text-gray-600 text-sm font-medium">WebSocket Status</p>
-          <p class="text-lg font-bold mt-2" [class.text-green-600]="wsConnected()" [class.text-red-600]="!wsConnected()">
-            {{ wsConnected() ? 'Connected' : 'Disconnected' }}
-          </p>
-        </div>
-      </div>
-
-      <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-        <p class="text-blue-900">
-          <strong>Phase 1 Complete!</strong> The admin dashboard is ready. Next phase will include fully functional modules for products, orders, categories, and users management.
-        </p>
-      </div>
-    </div>
-  `,
-  styles: []
+  templateUrl: 'dashboard.component.html',
+  styleUrl: 'dashboard.component.css'
 })
 export class DashboardComponent implements OnInit {
-  get wsConnected() {
-    return this.wsService.isConnected;
-  }
+  get isLoading() { return this.dashboardService.isLoading; }
+  get error() { return this.dashboardService.error; }
+  get stats() { return this.dashboardService.stats; }
+  get wsConnected() { return this.wsService.isConnected; }
 
-  constructor(private wsService: WebSocketService) {}
+  constructor(
+    private dashboardService: DashboardService,
+    private wsService: WebsocketService
+  ) {}
 
   ngOnInit(): void {
-    // Test WebSocket connection
-    this.wsService.on('connect', () => {
-      console.log('Dashboard: WebSocket connected');
-    });
+    this.dashboardService.loadDashboard();
+  }
+
+  async refresh(): Promise<void> {
+    await this.dashboardService.refresh();
+  }
+
+  /**
+   * Format currency for display
+   */
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  }
+
+  /**
+   * Format large numbers with K suffix
+   */
+  formatNumber(num: number): string {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  }
+
+  /**
+   * Get status color for order stats
+   */
+  getStatusColor(status: string): string {
+    const colors: { [key: string]: string } = {
+      pending: 'text-yellow-600 bg-yellow-50',
+      processing: 'text-blue-600 bg-blue-50',
+      shipped: 'text-purple-600 bg-purple-50',
+      delivered: 'text-green-600 bg-green-50'
+    };
+    return colors[status] || 'text-gray-600 bg-gray-50';
   }
 }

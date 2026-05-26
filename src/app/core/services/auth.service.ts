@@ -1,237 +1,308 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { computed, Injectable, signal } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { Observable, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { User, AuthResponse, LoginRequest, RegisterRequest } from '../../shared/types/interfaces';
+import {
+  User,
+  LoginRequest,
+  RegisterRequest,
+  AuthResponse,
+  RefreshTokenResponse,
+} from '../../shared/types/api';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly API_URL = `${environment.apiUrl}/api/auth`;
+  private apiUrl = `${environment.apiUrl}/auth`;
 
-  // Signals state
+  // State Signals
   currentUser = signal<User | null>(null);
   isLoading = signal(false);
   error = signal<string | null>(null);
-
-  // Computed derived state
-  isAuthenticated = computed(() => !!this.currentUser());
-  isAdmin = computed(() => this.currentUser()?.role === 'admin');
-  userFullName = computed(() => {
-    const user = this.currentUser();
-    return user ? `${user.firstName} ${user.lastName}` : '';
-  });
+  isAuthenticated = signal(false);
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
   ) {
-    // Initialize user from sessionStorage on service creation
-    this.initializeUser();
-
-    // Auto-save user to sessionStorage when it changes
-    effect(() => {
-      const user = this.currentUser();
-      if (user) {
-        sessionStorage.setItem('current_user', JSON.stringify(user));
-      } else {
-        sessionStorage.removeItem('current_user');
-      }
-    });
+    this.initializeAuth();
   }
 
   /**
-   * Initialize user from sessionStorage
+   * Inicializa la autenticación desde el almacenamiento
    */
-  private initializeUser(): void {
-    const stored = sessionStorage.getItem('current_user');
-    if (stored) {
+  private initializeAuth(): void {
+    const token = this.getAccessToken();
+    if (token && this.isTokenValid(token)) {
       try {
-        this.currentUser.set(JSON.parse(stored));
+        // Decodificar JWT sin verificar firma
+        const payload = this.decodeToken(token);
+        this.currentUser.set(payload);
+        this.isAuthenticated.set(true);
       } catch (e) {
-        console.error('Failed to parse stored user:', e);
         this.logout();
       }
+    } else if (token) {
+      // Token expirado, intentar refresh
+      this.refreshToken().subscribe({
+        error: () => this.logout(),
+      });
     }
   }
 
   /**
-   * Login user
+   * LOGIN - Autentica usuario con credenciales
    */
-  async login(credentials: LoginRequest): Promise<void> {
+  login(credentials: LoginRequest): Observable<AuthResponse> {
     this.isLoading.set(true);
     this.error.set(null);
 
-    try {
-      const response = await firstValueFrom(
-        this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials)
-      );
-
-      if (response.success && response.data) {
-        // Store tokens in sessionStorage
-        sessionStorage.setItem('access_token', response.data.accessToken);
-        sessionStorage.setItem('refresh_token', response.data.refreshToken);
-
-        // Set current user
-        this.currentUser.set(response.data.user);
-
-        // Navigate to dashboard
-        this.router.navigate(['/admin/dashboard']);
-      }
-    } catch (err: any) {
-      const message = err.error?.message || 'Login failed. Please try again.';
-      this.error.set(message);
-      throw new Error(message);
-    } finally {
-      this.isLoading.set(false);
-    }
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
+      tap((response) => {
+        this.setTokens(response.accessToken, response.refreshToken);
+        this.currentUser.set(response.user);
+        this.isAuthenticated.set(true);
+        this.isLoading.set(false);
+      }),
+      catchError((error) => {
+        const errorMsg = this.handleError(error);
+        this.error.set(errorMsg);
+        this.isLoading.set(false);
+        return throwError(() => new Error(errorMsg));
+      }),
+    );
   }
 
   /**
-   * Register new user
+   * REGISTER - Registra nuevo usuario
    */
-  async register(data: RegisterRequest): Promise<void> {
+  register(data: RegisterRequest): Observable<AuthResponse> {
     this.isLoading.set(true);
     this.error.set(null);
 
-    try {
-      const response = await firstValueFrom(
-        this.http.post<AuthResponse>(`${this.API_URL}/register`, data)
-      );
-
-      if (response.success) {
-        // Auto-login after registration
-        await this.login({ email: data.email, password: data.password });
-      }
-    } catch (err: any) {
-      const message = err.error?.message || 'Registration failed. Please try again.';
-      this.error.set(message);
-      throw new Error(message);
-    } finally {
-      this.isLoading.set(false);
-    }
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, data).pipe(
+      tap((response) => {
+        this.setTokens(response.accessToken, response.refreshToken);
+        this.currentUser.set(response.user);
+        this.isAuthenticated.set(true);
+        this.isLoading.set(false);
+      }),
+      catchError((error) => {
+        const errorMsg = this.handleError(error);
+        this.error.set(errorMsg);
+        this.isLoading.set(false);
+        return throwError(() => new Error(errorMsg));
+      }),
+    );
   }
 
   /**
-   * Logout user and clear session
+   * REFRESH TOKEN - Refresca el access token
    */
-  logout(): void {
-    // Clear sessionStorage
-    sessionStorage.removeItem('access_token');
-    sessionStorage.removeItem('refresh_token');
-    sessionStorage.removeItem('current_user');
+  refreshToken(): Observable<RefreshTokenResponse> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return throwError(() => new Error('No refresh token found'));
+    }
 
-    // Reset signals
-    this.currentUser.set(null);
-    this.error.set(null);
-
-    // Navigate to login
-    this.router.navigate(['/login']);
+    return this.http.post<RefreshTokenResponse>(`${this.apiUrl}/refresh`, { refreshToken }).pipe(
+      tap((response) => {
+        sessionStorage.setItem(environment.jwtTokenName, response.accessToken);
+      }),
+      catchError((error) => {
+        this.logout();
+        return throwError(() => new Error('Token refresh failed'));
+      }),
+    );
   }
 
   /**
-   * Get current access token
+   * LOGOUT - Cierra la sesión
+   */
+  logout(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/logout`, {}).pipe(
+      tap(() => {
+        this.clearAuth();
+      }),
+      catchError(() => {
+        // Limpiar incluso si falla
+        this.clearAuth();
+        return throwError(() => new Error('Logout failed'));
+      }),
+    );
+  }
+
+  /**
+   * FORGOT PASSWORD - Solicita reset de contraseña
+   */
+  forgotPassword(email: string): Observable<{ message: string }> {
+    this.isLoading.set(true);
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email }).pipe(
+      tap(() => this.isLoading.set(false)),
+      catchError((error) => {
+        this.error.set(this.handleError(error));
+        this.isLoading.set(false);
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  /**
+   * RESET PASSWORD - Resetea la contraseña
+   */
+  resetPassword(token: string, password: string): Observable<{ message: string }> {
+    return this.http
+      .post<{ message: string }>(`${this.apiUrl}/reset-password`, { token, password })
+      .pipe(
+        catchError((error) => {
+          this.error.set(this.handleError(error));
+          return throwError(() => error);
+        }),
+      );
+  }
+
+  /**
+   * CHANGE PASSWORD - Cambia contraseña (autenticado)
+   */
+  changePassword(oldPassword: string, newPassword: string): Observable<{ message: string }> {
+    return this.http
+      .post<{ message: string }>(`${this.apiUrl}/change-password`, { oldPassword, newPassword })
+      .pipe(
+        catchError((error) => {
+          this.error.set(this.handleError(error));
+          return throwError(() => error);
+        }),
+      );
+  }
+
+  /**
+   * VERIFY EMAIL - Verifica email de usuario
+   */
+  verifyEmail(token: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/verify-email`, { token }).pipe(
+      catchError((error) => {
+        this.error.set(this.handleError(error));
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  // ============= HELPERS =============
+
+  /**
+   * Obtiene el access token
    */
   getAccessToken(): string | null {
-    return sessionStorage.getItem('access_token');
+    return sessionStorage.getItem(environment.jwtTokenName);
   }
 
   /**
-   * Get current refresh token
+   * Obtiene el refresh token
    */
   getRefreshToken(): string | null {
-    return sessionStorage.getItem('refresh_token');
+    return sessionStorage.getItem(environment.refreshTokenName);
   }
 
   /**
-   * Refresh JWT tokens
+   * Guarda tokens en sessionStorage
    */
-  async refreshToken(): Promise<boolean> {
-    try {
-      const response = await firstValueFrom(
-        this.http.post<AuthResponse>(`${this.API_URL}/refresh-token`, {})
-      );
+  private setTokens(accessToken: string, refreshToken?: string): void {
+    sessionStorage.setItem(environment.jwtTokenName, accessToken);
+    if (refreshToken) {
+      sessionStorage.setItem(environment.refreshTokenName, refreshToken);
+    }
+  }
 
-      if (response.success && response.data) {
-        sessionStorage.setItem('access_token', response.data.accessToken);
-        sessionStorage.setItem('refresh_token', response.data.refreshToken);
-        this.currentUser.set(response.data.user);
-        return true;
-      }
+  /**
+   * Limpia la autenticación
+   */
+  private clearAuth(): void {
+    sessionStorage.removeItem(environment.jwtTokenName);
+    sessionStorage.removeItem(environment.refreshTokenName);
+    this.currentUser.set(null);
+    this.isAuthenticated.set(false);
+    this.router.navigate(['/auth/login']);
+  }
+
+  /**
+   * Decodifica un JWT sin verificar firma
+   */
+  private decodeToken(token: string): any {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) throw new Error('Invalid token');
+      const decoded = JSON.parse(atob(parts[1]));
+      return decoded;
+    } catch {
+      throw new Error('Failed to decode token');
+    }
+  }
+
+  /**
+   * Verifica si el token es válido (no expirado)
+   */
+  private isTokenValid(token: string): boolean {
+    try {
+      const decoded = this.decodeToken(token);
+      const exp = decoded.exp * 1000; // Convertir a ms
+      return exp > Date.now();
+    } catch {
       return false;
-    } catch (error) {
-      this.logout();
-      return false;
     }
   }
 
   /**
-   * Get current user profile
+   * Maneja errores HTTP
    */
-  async getProfile(): Promise<User> {
-    try {
-      const response = await firstValueFrom(
-        this.http.get<ApiResponse<User>>(`${this.API_URL}/me`)
-      );
-      if (response.success && response.data) {
-        this.currentUser.set(response.data);
-        return response.data;
-      }
-      throw new Error('Failed to fetch profile');
-    } catch (error) {
-      this.logout();
-      throw error;
+  private handleError(error: HttpErrorResponse): string {
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      return error.error.message;
+    } else {
+      // Server-side error
+      return error.error?.message || error.error?.error || 'Algo salió mal';
     }
   }
 
+  userFullName = computed(() => {
+    const user = this.currentUser() as any; // Cast temporal a 'any' si no quieres modificar la interfaz User
+    return user?.name || '';
+  });
+
   /**
-   * Update user profile
+   * Signal derivado que expone si el usuario tiene rol de administrador
    */
-  async updateProfile(data: Partial<User>): Promise<User> {
+  isAdmin = computed(() => {
+    const user = this.currentUser() as any;
+    return user?.role === 'admin';
+  });
+
+  /**
+   * Mantiene compatibilidad con tu método anterior si lo necesitas como función
+   */
+  isAdminUser(): boolean {
+    return this.isAdmin();
+  }
+
+  /**
+   * ACTUALIZAR PERFIL - Envía los cambios del usuario al servidor
+   */
+  updateProfile(data: Partial<User>): Observable<any> {
     this.isLoading.set(true);
-    try {
-      const response = await firstValueFrom(
-        this.http.put<ApiResponse<User>>(`${this.API_URL}/profile`, data)
-      );
-      if (response.success && response.data) {
-        this.currentUser.set(response.data);
-        return response.data;
-      }
-      throw new Error('Failed to update profile');
-    } finally {
-      this.isLoading.set(false);
-    }
+    return this.http.patch<User>(`${this.apiUrl}/profile`, data).pipe(
+      tap((updatedUser) => {
+        // Actualizamos el estado del signal con los nuevos datos combinados
+        const current = this.currentUser();
+        if (current) {
+          this.currentUser.set({ ...current, ...updatedUser });
+        }
+        this.isLoading.set(false);
+      }),
+      catchError((error) => {
+        this.error.set(this.handleError(error));
+        this.isLoading.set(false);
+        return throwError(() => error);
+      }),
+    );
   }
-
-  /**
-   * Change password
-   */
-  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    this.isLoading.set(true);
-    this.error.set(null);
-
-    try {
-      await firstValueFrom(
-        this.http.post(`${this.API_URL}/change-password`, {
-          currentPassword,
-          newPassword
-        })
-      );
-    } catch (err: any) {
-      const message = err.error?.message || 'Failed to change password';
-      this.error.set(message);
-      throw new Error(message);
-    } finally {
-      this.isLoading.set(false);
-    }
-  }
-}
-
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  errors?: any;
 }

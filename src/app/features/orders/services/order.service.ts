@@ -3,10 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Order, ApiResponse, PaginatedResponse } from '../../../shared/types/interfaces';
-import { WebSocketService } from '../../../core/services/websocket.service';
+import { WebsocketService } from '../../../core/services/websocket.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class OrderService {
   private readonly API_URL = `${environment.apiUrl}/api`;
@@ -29,7 +29,7 @@ export class OrderService {
     minDate: '',
     maxDate: '',
     minAmount: 0,
-    maxAmount: Infinity
+    maxAmount: Infinity,
   });
 
   // Real-time tracking
@@ -40,10 +40,10 @@ export class OrderService {
     const all = this.orders();
     const f = this.filters();
 
-    return all.filter(order => {
+    return all.filter((order) => {
       let matchesSearch = true;
       if (f.search) {
-        matchesSearch = 
+        matchesSearch =
           order._id.includes(f.search.toUpperCase()) ||
           (order.user?.name?.toLowerCase().includes(f.search.toLowerCase()) ?? false) ||
           (order.user?.email?.toLowerCase().includes(f.search.toLowerCase()) ?? false);
@@ -56,12 +56,13 @@ export class OrderService {
         const orderDate = new Date(order.createdAt);
         const minDate = f.minDate ? new Date(f.minDate) : null;
         const maxDate = f.maxDate ? new Date(f.maxDate) : null;
-        
+
         if (minDate && orderDate < minDate) matchesDate = false;
         if (maxDate && orderDate > maxDate) matchesDate = false;
       }
 
-      const orderTotal = order.total || order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const orderTotal =
+        order.total || order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
       const matchesAmount = orderTotal >= f.minAmount && orderTotal <= f.maxAmount;
 
       return matchesSearch && matchesStatus && matchesDate && matchesAmount;
@@ -78,9 +79,7 @@ export class OrderService {
     return filtered.slice(start, start + size);
   });
 
-  totalPages = computed(() => 
-    Math.ceil(this.totalFilteredOrders() / this.pageSize())
-  );
+  totalPages = computed(() => Math.ceil(this.totalFilteredOrders() / this.pageSize()));
 
   // Real-time highlight effect
   private highlightEffect = effect(() => {
@@ -89,10 +88,10 @@ export class OrderService {
       // Clear highlight after 3 seconds
       setTimeout(() => {
         this.recentlyUpdatedOrders.set(
-          recentIds.filter(id => {
-            const order = this.orders().find(o => o._id === id);
+          recentIds.filter((id) => {
+            const order = this.orders().find((o) => o._id === id);
             return order && Math.random() > 0.5; // Random cleanup for demo
-          })
+          }),
         );
       }, 3000);
     }
@@ -100,7 +99,7 @@ export class OrderService {
 
   constructor(
     private http: HttpClient,
-    private websocketService: WebSocketService
+    private websocketService: WebsocketService,
   ) {
     this.setupWebSocketListeners();
   }
@@ -119,8 +118,8 @@ export class OrderService {
    * Handle order update from WebSocket
    */
   private handleOrderUpdate(updatedOrder: Order): void {
-    const existingIdx = this.orders().findIndex(o => o._id === updatedOrder._id);
-    
+    const existingIdx = this.orders().findIndex((o) => o._id === updatedOrder._id);
+
     if (existingIdx >= 0) {
       // Update existing order
       const updated = [...this.orders()];
@@ -132,10 +131,7 @@ export class OrderService {
     }
 
     // Mark as recently updated for UI highlighting
-    this.recentlyUpdatedOrders.set([
-      updatedOrder._id,
-      ...this.recentlyUpdatedOrders().slice(0, 4)
-    ]);
+    this.recentlyUpdatedOrders.set([updatedOrder._id, ...this.recentlyUpdatedOrders().slice(0, 4)]);
 
     // Update selected if it's the one being updated
     if (this.selectedOrder()?._id === updatedOrder._id) {
@@ -152,10 +148,9 @@ export class OrderService {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<PaginatedResponse<Order>>(
-          `${this.API_URL}/orders`,
-          { params: { page: page.toString(), limit: limit.toString() } }
-        )
+        this.http.get<PaginatedResponse<Order>>(`${this.API_URL}/orders`, {
+          params: { page: page.toString(), limit: limit.toString() },
+        }),
       );
 
       this.orders.set(response.data || []);
@@ -179,7 +174,7 @@ export class OrderService {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<ApiResponse<Order>>(`${this.API_URL}/orders/${id}`)
+        this.http.get<ApiResponse<Order>>(`${this.API_URL}/orders/${id}`),
       );
 
       if (response.data) {
@@ -205,10 +200,7 @@ export class OrderService {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<{ data: Order[] }>(
-          `${this.API_URL}/orders/search`,
-          { params: { q: query } }
-        )
+        this.http.get<{ data: Order[] }>(`${this.API_URL}/orders/search`, { params: { q: query } }),
       );
 
       this.orders.set(response.data || []);
@@ -228,10 +220,7 @@ export class OrderService {
 
     try {
       const response = await firstValueFrom(
-        this.http.patch<ApiResponse<Order>>(
-          `${this.API_URL}/orders/${id}/status`,
-          { status }
-        )
+        this.http.patch<ApiResponse<Order>>(`${this.API_URL}/orders/${id}/status`, { status }),
       );
 
       if (response.data) {
@@ -255,10 +244,7 @@ export class OrderService {
   async addNote(id: string, note: string): Promise<Order> {
     try {
       const response = await firstValueFrom(
-        this.http.post<ApiResponse<Order>>(
-          `${this.API_URL}/orders/${id}/notes`,
-          { note }
-        )
+        this.http.post<ApiResponse<Order>>(`${this.API_URL}/orders/${id}/notes`, { note }),
       );
 
       if (response.data) {
@@ -277,9 +263,7 @@ export class OrderService {
    */
   async getStats(): Promise<any> {
     try {
-      const response = await firstValueFrom(
-        this.http.get(`${this.API_URL}/orders/admin/stats`)
-      );
+      const response = await firstValueFrom(this.http.get(`${this.API_URL}/orders/admin/stats`));
       return response;
     } catch (err) {
       console.error('Failed to fetch order stats', err);
@@ -290,7 +274,10 @@ export class OrderService {
   /**
    * Update filter
    */
-  updateFilter(key: 'search' | 'status' | 'minDate' | 'maxDate' | 'minAmount' | 'maxAmount', value: any): void {
+  updateFilter(
+    key: 'search' | 'status' | 'minDate' | 'maxDate' | 'minAmount' | 'maxAmount',
+    value: any,
+  ): void {
     const current = this.filters();
     this.filters.set({ ...current, [key]: value });
     this.currentPage.set(1); // Reset to first page
@@ -306,7 +293,7 @@ export class OrderService {
       minDate: '',
       maxDate: '',
       minAmount: 0,
-      maxAmount: Infinity
+      maxAmount: Infinity,
     });
     this.currentPage.set(1);
   }
@@ -326,11 +313,11 @@ export class OrderService {
    */
   getStatusColor(status: string): string {
     const colors: { [key: string]: string } = {
-      'pending': 'bg-yellow-100 text-yellow-800',
-      'processing': 'bg-blue-100 text-blue-800',
-      'shipped': 'bg-purple-100 text-purple-800',
-      'delivered': 'bg-green-100 text-green-800',
-      'cancelled': 'bg-red-100 text-red-800'
+      pending: 'bg-yellow-100 text-yellow-800',
+      processing: 'bg-blue-100 text-blue-800',
+      shipped: 'bg-purple-100 text-purple-800',
+      delivered: 'bg-green-100 text-green-800',
+      cancelled: 'bg-red-100 text-red-800',
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   }
@@ -340,11 +327,11 @@ export class OrderService {
    */
   getStatusLabel(status: string): string {
     const labels: { [key: string]: string } = {
-      'pending': 'Pending',
-      'processing': 'Processing',
-      'shipped': 'Shipped',
-      'delivered': 'Delivered',
-      'cancelled': 'Cancelled'
+      pending: 'Pending',
+      processing: 'Processing',
+      shipped: 'Shipped',
+      delivered: 'Delivered',
+      cancelled: 'Cancelled',
     };
     return labels[status] || status;
   }

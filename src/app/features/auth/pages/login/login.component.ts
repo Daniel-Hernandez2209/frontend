@@ -1,86 +1,140 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
-    <div class="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
-      <div class="w-full max-w-md bg-white rounded-lg shadow-xl p-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Admin Panel</h1>
-        <p class="text-gray-600 mb-6">Login to your account</p>
-
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              formControlName="email"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="admin@example.com"
-            />
+    <div
+      class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100"
+    >
+      <div class="w-full max-w-md">
+        <!-- Card -->
+        <div class="bg-white rounded-lg shadow-xl p-8">
+          <!-- Logo -->
+          <div class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-900">ATHENA BRAND</h1>
+            <p class="text-gray-600 mt-2">Admin Panel</p>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              formControlName="password"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="••••••••"
-            />
-          </div>
+          <!-- Form -->
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+            <!-- Email -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Correo Electrónico
+              </label>
+              <input
+                type="email"
+                formControlName="email"
+                placeholder="tu@email.com"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                [class.border-red-500]="isFieldInvalid('email')"
+              />
+              @if (isFieldInvalid('email')) {
+                <p class="text-red-500 text-sm mt-1">
+                  {{ getFieldError('email') }}
+                </p>
+              }
+            </div>
 
-          <button
-            type="submit"
-            [disabled]="form.invalid || isLoading()"
-            class="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-          >
-            {{ isLoading() ? 'Logging in...' : 'Login' }}
-          </button>
+            <!-- Password -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"> Contraseña </label>
+              <input
+                type="password"
+                formControlName="password"
+                placeholder="••••••••"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                [class.border-red-500]="isFieldInvalid('password')"
+              />
+              @if (isFieldInvalid('password')) {
+                <p class="text-red-500 text-sm mt-1">
+                  {{ getFieldError('password') }}
+                </p>
+              }
+            </div>
 
-          <div *ngIf="error()" class="p-3 bg-red-100 text-red-700 rounded-lg text-sm">
-            {{ error() }}
+            <!-- Global Error -->
+            @if (auth.error()) {
+              <div class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                ⚠️ {{ auth.error() }}
+              </div>
+            }
+
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              [disabled]="!form.valid || auth.isLoading()"
+              class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              @if (auth.isLoading()) {
+                <span>Ingresando...</span>
+              } @else {
+                <span>Ingresar</span>
+              }
+            </button>
+          </form>
+
+          <!-- Footer Links -->
+          <div class="mt-6 space-y-2 text-center">
+            <a
+              routerLink="/auth/forgot-password"
+              class="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+            >
+              ¿Olvidaste tu contraseña?
+            </a>
+            <p class="text-gray-600 text-sm">
+              ¿No tienes cuenta?
+              <a
+                routerLink="/auth/register"
+                class="text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                Regístrate aquí
+              </a>
+            </p>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   `,
-  styles: []
+  styles: [],
 })
 export class LoginComponent {
-  form: FormGroup;
+  private fb = inject(FormBuilder);
+  protected auth = inject(AuthService);
 
-  get isLoading() {
-    return this.authService.isLoading;
-  }
+  form = this.fb.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+  });
 
-  get error() {
-    return this.authService.error;
-  }
-
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router
-  ) {
-    this.form = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
-    });
-  }
-
-  async onSubmit(): Promise<void> {
-    if (this.form.invalid) return;
-
-    try {
-      await this.authService.login(this.form.value);
-    } catch (error) {
-      console.error('Login failed:', error);
+  onSubmit(): void {
+    if (this.form.valid) {
+      this.auth.login(this.form.getRawValue()).subscribe({
+        error: (err) => console.error('Login error:', err),
+      });
     }
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.form.get(fieldName);
+    return !!(field && field.invalid && (field.dirty || field.touched));
+  }
+
+  getFieldError(fieldName: string): string {
+    const field = this.form.get(fieldName);
+    if (!field?.errors) return '';
+
+    if (field.errors['required']) return 'Este campo es requerido';
+    if (field.errors['email']) return 'Email inválido';
+    if (field.errors['minlength'])
+      return `Mínimo ${field.errors['minlength'].requiredLength} caracteres`;
+
+    return 'Error en el campo';
   }
 }
