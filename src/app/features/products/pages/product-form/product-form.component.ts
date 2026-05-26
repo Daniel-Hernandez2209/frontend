@@ -9,7 +9,7 @@ import { ProductService } from '../../services/product.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './product-form.component.html',
-  styleUrls: []
+  styleUrls: [],
 })
 export class ProductFormComponent implements OnInit, OnDestroy {
   form: FormGroup;
@@ -22,18 +22,23 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   imagesToUpload: File[] = [];
   selectedSizes: Map<string, number> = new Map();
 
-  get isEditMode() { return !!this.route.snapshot.paramMap.get('id'); }
+  get isEditMode() {
+    return !!this.route.snapshot.paramMap.get('id');
+  }
 
   constructor(
     private fb: FormBuilder,
     private productService: ProductService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
       slug: [''],
-      description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
+      description: [
+        '',
+        [Validators.required, Validators.minLength(10), Validators.maxLength(2000)],
+      ],
       price: [0, [Validators.required, Validators.min(0.01)]],
       discountPrice: [null],
       category: ['', Validators.required],
@@ -45,7 +50,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       metaDescription: [''],
       isActive: [true],
       isFeatured: [false],
-      tags: ['']
+      tags: [''],
     });
   }
 
@@ -57,7 +62,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     // Cleanup previews
-    this.imagePreviews.forEach(url => URL.revokeObjectURL(url));
+    this.imagePreviews.forEach((url) => URL.revokeObjectURL(url));
   }
 
   async loadProduct(): Promise<void> {
@@ -79,7 +84,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         metaDescription: product.metaDescription || '',
         isActive: product.isActive,
         isFeatured: product.isFeatured,
-        tags: product.tags?.join(', ') || ''
+        tags: product.tags?.join(', ') || '',
       });
 
       // Load existing images as previews
@@ -114,7 +119,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   private addFiles(files: File[]): void {
     this.uploadError.set('');
 
-    files.forEach(file => {
+    files.forEach((file) => {
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         this.uploadError.set('File size exceeds 10 MB limit');
@@ -195,14 +200,14 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         ...formValue,
         sizes: Array.from(this.selectedSizes.entries()).map(([size, stock]) => ({
           size,
-          stock
+          stock,
         })),
         tags: formValue.tags?.split(',').map((t: string) => t.trim()) || [],
         images: imageUrls.map((url, i) => ({
           url,
           alt: formValue.name,
-          isPrimary: i === 0
-        }))
+          isPrimary: i === 0,
+        })),
       };
 
       if (this.isEditMode) {

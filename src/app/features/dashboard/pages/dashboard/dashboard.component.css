@@ -26,7 +26,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -49,16 +50,33 @@
 }
 
 /* Chart animations */
-.h-16, .h-20, .h-12, .h-24, .h-14, .h-28 {
+.h-16,
+.h-20,
+.h-12,
+.h-24,
+.h-14,
+.h-28 {
   animation: slideIn 0.6s ease-out backwards;
 }
 
-.h-16 { animation-delay: 0.1s; }
-.h-20 { animation-delay: 0.2s; }
-.h-12 { animation-delay: 0.3s; }
-.h-24 { animation-delay: 0.4s; }
-.h-14 { animation-delay: 0.5s; }
-.h-28 { animation-delay: 0.6s; }
+.h-16 {
+  animation-delay: 0.1s;
+}
+.h-20 {
+  animation-delay: 0.2s;
+}
+.h-12 {
+  animation-delay: 0.3s;
+}
+.h-24 {
+  animation-delay: 0.4s;
+}
+.h-14 {
+  animation-delay: 0.5s;
+}
+.h-28 {
+  animation-delay: 0.6s;
+}
 
 /* Loading spinner */
 .animate-spin {
@@ -86,8 +104,9 @@
 }
 
 /* Text shadows for better readability */
-.text-4xl, .text-3xl {
-  font-feature-settings: "kern" 1;
+.text-4xl,
+.text-3xl {
+  font-feature-settings: 'kern' 1;
   letter-spacing: -0.02em;
 }
 

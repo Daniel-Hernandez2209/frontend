@@ -8,17 +8,25 @@ import { WebsocketService } from '../../../../core/services/websocket.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: 'dashboard.component.html',
-  styleUrl: 'dashboard.component.css'
+  styleUrl: 'dashboard.component.css',
 })
 export class DashboardComponent implements OnInit {
-  get isLoading() { return this.dashboardService.isLoading; }
-  get error() { return this.dashboardService.error; }
-  get stats() { return this.dashboardService.stats; }
-  get wsConnected() { return this.wsService.isConnected; }
+  get isLoading() {
+    return this.dashboardService.isLoading;
+  }
+  get error() {
+    return this.dashboardService.error;
+  }
+  get stats() {
+    return this.dashboardService.stats;
+  }
+  get wsConnected() {
+    return this.wsService.isConnected;
+  }
 
   constructor(
     private dashboardService: DashboardService,
-    private wsService: WebsocketService
+    private wsService: WebsocketService,
   ) {}
 
   ngOnInit(): void {
@@ -35,7 +43,7 @@ export class DashboardComponent implements OnInit {
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(amount);
   }
 
@@ -57,7 +65,7 @@ export class DashboardComponent implements OnInit {
       pending: 'text-yellow-600 bg-yellow-50',
       processing: 'text-blue-600 bg-blue-50',
       shipped: 'text-purple-600 bg-purple-50',
-      delivered: 'text-green-600 bg-green-50'
+      delivered: 'text-green-600 bg-green-50',
     };
     return colors[status] || 'text-gray-600 bg-gray-50';
   }

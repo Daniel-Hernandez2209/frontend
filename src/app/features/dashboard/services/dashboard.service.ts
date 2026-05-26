@@ -32,7 +32,7 @@ export interface ChartData {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DashboardService {
   private readonly API_URL = `${environment.apiUrl}/api`;
@@ -49,7 +49,7 @@ export class DashboardService {
     deliveredOrders: 0,
     totalCategories: 0,
     newUsersThisMonth: 0,
-    newOrdersThisMonth: 0
+    newOrdersThisMonth: 0,
   });
 
   isLoading = signal(false);
@@ -58,25 +58,25 @@ export class DashboardService {
   // Sales Chart Data
   salesChartData = signal<ChartData>({
     labels: [],
-    datasets: []
+    datasets: [],
   });
 
   // Orders by Status
   ordersByStatusData = signal<ChartData>({
     labels: [],
-    datasets: []
+    datasets: [],
   });
 
   // Top Products
   topProductsData = signal<ChartData>({
     labels: [],
-    datasets: []
+    datasets: [],
   });
 
   // Monthly trends
   monthlyTrendsData = signal<ChartData>({
     labels: [],
-    datasets: []
+    datasets: [],
   });
 
   constructor(
@@ -84,15 +84,18 @@ export class DashboardService {
     private wsService: WebsocketService,
     private productService: ProductService,
     private orderService: OrderService,
-    private userService: UserService
+    private userService: UserService,
   ) {
     // Setup real-time updates
     this._setupWebSocketListeners();
-    
+
     // Auto-refresh when orders/products/users change
-    effect(() => {
-      this._updateStatsFromServices();
-    }, { allowSignalWrites: true });
+    effect(
+      () => {
+        this._updateStatsFromServices();
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   /**
@@ -114,7 +117,7 @@ export class DashboardService {
         this._fetchSalesChart(),
         this._fetchOrdersByStatus(),
         this._fetchTopProducts(),
-        this._fetchMonthlyTrends()
+        this._fetchMonthlyTrends(),
       ]);
 
       this.stats.set(statsResp);
@@ -164,20 +167,28 @@ export class DashboardService {
 
     // Calculate derived stats
     const totalRevenue = orders.reduce((sum, order: any) => {
-      return sum + (order.total || order.items.reduce((s: number, item: any) => s + (item.price * item.quantity), 0));
+      return (
+        sum +
+        (order.total ||
+          order.items.reduce((s: number, item: any) => s + item.price * item.quantity, 0))
+      );
     }, 0);
 
     const ordersByStatus = {
       pending: orders.filter((o: any) => o.status === 'pending').length,
       processing: orders.filter((o: any) => o.status === 'processing').length,
       shipped: orders.filter((o: any) => o.status === 'shipped').length,
-      delivered: orders.filter((o: any) => o.status === 'delivered').length
+      delivered: orders.filter((o: any) => o.status === 'delivered').length,
     };
 
-    const newUsersThisMonth = users.filter((u: any) => new Date(u.createdAt) >= startOfMonth).length;
-    const newOrdersThisMonth = orders.filter((o: any) => new Date(o.createdAt) >= startOfMonth).length;
+    const newUsersThisMonth = users.filter(
+      (u: any) => new Date(u.createdAt) >= startOfMonth,
+    ).length;
+    const newOrdersThisMonth = orders.filter(
+      (o: any) => new Date(o.createdAt) >= startOfMonth,
+    ).length;
 
-    this.stats.update(s => ({
+    this.stats.update((s) => ({
       ...s,
       totalOrders: orders.length,
       totalRevenue,
@@ -188,27 +199,29 @@ export class DashboardService {
       shippedOrders: ordersByStatus.shipped,
       deliveredOrders: ordersByStatus.delivered,
       newUsersThisMonth,
-      newOrdersThisMonth
+      newOrdersThisMonth,
     }));
 
     // Update order status chart
     this.ordersByStatusData.set({
       labels: ['Pending', 'Processing', 'Shipped', 'Delivered'],
-      datasets: [{
-        label: 'Orders by Status',
-        data: [
-          ordersByStatus.pending,
-          ordersByStatus.processing,
-          ordersByStatus.shipped,
-          ordersByStatus.delivered
-        ],
-        backgroundColor: [
-          'rgba(234, 179, 8, 0.6)',   // yellow
-          'rgba(59, 130, 246, 0.6)',  // blue
-          'rgba(168, 85, 247, 0.6)',  // purple
-          'rgba(34, 197, 94, 0.6)'    // green
-        ]
-      }]
+      datasets: [
+        {
+          label: 'Orders by Status',
+          data: [
+            ordersByStatus.pending,
+            ordersByStatus.processing,
+            ordersByStatus.shipped,
+            ordersByStatus.delivered,
+          ],
+          backgroundColor: [
+            'rgba(234, 179, 8, 0.6)', // yellow
+            'rgba(59, 130, 246, 0.6)', // blue
+            'rgba(168, 85, 247, 0.6)', // purple
+            'rgba(34, 197, 94, 0.6)', // green
+          ],
+        },
+      ],
     });
   }
 
@@ -218,7 +231,7 @@ export class DashboardService {
   private async _fetchStats(): Promise<DashboardStats> {
     try {
       const response = await firstValueFrom(
-        this.http.get<{ data: DashboardStats }>(`${this.API_URL}/dashboard/stats`)
+        this.http.get<{ data: DashboardStats }>(`${this.API_URL}/dashboard/stats`),
       );
       return response.data || this.stats();
     } catch (err) {
@@ -233,7 +246,7 @@ export class DashboardService {
   private async _fetchSalesChart(): Promise<ChartData> {
     try {
       const response = await firstValueFrom(
-        this.http.get<{ data: ChartData }>(`${this.API_URL}/dashboard/sales-chart`)
+        this.http.get<{ data: ChartData }>(`${this.API_URL}/dashboard/sales-chart`),
       );
       return response.data || this._generateSalesChartFallback();
     } catch (err) {
@@ -247,7 +260,7 @@ export class DashboardService {
   private async _fetchOrdersByStatus(): Promise<ChartData> {
     try {
       const response = await firstValueFrom(
-        this.http.get<{ data: ChartData }>(`${this.API_URL}/dashboard/orders-status`)
+        this.http.get<{ data: ChartData }>(`${this.API_URL}/dashboard/orders-status`),
       );
       return response.data || { labels: [], datasets: [] };
     } catch (err) {
@@ -261,7 +274,7 @@ export class DashboardService {
   private async _fetchTopProducts(): Promise<ChartData> {
     try {
       const response = await firstValueFrom(
-        this.http.get<{ data: ChartData }>(`${this.API_URL}/dashboard/top-products`)
+        this.http.get<{ data: ChartData }>(`${this.API_URL}/dashboard/top-products`),
       );
       return response.data || this._generateTopProductsFallback();
     } catch (err) {
@@ -275,7 +288,7 @@ export class DashboardService {
   private async _fetchMonthlyTrends(): Promise<ChartData> {
     try {
       const response = await firstValueFrom(
-        this.http.get<{ data: ChartData }>(`${this.API_URL}/dashboard/monthly-trends`)
+        this.http.get<{ data: ChartData }>(`${this.API_URL}/dashboard/monthly-trends`),
       );
       return response.data || this._generateMonthlyTrendsFallback();
     } catch (err) {
@@ -290,23 +303,27 @@ export class DashboardService {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     return {
       labels: months,
-      datasets: [{
-        label: 'Sales ($)',
-        data: [12000, 19000, 13000, 15000, 10000, 16000],
-        borderColor: 'rgba(59, 130, 246, 1)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)'
-      }]
+      datasets: [
+        {
+          label: 'Sales ($)',
+          data: [12000, 19000, 13000, 15000, 10000, 16000],
+          borderColor: 'rgba(59, 130, 246, 1)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        },
+      ],
     };
   }
 
   private _generateTopProductsFallback(): ChartData {
     return {
       labels: ['Classic T-Shirt', 'Denim Jacket', 'Sneakers', 'Hoodie', 'Jeans'],
-      datasets: [{
-        label: 'Sales',
-        data: [120, 95, 87, 65, 54],
-        backgroundColor: 'rgba(59, 130, 246, 0.6)'
-      }]
+      datasets: [
+        {
+          label: 'Sales',
+          data: [120, 95, 87, 65, 54],
+          backgroundColor: 'rgba(59, 130, 246, 0.6)',
+        },
+      ],
     };
   }
 
@@ -319,15 +336,15 @@ export class DashboardService {
           label: 'Revenue',
           data: [65, 59, 80, 81, 56, 55],
           borderColor: 'rgba(34, 197, 94, 1)',
-          backgroundColor: 'rgba(34, 197, 94, 0.1)'
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
         },
         {
           label: 'Orders',
           data: [28, 48, 40, 19, 86, 27],
           borderColor: 'rgba(59, 130, 246, 1)',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)'
-        }
-      ]
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        },
+      ],
     };
   }
 
