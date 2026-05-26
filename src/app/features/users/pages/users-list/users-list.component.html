@@ -1,0 +1,653 @@
+<div class="p-6 space-y-6">
+  <!-- ══ HEADER ══════════════════════════════════════════════════════════ -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
+      <p class="text-gray-500 mt-1">Administra roles, permisos y estados de los usuarios</p>
+    </div>
+    <button
+      (click)="createUser()"
+      class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- ══ STATS CARDS ═══════════════════════════════════════════════════════ -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+      <p class="text-2xl font-bold text-gray-900">{{ stats().total }}</p>
+      <p class="text-xs text-gray-500 mt-1 font-medium">Total</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+      <p class="text-2xl font-bold text-green-600">{{ stats().active }}</p>
+      <p class="text-xs text-gray-500 mt-1 font-medium">Activos</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+      <p class="text-2xl font-bold text-red-500">{{ stats().inactive }}</p>
+      <p class="text-xs text-gray-500 mt-1 font-medium">Inactivos</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+      <p class="text-2xl font-bold text-purple-600">{{ stats().admins }}</p>
+      <p class="text-xs text-gray-500 mt-1 font-medium">Admins</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+      <p class="text-2xl font-bold text-teal-600">{{ stats().verified }}</p>
+      <p class="text-xs text-gray-500 mt-1 font-medium">Verificados</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+      <p class="text-2xl font-bold text-blue-600">{{ stats().newThisMonth }}</p>
+      <p class="text-xs text-gray-500 mt-1 font-medium">Este mes</p>
+    </div>
+  </div>
+
+  <!-- ══ TOAST / SUCCESS MSG ═══════════════════════════════════════════════ -->
+  @if (successMsg()) {
+    <div
+      class="flex items-center gap-3 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl"
+    >
+      <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      {{ successMsg() }}
+    </div>
+  }
+
+  <!-- ══ ERROR MSG ══════════════════════════════════════════════════════════ -->
+  @if (error()) {
+    <div
+      class="flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl"
+    >
+      <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      {{ error() }}
+      <button
+        (click)="userService.clearError()"
+        class="ml-auto text-red-600 hover:text-red-800 font-medium text-sm"
+      >
+        Cerrar
+      </button>
+    </div>
+  }
+
+  <!-- ══ FILTROS ════════════════════════════════════════════════════════════ -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <!-- Búsqueda -->
+      <div class="lg:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Buscar usuario</label>
+        <div class="relative">
+          <svg
+            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"
+            />
+          </svg>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onSearchChange()"
+            placeholder="Nombre, email o teléfono..."
+            class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <!-- Rol -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Rol</label>
+        <select
+          [(ngModel)]="selectedRole"
+          (ngModelChange)="onRoleChange()"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          @for (opt of roleOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Estado -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Estado</label>
+        <select
+          [(ngModel)]="selectedStatus"
+          (ngModelChange)="onStatusChange()"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          @for (opt of statusOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Verificación -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Verificación</label>
+        <select
+          [(ngModel)]="selectedVerified"
+          (ngModelChange)="onVerifiedChange()"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          @for (opt of verifiedOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- Reset -->
+    <div class="mt-4 flex justify-end">
+      <button
+        (click)="resetFilters()"
+        class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
+        </svg>
+        Limpiar filtros
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ LOADING ════════════════════════════════════════════════════════════ -->
+  @if (isLoading()) {
+    <div class="text-center py-16">
+      <div class="inline-flex flex-col items-center gap-3">
+        <div
+          class="h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"
+        ></div>
+        <p class="text-gray-500 font-medium">Cargando usuarios...</p>
+      </div>
+    </div>
+  }
+
+  <!-- ══ TABLA ══════════════════════════════════════════════════════════════ -->
+  @if (!isLoading()) {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <!-- Empty state -->
+      @if (paginatedUsers().length === 0) {
+        <div class="py-20 text-center">
+          <svg
+            class="mx-auto w-16 h-16 text-gray-300 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+          <p class="text-gray-500 text-lg font-medium">No se encontraron usuarios</p>
+          <p class="text-gray-400 text-sm mt-1">Intenta ajustar los filtros de búsqueda</p>
+        </div>
+      }
+
+      <!-- Table -->
+      @if (paginatedUsers().length > 0) {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th
+                  class="px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                >
+                  Usuario
+                </th>
+                <th
+                  class="px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                >
+                  Contacto
+                </th>
+                <th
+                  class="px-5 py-3.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                >
+                  Rol
+                </th>
+                <th
+                  class="px-5 py-3.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                >
+                  Estado
+                </th>
+                <th
+                  class="px-5 py-3.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                >
+                  Verificado
+                </th>
+                <th
+                  class="px-5 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                >
+                  Registro
+                </th>
+                <th
+                  class="px-5 py-3.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                >
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (user of paginatedUsers(); track user._id) {
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <!-- Avatar + Nombre -->
+                  <td class="px-5 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="relative flex-shrink-0">
+                        @if (user.avatar) {
+                          <img
+                            [src]="user.avatar"
+                            [alt]="user.firstName"
+                            class="w-10 h-10 rounded-full object-cover"
+                          />
+                        } @else {
+                          <div
+                            [class]="
+                              'w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ' +
+                              getAvatarColor(user)
+                            "
+                          >
+                            {{ getInitials(user) }}
+                          </div>
+                        }
+                        <span
+                          [class]="
+                            'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ' +
+                            (user.isActive ? 'bg-green-400' : 'bg-gray-300')
+                          "
+                        ></span>
+                      </div>
+                      <div>
+                        <p class="font-semibold text-gray-900">
+                          {{ user.firstName }} {{ user.lastName }}
+                        </p>
+                        <p class="text-xs text-gray-400 font-mono">{{ user._id.slice(-8) }}</p>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Contacto -->
+                  <td class="px-5 py-4">
+                    <p class="text-gray-800 font-medium">{{ user.email }}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ user.phone || '—' }}</p>
+                  </td>
+
+                  <!-- Rol -->
+                  <td class="px-5 py-4 text-center">
+                    <span
+                      [class]="
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ' +
+                        getRoleColor(user.role)
+                      "
+                    >
+                      @if (user.role === 'admin') {
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fill-rule="evenodd"
+                            d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                      } @else {
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fill-rule="evenodd"
+                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                      }
+                      {{ getRoleLabel(user.role) }}
+                    </span>
+                  </td>
+
+                  <!-- Estado -->
+                  <td class="px-5 py-4 text-center">
+                    <button
+                      (click)="toggleStatus(user, $event)"
+                      [class]="
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold cursor-pointer transition ' +
+                        getStatusColor(user.isActive)
+                      "
+                      [title]="'Clic para ' + (user.isActive ? 'desactivar' : 'activar')"
+                    >
+                      <span
+                        [class]="
+                          'w-1.5 h-1.5 rounded-full ' +
+                          (user.isActive ? 'bg-green-500' : 'bg-red-400')
+                        "
+                      ></span>
+                      {{ getStatusLabel(user.isActive) }}
+                    </button>
+                  </td>
+
+                  <!-- Verificado -->
+                  <td class="px-5 py-4 text-center">
+                    <span
+                      [class]="
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ' +
+                        getVerifiedColor(user.isVerified)
+                      "
+                    >
+                      @if (user.isVerified) {
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fill-rule="evenodd"
+                            d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                      } @else {
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                      }
+                      {{ getVerifiedLabel(user.isVerified) }}
+                    </span>
+                  </td>
+
+                  <!-- Fecha -->
+                  <td class="px-5 py-4">
+                    <p class="text-gray-700">{{ formatDate(user.createdAt) }}</p>
+                  </td>
+
+                  <!-- Acciones -->
+                  <td class="px-5 py-4">
+                    <div class="flex items-center justify-center gap-1">
+                      <button
+                        (click)="editUser(user._id)"
+                        title="Editar usuario"
+                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        (click)="openRoleModal(user, $event)"
+                        title="Cambiar rol"
+                        class="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        (click)="openDeleteModal(user, $event)"
+                        title="Eliminar usuario"
+                        class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ══ PAGINACIÓN ════════════════════════════════════════════════════════ -->
+  @if (!isLoading() && paginatedUsers().length > 0) {
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-sm text-gray-500">
+        Mostrando <span class="font-semibold text-gray-700">{{ paginatedUsers().length }}</span> de
+        <span class="font-semibold text-gray-700">{{ totalFiltered() }}</span> usuarios (Página
+        {{ currentPage() }} de {{ totalPages() }})
+      </p>
+      <div class="flex items-center gap-1">
+        <button
+          (click)="previousPage()"
+          [disabled]="currentPage() === 1"
+          class="p-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        @for (page of getPageNumbers(); track page) {
+          <button
+            (click)="goToPage(page)"
+            [class]="
+              'px-3.5 py-1.5 rounded-lg text-sm font-medium transition ' +
+              (page === currentPage()
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'border border-gray-300 text-gray-700 hover:bg-gray-50')
+            "
+          >
+            {{ page }}
+          </button>
+        }
+        <button
+          (click)="nextPage()"
+          [disabled]="currentPage() === totalPages()"
+          class="p-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ══ MODAL: CAMBIO DE ROL ═══════════════════════════════════════════════ -->
+@if (showRoleModal()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+    (click)="closeRoleModal()"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-center gap-4 mb-5">
+        <div
+          class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center"
+        >
+          <svg
+            class="w-6 h-6 text-purple-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+            />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Cambiar Rol</h3>
+          @if (userToChangeRole()) {
+            <p class="text-sm text-gray-500">
+              {{ userToChangeRole()!.firstName }} {{ userToChangeRole()!.lastName }}
+            </p>
+          }
+        </div>
+      </div>
+
+      @if (userToChangeRole()) {
+        <div class="mb-6 p-4 bg-gray-50 rounded-xl">
+          <p class="text-sm text-gray-600 mb-3">
+            Rol actual:
+            <span
+              [class]="
+                'ml-2 inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ' +
+                getRoleColor(userToChangeRole()!.role)
+              "
+            >
+              {{ getRoleLabel(userToChangeRole()!.role) }}
+            </span>
+          </p>
+          <p class="text-sm text-gray-600">
+            Nuevo rol:
+            <span
+              [class]="
+                'ml-2 inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ' +
+                getRoleColor(newRole())
+              "
+            >
+              {{ getRoleLabel(newRole()) }}
+            </span>
+          </p>
+        </div>
+      }
+
+      <p class="text-sm text-gray-600 mb-6">
+        ¿Confirmas el cambio de rol?
+        @if (newRole() === 'admin') {
+          <span class="font-medium text-purple-700">
+            El usuario tendrá acceso completo al panel de administración.</span
+          >
+        } @else {
+          <span class="font-medium text-blue-700">
+            El usuario perderá los privilegios de administrador.</span
+          >
+        }
+      </p>
+
+      <div class="flex gap-3">
+        <button
+          (click)="closeRoleModal()"
+          class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="confirmRoleChange()"
+          [disabled]="isLoading()"
+          class="flex-1 px-4 py-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 transition font-medium"
+        >
+          @if (isLoading()) {
+            Cambiando...
+          } @else {
+            Confirmar cambio
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ══ MODAL: ELIMINAR USUARIO ════════════════════════════════════════════ -->
+@if (showDeleteModal()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+    (click)="closeDeleteModal()"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-center gap-4 mb-5">
+        <div
+          class="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center"
+        >
+          <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+            />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Eliminar Usuario</h3>
+          @if (userToDelete()) {
+            <p class="text-sm text-gray-500">
+              {{ userToDelete()!.firstName }} {{ userToDelete()!.lastName }}
+            </p>
+          }
+        </div>
+      </div>
+      <p class="text-sm text-gray-600 mb-6">
+        Esta acción es <span class="font-semibold text-red-600">permanente e irreversible</span>. Se
+        eliminarán todos los datos del usuario, incluyendo su historial de pedidos.
+      </p>
+      <div class="flex gap-3">
+        <button
+          (click)="closeDeleteModal()"
+          class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="confirmDelete()"
+          [disabled]="isLoading()"
+          class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 transition font-medium"
+        >
+          @if (isLoading()) {
+            Eliminando...
+          } @else {
+            Sí, eliminar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

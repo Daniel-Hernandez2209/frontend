@@ -6,11 +6,66 @@ export interface User {
   email: string;
   phone?: string;
   address?: string;
+  avatar?: string;
   role: 'user' | 'admin';
   isActive: boolean;
   isVerified: boolean;
+  lastLogin?: Date;
+  ordersCount?: number;
+  totalSpent?: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface UserFilters {
+  search: string;
+  role: 'user' | 'admin' | null;
+  isActive: boolean | null;
+  isVerified: boolean | null;
+}
+
+export interface CreateUserRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone?: string;
+  address?: string;
+  role: 'user' | 'admin';
+  isActive: boolean;
+}
+
+export interface UpdateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  role?: 'user' | 'admin';
+  isActive?: boolean;
+  isVerified?: boolean;
+}
+
+export interface UpdateProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface UserStats {
+  total: number;
+  active: number;
+  inactive: number;
+  admins: number;
+  verified: number;
+  newThisMonth: number;
 }
 
 export interface AuthResponse {
@@ -101,7 +156,14 @@ export interface Order {
   total?: number;
   paymentInfo?: PaymentInfo;
   payment?: PaymentInfo;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'confirmed' | 'returned';
+  status:
+    | 'pending'
+    | 'processing'
+    | 'shipped'
+    | 'delivered'
+    | 'cancelled'
+    | 'confirmed'
+    | 'returned';
   statusHistory?: StatusHistoryEntry[];
   notes?: Array<{ text: string; author: string; createdAt: Date }>;
   createdAt: Date;

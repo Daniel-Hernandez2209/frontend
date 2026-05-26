@@ -3,10 +3,17 @@ import { Routes } from '@angular/router';
 export const USERS_ROUTES: Routes = [
   {
     path: '',
-    component: { template: '<p>Users List Coming Soon</p>' } as any
+    loadComponent: () =>
+      import('./pages/users-list/users-list.component').then((m) => m.UsersListComponent),
   },
   {
-    path: ':id',
-    component: { template: '<p>User Detail Coming Soon</p>' } as any
-  }
+    path: 'create',
+    loadComponent: () =>
+      import('./pages/user-form/user-form.component').then((m) => m.UserFormComponent),
+  },
+  {
+    path: ':id/edit',
+    loadComponent: () =>
+      import('./pages/user-form/user-form.component').then((m) => m.UserFormComponent),
+  },
 ];
