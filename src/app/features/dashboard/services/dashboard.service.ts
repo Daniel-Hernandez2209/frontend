@@ -26,8 +26,8 @@ export interface ChartData {
   datasets: {
     label: string;
     data: number[];
-    borderColor?: string;
-    backgroundColor?: string;
+    borderColor?: string | string[];
+    backgroundColor?: string | string[];
   }[];
 }
 
@@ -144,12 +144,12 @@ export class DashboardService {
     });
 
     // Listen for product updates
-    this.wsService.onProductsUpdated((product: any) => {
+    this.wsService.onStocksUpdated((product: any) => {
       this._updateStatsFromServices();
     });
 
     // Listen for stock updates
-    this.wsService.onStockUpdated((stock: any) => {
+    this.wsService.onStocksUpdated((stock: any) => {
       this._updateStatsFromServices();
     });
   }

@@ -11,6 +11,7 @@ export interface RegisterRequest {
 }
 
 export interface User {
+  _id: string;
   name?: string;
   lastName?: string;
   phone?: string;
@@ -18,6 +19,8 @@ export interface User {
   isVerified?: boolean;
   isActive?: boolean;
   role?: 'user' | 'admin';
+  email?: string;
+  createdAt?: string;
 }
 
 export interface AuthResponse {

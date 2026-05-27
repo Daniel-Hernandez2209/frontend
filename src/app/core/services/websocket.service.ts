@@ -18,7 +18,7 @@ export class WebsocketService {
     if (this.socket?.connected) return;
 
     const token = this.authService.getAccessToken();
-    this.socket = io(environment.websocketUrl, {
+    this.socket = io(environment.wsUrl, {
       auth: {
         token: token || undefined,
       },
