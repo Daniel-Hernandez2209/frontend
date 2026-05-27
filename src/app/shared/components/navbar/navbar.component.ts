@@ -55,7 +55,7 @@ import { AuthService } from '../../../core/services/auth.service';
       </div>
     </nav>
   `,
-  styles: []
+  styles: [],
 })
 export class NavbarComponent {
   protected authService = inject(AuthService);
@@ -66,11 +66,12 @@ export class NavbarComponent {
   getInitials(): string {
     const user = this.authService.currentUser();
     if (!user) return 'U';
-    const initials = user.name
-      ?.split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase() || 'U';
+    const initials =
+      user.name
+        ?.split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase() || 'U';
     return initials.substring(0, 2);
   }
 
@@ -78,7 +79,7 @@ export class NavbarComponent {
     this.authService.logout().subscribe({
       complete: () => {
         this.router.navigate(['/login']);
-      }
+      },
     });
   }
 }

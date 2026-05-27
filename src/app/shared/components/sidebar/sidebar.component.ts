@@ -122,12 +122,12 @@ interface MenuItem {
       </nav>
     </aside>
   `,
-  styles: []
+  styles: [],
 })
 export class SidebarComponent {
   menus: { [key: string]: boolean } = {
     products: true,
-    orders: true
+    orders: true,
   };
 
   toggleMenu(menu: string): void {

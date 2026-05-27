@@ -25,6 +25,6 @@ import { SidebarComponent } from '../../shared/components/sidebar/sidebar.compon
       </div>
     </div>
   `,
-  styles: []
+  styles: [],
 })
 export class AdminLayoutComponent {}
