@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../services/dashboard.service';
 import { WebsocketService } from '../../../../core/services/websocket.service';
+import { OrderService } from '../../orders/services/order.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,6 +12,10 @@ import { WebsocketService } from '../../../../core/services/websocket.service';
   styleUrl: 'dashboard.component.css',
 })
 export class DashboardComponent implements OnInit {
+  private dashboardService = inject(DashboardService);
+  private wsService = inject(WebsocketService);
+  private orderService = inject(OrderService);
+
   get isLoading() {
     return this.dashboardService.isLoading;
   }
@@ -24,17 +29,14 @@ export class DashboardComponent implements OnInit {
     return this.wsService.isConnected;
   }
 
-  constructor(
-    private dashboardService: DashboardService,
-    private wsService: WebsocketService,
-  ) {}
-
   ngOnInit(): void {
     this.dashboardService.loadDashboard();
+    // Connect WebSocket for real-time updates
+    this.wsService.connect();
   }
 
   async refresh(): Promise<void> {
-    await this.dashboardService.refresh();
+    await this.dashboardService.loadDashboard();
   }
 
   /**
@@ -68,5 +70,12 @@ export class DashboardComponent implements OnInit {
       delivered: 'text-green-600 bg-green-50',
     };
     return colors[status] || 'text-gray-600 bg-gray-50';
+  }
+
+  /**
+   * Get status label for order stats
+   */
+  getStatusLabel(status: string): string {
+    return this.orderService.getStatusLabel(status);
   }
 }
