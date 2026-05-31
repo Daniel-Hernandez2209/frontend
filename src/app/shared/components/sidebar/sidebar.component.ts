@@ -16,72 +16,62 @@ interface MenuItem {
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <aside class="w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto sticky top-0">
-      <nav class="px-4 py-6 space-y-2">
+    <aside class="w-64 bg-base-100 border-r border-base-300 h-screen overflow-y-auto sticky top-0">
+      <nav class="p-4 space-y-2">
         <!-- Dashboard -->
         <a
           routerLink="/admin/dashboard"
-          routerLinkActive="bg-blue-50 text-blue-600"
+          routerLinkActive="bg-primary text-primary-content"
           [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition"
+          class="flex items-center gap-3 px-4 py-3 text-base-content hover:bg-base-200 rounded-lg transition"
         >
           <span class="text-xl">📊</span>
           <span class="font-medium">Dashboard</span>
         </a>
 
-        <!-- Products -->
-        <div>
-          <button
-            (click)="toggleMenu('products')"
-            class="w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition"
-          >
-            <div class="flex items-center space-x-3">
-              <span class="text-xl">📦</span>
-              <span class="font-medium">Products</span>
-            </div>
-            <span [class.rotate-180]="menus['products']" class="transition">▼</span>
-          </button>
-          <div *ngIf="menus['products']" class="ml-4 mt-1 space-y-1">
+        <!-- Products Collapse -->
+        <div class="collapse collapse-arrow bg-base-200 rounded-lg">
+          <input type="checkbox" [checked]="menus['products']" (change)="toggleMenu('products')" />
+          <div class="collapse-title flex items-center gap-3 px-4 py-3 font-medium cursor-pointer">
+            <span class="text-xl">📦</span>
+            <span>Products</span>
+          </div>
+          <div class="collapse-content pl-4 space-y-1">
             <a
               routerLink="/admin/products"
-              routerLinkActive="bg-blue-50 text-blue-600"
-              class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition"
+              routerLinkActive="text-primary font-semibold"
+              class="block px-4 py-2 text-sm text-base-content hover:bg-base-300 rounded-lg transition"
             >
               All Products
             </a>
             <a
               routerLink="/admin/products/create"
-              class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition"
+              class="block px-4 py-2 text-sm text-base-content hover:bg-base-300 rounded-lg transition"
             >
               Add Product
             </a>
           </div>
         </div>
 
-        <!-- Orders -->
-        <div>
-          <button
-            (click)="toggleMenu('orders')"
-            class="w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition"
-          >
-            <div class="flex items-center space-x-3">
-              <span class="text-xl">🛒</span>
-              <span class="font-medium">Orders</span>
-            </div>
-            <span [class.rotate-180]="menus['orders']" class="transition">▼</span>
-          </button>
-          <div *ngIf="menus['orders']" class="ml-4 mt-1 space-y-1">
+        <!-- Orders Collapse -->
+        <div class="collapse collapse-arrow bg-base-200 rounded-lg">
+          <input type="checkbox" [checked]="menus['orders']" (change)="toggleMenu('orders')" />
+          <div class="collapse-title flex items-center gap-3 px-4 py-3 font-medium cursor-pointer">
+            <span class="text-xl">🛒</span>
+            <span>Orders</span>
+          </div>
+          <div class="collapse-content pl-4 space-y-1">
             <a
               routerLink="/admin/orders"
-              routerLinkActive="bg-blue-50 text-blue-600"
-              class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition"
+              routerLinkActive="text-primary font-semibold"
+              class="block px-4 py-2 text-sm text-base-content hover:bg-base-300 rounded-lg transition"
             >
               All Orders
             </a>
             <a
               routerLink="/admin/orders"
               [queryParams]="{ status: 'pending' }"
-              class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition"
+              class="block px-4 py-2 text-sm text-base-content hover:bg-base-300 rounded-lg transition"
             >
               Pending
             </a>
@@ -91,8 +81,8 @@ interface MenuItem {
         <!-- Categories -->
         <a
           routerLink="/admin/categories"
-          routerLinkActive="bg-blue-50 text-blue-600"
-          class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition"
+          routerLinkActive="bg-primary text-primary-content"
+          class="flex items-center gap-3 px-4 py-3 text-base-content hover:bg-base-200 rounded-lg transition"
         >
           <span class="text-xl">🏷️</span>
           <span class="font-medium">Categories</span>
@@ -101,19 +91,19 @@ interface MenuItem {
         <!-- Users -->
         <a
           routerLink="/admin/users"
-          routerLinkActive="bg-blue-50 text-blue-600"
-          class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition"
+          routerLinkActive="bg-primary text-primary-content"
+          class="flex items-center gap-3 px-4 py-3 text-base-content hover:bg-base-200 rounded-lg transition"
         >
           <span class="text-xl">👥</span>
           <span class="font-medium">Users</span>
         </a>
 
         <!-- Settings -->
-        <div class="border-t border-gray-200 mt-6 pt-6">
+        <div class="border-t border-base-300 mt-6 pt-6">
           <a
             routerLink="/admin/profile"
-            routerLinkActive="bg-blue-50 text-blue-600"
-            class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition"
+            routerLinkActive="bg-primary text-primary-content"
+            class="flex items-center gap-3 px-4 py-3 text-base-content hover:bg-base-200 rounded-lg transition"
           >
             <span class="text-xl">⚙️</span>
             <span class="font-medium">Settings</span>
