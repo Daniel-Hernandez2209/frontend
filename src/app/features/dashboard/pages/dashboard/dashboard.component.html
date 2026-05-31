@@ -25,11 +25,7 @@
         </span>
       </div>
       <!-- Refresh Button -->
-      <button
-        (click)="refresh()"
-        [disabled]="isLoading()"
-        class="btn btn-primary"
-      >
+      <button (click)="refresh()" [disabled]="isLoading()" class="btn btn-primary">
         <span *ngIf="!isLoading()">🔄 Refresh</span>
         <span *ngIf="isLoading()" class="inline-flex items-center gap-2">
           <span class="loading loading-spinner loading-sm"></span> Loading...
@@ -56,9 +52,7 @@
     <!-- Key Metrics (4 Cards) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <!-- Total Orders Card -->
-      <div
-        class="card bg-base-100 shadow-sm"
-      >
+      <div class="card bg-base-100 shadow-sm">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-600 text-sm font-medium">Total Orders</p>
@@ -72,9 +66,7 @@
       </div>
 
       <!-- Total Revenue Card -->
-      <div
-        class="card bg-base-100 shadow-sm"
-      >
+      <div class="card bg-base-100 shadow-sm">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-600 text-sm font-medium">Total Revenue</p>
@@ -88,9 +80,7 @@
       </div>
 
       <!-- Active Products Card -->
-      <div
-        class="card bg-base-100 shadow-sm"
-      >
+      <div class="card bg-base-100 shadow-sm">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-600 text-sm font-medium">Active Products</p>
@@ -102,9 +92,7 @@
       </div>
 
       <!-- Total Users Card -->
-      <div
-        class="card bg-base-100 shadow-sm"
-      >
+      <div class="card bg-base-100 shadow-sm">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-gray-600 text-sm font-medium">Total Users</p>

@@ -2,9 +2,7 @@
   <div class="flex justify-between items-center">
     <h1 class="text-3xl font-bold text-gray-900">Orders</h1>
     <div class="flex gap-2">
-      <span class="badge badge-lg badge-primary">
-        Total: {{ totalFilteredOrders() }}
-      </span>
+      <span class="badge badge-lg badge-primary"> Total: {{ totalFilteredOrders() }} </span>
     </div>
   </div>
 
@@ -12,112 +10,107 @@
   <div class="card bg-base-100 shadow-sm">
     <div class="card-body">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- Search -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Search (ID, Name, Email)</span>
-          </div>
-          <input
-            type="text"
-            [(ngModel)]="searchQuery"
-            (ngModelChange)="onSearchChange($event)"
-            placeholder="Search orders..."
-            class="input input-bordered w-full"
-          />
-        </label>
-      </div>
+        <!-- Search -->
+        <div>
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Search (ID, Name, Email)</span>
+            </div>
+            <input
+              type="text"
+              [(ngModel)]="searchQuery"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Search orders..."
+              class="input input-bordered w-full"
+            />
+          </label>
+        </div>
 
-      <!-- Status -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Status</span>
-          </div>
-          <select
-            [(ngModel)]="selectedStatus"
-            (ngModelChange)="onStatusChange($event)"
-            class="select select-bordered w-full"
-          >
-            <option value="">All Statuses</option>
-            <option *ngFor="let status of statuses" [value]="status.value">
-              {{ status.label }}
-            </option>
-          </select>
-        </label>
-      </div>
+        <!-- Status -->
+        <div>
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Status</span>
+            </div>
+            <select
+              [(ngModel)]="selectedStatus"
+              (ngModelChange)="onStatusChange($event)"
+              class="select select-bordered w-full"
+            >
+              <option value="">All Statuses</option>
+              <option *ngFor="let status of statuses" [value]="status.value">
+                {{ status.label }}
+              </option>
+            </select>
+          </label>
+        </div>
 
-      <!-- Min Date -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">From Date</span>
-          </div>
-          <input
-            type="date"
-            [(ngModel)]="minDate"
-            (ngModelChange)="onDateChange()"
-            class="input input-bordered w-full"
-          />
-        </label>
-      </div>
+        <!-- Min Date -->
+        <div>
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">From Date</span>
+            </div>
+            <input
+              type="date"
+              [(ngModel)]="minDate"
+              (ngModelChange)="onDateChange()"
+              class="input input-bordered w-full"
+            />
+          </label>
+        </div>
 
-      <!-- Max Date -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">To Date</span>
-          </div>
-          <input
-            type="date"
-            [(ngModel)]="maxDate"
-            (ngModelChange)="onDateChange()"
-            class="input input-bordered w-full"
-          />
-        </label>
-      </div>
+        <!-- Max Date -->
+        <div>
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">To Date</span>
+            </div>
+            <input
+              type="date"
+              [(ngModel)]="maxDate"
+              (ngModelChange)="onDateChange()"
+              class="input input-bordered w-full"
+            />
+          </label>
+        </div>
 
-      <!-- Min Amount -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Min Amount ($)</span>
-          </div>
-          <input
-            type="number"
-            [(ngModel)]="minAmount"
-            (ngModelChange)="onAmountChange()"
-            placeholder="0"
-            class="input input-bordered w-full"
-          />
-        </label>
-      </div>
+        <!-- Min Amount -->
+        <div>
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Min Amount ($)</span>
+            </div>
+            <input
+              type="number"
+              [(ngModel)]="minAmount"
+              (ngModelChange)="onAmountChange()"
+              placeholder="0"
+              class="input input-bordered w-full"
+            />
+          </label>
+        </div>
 
-      <!-- Max Amount -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Max Amount ($)</span>
-          </div>
-          <input
-            type="number"
-            [(ngModel)]="maxAmount"
-            (ngModelChange)="onAmountChange()"
-            placeholder="∞"
-            class="input input-bordered w-full"
-          />
-        </label>
-      </div>
+        <!-- Max Amount -->
+        <div>
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Max Amount ($)</span>
+            </div>
+            <input
+              type="number"
+              [(ngModel)]="maxAmount"
+              (ngModelChange)="onAmountChange()"
+              placeholder="∞"
+              class="input input-bordered w-full"
+            />
+          </label>
+        </div>
 
-      <!-- Reset -->
-      <div class="flex items-end">
-        <button
-          (click)="resetFilters()"
-          class="btn btn-secondary w-full"
-        >
-          Reset Filters
-        </button>
-      </div>
+        <!-- Reset -->
+        <div class="flex items-end">
+          <button (click)="resetFilters()" class="btn btn-secondary w-full">Reset Filters</button>
+        </div>
       </div>
     </div>
   </div>
@@ -136,102 +129,119 @@
   </div>
 
   <!-- Orders Table -->
-  <div *ngIf="!isLoading() && paginatedOrders().length > 0" class="card bg-base-100 shadow-sm overflow-hidden">
+  <div
+    *ngIf="!isLoading() && paginatedOrders().length > 0"
+    class="card bg-base-100 shadow-sm overflow-hidden"
+  >
     <div class="overflow-x-auto">
       <table class="table table-zebra">
         <thead>
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Order ID</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Customer</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
+              Order ID
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
+              Customer
+            </th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Items</th>
-          <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Total</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Status</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Date</th>
-          <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Action</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200">
-        <tr 
-          *ngFor="let order of paginatedOrders()" 
-          [class.bg-yellow-50]="isRecentlyUpdated(order._id)"
-          class="hover:bg-gray-50 transition"
-        >
-          <td class="px-6 py-4 text-sm font-mono text-gray-900">
-            {{ order._id.substring(0, 12) }}...
-          </td>
-          <td class="px-6 py-4">
-            <div class="text-sm">
-              <p class="font-medium text-gray-900">{{ order.user?.name }}</p>
-              <p class="text-gray-500 text-xs">{{ order.user?.email }}</p>
-            </div>
-          </td>
-          <td class="px-6 py-4 text-sm">
-            <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-              {{ getItemCount(order) }} items
-            </span>
-          </td>
-          <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
-            {{ formatCurrency(getOrderTotal(order)) }}
-          </td>
-          <td class="px-6 py-4">
-            <span [class]="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusColor(order.status)">
-              {{ getStatusLabel(order.status) }}
-            </span>
-          </td>
-          <td class="px-6 py-4 text-sm text-gray-600">
-            {{ formatDate(order.createdAt) }}
-          </td>
-          <td class="px-6 py-4 text-center">
-            <a
-              [routerLink]="['/admin/orders', order._id]"
-              class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition font-medium"
-            >
-              View
-            </a>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Total</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Date</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">
+              Action
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <tr
+            *ngFor="let order of paginatedOrders()"
+            [class.bg-yellow-50]="isRecentlyUpdated(order._id)"
+            class="hover:bg-gray-50 transition"
+          >
+            <td class="px-6 py-4 text-sm font-mono text-gray-900">
+              {{ order._id.substring(0, 12) }}...
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-sm">
+                <p class="font-medium text-gray-900">{{ order.user?.name }}</p>
+                <p class="text-gray-500 text-xs">{{ order.user?.email }}</p>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-sm">
+              <span
+                class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+              >
+                {{ getItemCount(order) }} items
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
+              {{ formatCurrency(getOrderTotal(order)) }}
+            </td>
+            <td class="px-6 py-4">
+              <span
+                [class]="
+                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' +
+                  getStatusColor(order.status)
+                "
+              >
+                {{ getStatusLabel(order.status) }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">
+              {{ formatDate(order.createdAt) }}
+            </td>
+            <td class="px-6 py-4 text-center">
+              <a
+                [routerLink]="['/admin/orders', order._id]"
+                class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition font-medium"
+              >
+                View
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-  <!-- Empty State -->
-  <div *ngIf="!isLoading() && paginatedOrders().length === 0" class="text-center py-12">
-    <p class="text-gray-600">No orders found</p>
-  </div>
+    <!-- Empty State -->
+    <div *ngIf="!isLoading() && paginatedOrders().length === 0" class="text-center py-12">
+      <p class="text-gray-600">No orders found</p>
+    </div>
 
-  <!-- Pagination -->
-  <div *ngIf="totalPages() > 1" class="flex justify-center items-center space-x-4">
-    <button
-      (click)="previousPage()"
-      [disabled]="currentPage() === 1"
-      class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-    >
-      ← Previous
-    </button>
-
-    <div class="flex space-x-2">
+    <!-- Pagination -->
+    <div *ngIf="totalPages() > 1" class="flex justify-center items-center space-x-4">
       <button
-        *ngFor="let page of getPageNumbers()"
-        (click)="goToPage(page)"
-        [class.bg-blue-600]="page === currentPage()"
-        [class.text-white]="page === currentPage()"
-        [class.border-blue-600]="page === currentPage()"
-        class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition"
+        (click)="previousPage()"
+        [disabled]="currentPage() === 1"
+        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
       >
-        {{ page }}
+        ← Previous
+      </button>
+
+      <div class="flex space-x-2">
+        <button
+          *ngFor="let page of getPageNumbers()"
+          (click)="goToPage(page)"
+          [class.bg-blue-600]="page === currentPage()"
+          [class.text-white]="page === currentPage()"
+          [class.border-blue-600]="page === currentPage()"
+          class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition"
+        >
+          {{ page }}
+        </button>
+      </div>
+
+      <button
+        (click)="nextPage()"
+        [disabled]="currentPage() === totalPages()"
+        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+      >
+        Next →
       </button>
     </div>
 
-    <button
-      (click)="nextPage()"
-      [disabled]="currentPage() === totalPages()"
-      class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-    >
-      Next →
-    </button>
-  </div>
-
-  <div class="text-center text-sm text-gray-600">
-    Page {{ currentPage() }} of {{ totalPages() }} | {{ totalFilteredOrders() }} orders
+    <div class="text-center text-sm text-gray-600">
+      Page {{ currentPage() }} of {{ totalPages() }} | {{ totalFilteredOrders() }} orders
+    </div>
   </div>
 </div>

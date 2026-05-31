@@ -1,14 +1,9 @@
 <div class="p-6 max-w-3xl mx-auto space-y-6">
-
   <!-- ══ HEADER ══════════════════════════════════════════════════════════ -->
   <div class="flex items-center gap-4">
-    <button
-      (click)="goBack()"
-      class="btn btn-ghost btn-circle"
-      title="Volver"
-    >
+    <button (click)="goBack()" class="btn btn-ghost btn-circle" title="Volver">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
     </button>
     <div>
@@ -16,7 +11,11 @@
         {{ isEditMode ? 'Editar Usuario' : 'Nuevo Usuario' }}
       </h1>
       <p class="text-sm text-gray-500 mt-0.5">
-        {{ isEditMode ? 'Modifica los datos del usuario seleccionado' : 'Completa el formulario para crear un nuevo usuario' }}
+        {{
+          isEditMode
+            ? 'Modifica los datos del usuario seleccionado'
+            : 'Completa el formulario para crear un nuevo usuario'
+        }}
       </p>
     </div>
   </div>
@@ -37,11 +36,14 @@
     class="space-y-6"
     novalidate
   >
-
     <!-- ── ALERT: ERROR ─────────────────────────────────────────────── -->
     <div *ngIf="formError()" class="alert alert-error">
       <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+          clip-rule="evenodd"
+        />
       </svg>
       <span>{{ formError() }}</span>
     </div>
@@ -49,7 +51,11 @@
     <!-- ── ALERT: SUCCESS ───────────────────────────────────────────── -->
     <div *ngIf="formSuccess()" class="alert alert-success">
       <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+          clip-rule="evenodd"
+        />
       </svg>
       <span>{{ formSuccess() }}</span>
     </div>
@@ -58,8 +64,12 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-5">
       <div class="flex items-center gap-2 pb-3 border-b border-gray-100">
         <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          />
         </svg>
         <h2 class="text-base font-semibold text-gray-800">Información personal</h2>
       </div>
@@ -74,8 +84,10 @@
             type="text"
             formControlName="firstName"
             placeholder="Ej: Carlos"
-            [class]="'w-full px-4 py-2.5 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
-                     (isFieldInvalid('firstName') ? 'border-red-400 bg-red-50' : 'border-gray-300')"
+            [class]="
+              'w-full px-4 py-2.5 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
+              (isFieldInvalid('firstName') ? 'border-red-400 bg-red-50' : 'border-gray-300')
+            "
           />
           <p *ngIf="isFieldInvalid('firstName')" class="mt-1 text-xs text-red-600">
             {{ getFieldError('firstName') }}
@@ -90,8 +102,10 @@
             type="text"
             formControlName="lastName"
             placeholder="Ej: Rodríguez"
-            [class]="'w-full px-4 py-2.5 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
-                     (isFieldInvalid('lastName') ? 'border-red-400 bg-red-50' : 'border-gray-300')"
+            [class]="
+              'w-full px-4 py-2.5 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
+              (isFieldInvalid('lastName') ? 'border-red-400 bg-red-50' : 'border-gray-300')
+            "
           />
           <p *ngIf="isFieldInvalid('lastName')" class="mt-1 text-xs text-red-600">
             {{ getFieldError('lastName') }}
@@ -108,8 +122,10 @@
           type="email"
           formControlName="email"
           placeholder="usuario@ejemplo.com"
-          [class]="'w-full px-4 py-2.5 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
-                   (isFieldInvalid('email') ? 'border-red-400 bg-red-50' : 'border-gray-300')"
+          [class]="
+            'w-full px-4 py-2.5 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
+            (isFieldInvalid('email') ? 'border-red-400 bg-red-50' : 'border-gray-300')
+          "
         />
         <p *ngIf="isFieldInvalid('email')" class="mt-1 text-xs text-red-600">
           {{ getFieldError('email') }}
@@ -124,8 +140,10 @@
             type="tel"
             formControlName="phone"
             placeholder="+57 300 000 0000"
-            [class]="'w-full px-4 py-2.5 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
-                     (isFieldInvalid('phone') ? 'border-red-400 bg-red-50' : 'border-gray-300')"
+            [class]="
+              'w-full px-4 py-2.5 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
+              (isFieldInvalid('phone') ? 'border-red-400 bg-red-50' : 'border-gray-300')
+            "
           />
           <p *ngIf="isFieldInvalid('phone')" class="mt-1 text-xs text-red-600">
             {{ getFieldError('phone') }}
@@ -138,8 +156,7 @@
             type="text"
             formControlName="address"
             placeholder="Calle 123 # 45-67"
-            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm
-                   focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -149,8 +166,12 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-5">
       <div class="flex items-center gap-2 pb-3 border-b border-gray-100">
         <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+          />
         </svg>
         <h2 class="text-base font-semibold text-gray-800">Rol y permisos</h2>
       </div>
@@ -163,10 +184,14 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label
             *ngFor="let opt of roleOptions"
-            [class]="'flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition ' +
-                     (userForm.get('role')?.value === opt.value
-                       ? (opt.value === 'admin' ? 'border-purple-500 bg-purple-50' : 'border-blue-500 bg-blue-50')
-                       : 'border-gray-200 hover:border-gray-300')"
+            [class]="
+              'flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition ' +
+              (userForm.get('role')?.value === opt.value
+                ? opt.value === 'admin'
+                  ? 'border-purple-500 bg-purple-50'
+                  : 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 hover:border-gray-300')
+            "
           >
             <input
               type="radio"
@@ -179,16 +204,36 @@
                 {{ opt.value === 'admin' ? 'Administrador' : 'Usuario' }}
               </p>
               <p class="text-xs text-gray-500 mt-0.5">
-                {{ opt.value === 'admin' ? 'Acceso completo al panel' : 'Acceso básico a la tienda' }}
+                {{
+                  opt.value === 'admin' ? 'Acceso completo al panel' : 'Acceso básico a la tienda'
+                }}
               </p>
             </div>
             <!-- Icono admin -->
-            <svg *ngIf="opt.value === 'admin'" class="w-5 h-5 text-purple-500 ml-auto" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            <svg
+              *ngIf="opt.value === 'admin'"
+              class="w-5 h-5 text-purple-500 ml-auto"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"
+              />
             </svg>
             <!-- Icono user -->
-            <svg *ngIf="opt.value !== 'admin'" class="w-5 h-5 text-blue-400 ml-auto" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            <svg
+              *ngIf="opt.value !== 'admin'"
+              class="w-5 h-5 text-blue-400 ml-auto"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                clip-rule="evenodd"
+              />
             </svg>
           </label>
         </div>
@@ -196,31 +241,39 @@
 
       <!-- Estado + Verificado -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-        <label class="flex items-center justify-between p-4 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition">
+        <label
+          class="flex items-center justify-between p-4 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition"
+        >
           <div>
             <p class="text-sm font-semibold text-gray-800">Cuenta activa</p>
             <p class="text-xs text-gray-500 mt-0.5">El usuario puede iniciar sesión</p>
           </div>
           <div class="relative">
-            <input type="checkbox" formControlName="isActive" class="sr-only peer"/>
-            <div class="w-11 h-6 bg-gray-200 rounded-full peer
-                        peer-checked:bg-green-500 transition-colors"></div>
-            <div class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow
-                        peer-checked:translate-x-5 transition-transform"></div>
+            <input type="checkbox" formControlName="isActive" class="sr-only peer" />
+            <div
+              class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-green-500 transition-colors"
+            ></div>
+            <div
+              class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow peer-checked:translate-x-5 transition-transform"
+            ></div>
           </div>
         </label>
 
-        <label class="flex items-center justify-between p-4 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition">
+        <label
+          class="flex items-center justify-between p-4 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition"
+        >
           <div>
             <p class="text-sm font-semibold text-gray-800">Email verificado</p>
             <p class="text-xs text-gray-500 mt-0.5">Se omite el proceso de verificación</p>
           </div>
           <div class="relative">
-            <input type="checkbox" formControlName="isVerified" class="sr-only peer"/>
-            <div class="w-11 h-6 bg-gray-200 rounded-full peer
-                        peer-checked:bg-teal-500 transition-colors"></div>
-            <div class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow
-                        peer-checked:translate-x-5 transition-transform"></div>
+            <input type="checkbox" formControlName="isVerified" class="sr-only peer" />
+            <div
+              class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-teal-500 transition-colors"
+            ></div>
+            <div
+              class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow peer-checked:translate-x-5 transition-transform"
+            ></div>
           </div>
         </label>
       </div>
@@ -230,8 +283,12 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-5">
       <div class="flex items-center gap-2 pb-3 border-b border-gray-100">
         <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          />
         </svg>
         <h2 class="text-base font-semibold text-gray-800">
           {{ isEditMode ? 'Cambiar contraseña' : 'Contraseña' }}
@@ -253,21 +310,43 @@
               [type]="showPassword() ? 'text' : 'password'"
               formControlName="password"
               placeholder="Mín. 8 caracteres"
-              [class]="'w-full px-4 py-2.5 pr-11 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
-                       (isFieldInvalid('password') ? 'border-red-400 bg-red-50' : 'border-gray-300')"
+              [class]="
+                'w-full px-4 py-2.5 pr-11 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
+                (isFieldInvalid('password') ? 'border-red-400 bg-red-50' : 'border-gray-300')
+              "
             />
             <button
               type="button"
               (click)="toggleShowPassword()"
               class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              <svg *ngIf="!showPassword()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-3-7C6.48 5 2 9.48 2 12s4.48 7 10 7 10-4.48 10-7-4.48-7-10-7z"/>
+              <svg
+                *ngIf="!showPassword()"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-3-7C6.48 5 2 9.48 2 12s4.48 7 10 7 10-4.48 10-7-4.48-7-10-7z"
+                />
               </svg>
-              <svg *ngIf="showPassword()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-7 0-1.065.38-2.048 1.01-2.887M9.9 4.24A9.12 9.12 0 0112 4c5.523 0 10 3.477 10 7a10.05 10.05 0 01-1.252 2.768M3 3l18 18"/>
+              <svg
+                *ngIf="showPassword()"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-7 0-1.065.38-2.048 1.01-2.887M9.9 4.24A9.12 9.12 0 0112 4c5.523 0 10 3.477 10 7a10.05 10.05 0 01-1.252 2.768M3 3l18 18"
+                />
               </svg>
             </button>
           </div>
@@ -277,21 +356,52 @@
           <!-- Requisitos de contraseña -->
           <div *ngIf="hasPasswordValue" class="mt-2 space-y-1">
             <p class="text-xs text-gray-500 font-medium">Requisitos:</p>
-            <p [class]="'text-xs flex items-center gap-1 ' + ((userForm.get('password')?.value?.length >= 8) ? 'text-green-600' : 'text-gray-400')">
+            <p
+              [class]="
+                'text-xs flex items-center gap-1 ' +
+                (userForm.get('password')?.value?.length >= 8 ? 'text-green-600' : 'text-gray-400')
+              "
+            >
               <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"
+                />
               </svg>
               Mínimo 8 caracteres
             </p>
-            <p [class]="'text-xs flex items-center gap-1 ' + (/[A-Z]/.test(userForm.get('password')?.value ?? '') ? 'text-green-600' : 'text-gray-400')">
+            <p
+              [class]="
+                'text-xs flex items-center gap-1 ' +
+                (/[A-Z]/.test(userForm.get('password')?.value ?? '')
+                  ? 'text-green-600'
+                  : 'text-gray-400')
+              "
+            >
               <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"
+                />
               </svg>
               Al menos una mayúscula
             </p>
-            <p [class]="'text-xs flex items-center gap-1 ' + (/\d/.test(userForm.get('password')?.value ?? '') ? 'text-green-600' : 'text-gray-400')">
+            <p
+              [class]="
+                'text-xs flex items-center gap-1 ' +
+                (/\d/.test(userForm.get('password')?.value ?? '')
+                  ? 'text-green-600'
+                  : 'text-gray-400')
+              "
+            >
               <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"
+                />
               </svg>
               Al menos un número
             </p>
@@ -309,21 +419,45 @@
               [type]="showConfirm() ? 'text' : 'password'"
               formControlName="confirmPassword"
               placeholder="Repite la contraseña"
-              [class]="'w-full px-4 py-2.5 pr-11 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
-                       ((isFieldInvalid('confirmPassword') || passwordMismatch) ? 'border-red-400 bg-red-50' : 'border-gray-300')"
+              [class]="
+                'w-full px-4 py-2.5 pr-11 rounded-lg border text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
+                (isFieldInvalid('confirmPassword') || passwordMismatch
+                  ? 'border-red-400 bg-red-50'
+                  : 'border-gray-300')
+              "
             />
             <button
               type="button"
               (click)="toggleShowConfirm()"
               class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              <svg *ngIf="!showConfirm()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-3-7C6.48 5 2 9.48 2 12s4.48 7 10 7 10-4.48 10-7-4.48-7-10-7z"/>
+              <svg
+                *ngIf="!showConfirm()"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-3-7C6.48 5 2 9.48 2 12s4.48 7 10 7 10-4.48 10-7-4.48-7-10-7z"
+                />
               </svg>
-              <svg *ngIf="showConfirm()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-7 0-1.065.38-2.048 1.01-2.887M9.9 4.24A9.12 9.12 0 0112 4c5.523 0 10 3.477 10 7a10.05 10.05 0 01-1.252 2.768M3 3l18 18"/>
+              <svg
+                *ngIf="showConfirm()"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-7 0-1.065.38-2.048 1.01-2.887M9.9 4.24A9.12 9.12 0 0112 4c5.523 0 10 3.477 10 7a10.05 10.05 0 01-1.252 2.768M3 3l18 18"
+                />
               </svg>
             </button>
           </div>
@@ -342,21 +476,25 @@
       <button
         type="button"
         (click)="goBack()"
-        class="flex-1 sm:flex-none px-6 py-3 border border-gray-300 text-gray-700 rounded-xl
-               hover:bg-gray-50 transition font-medium"
+        class="flex-1 sm:flex-none px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium"
       >
         Cancelar
       </button>
       <button
         type="submit"
         [disabled]="isSubmitting() || userForm.invalid"
-        class="flex-1 sm:flex-none px-8 py-3 bg-blue-600 text-white rounded-xl font-medium
-               hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed
-               transition flex items-center justify-center gap-2 shadow-sm"
+        class="flex-1 sm:flex-none px-8 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-sm"
       >
         <svg *ngIf="isSubmitting()" class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
         </svg>
         <span *ngIf="!isSubmitting()">
           {{ isEditMode ? 'Guardar cambios' : 'Crear usuario' }}
@@ -366,6 +504,5 @@
         </span>
       </button>
     </div>
-
   </form>
 </div>

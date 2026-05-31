@@ -24,11 +24,16 @@ import { AuthService } from '../../../core/services/auth.service';
         <!-- User Menu Dropdown -->
         <div class="dropdown dropdown-end">
           <button tabindex="0" class="btn btn-ghost btn-circle avatar">
-            <div class="w-10 rounded-full bg-secondary text-secondary-content flex items-center justify-center font-semibold">
+            <div
+              class="w-10 rounded-full bg-secondary text-secondary-content flex items-center justify-center font-semibold"
+            >
               {{ getInitials() }}
             </div>
           </button>
-          <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+          <ul
+            tabindex="0"
+            class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+          >
             <li><a routerLink="/admin/profile">My Profile</a></li>
             <li><a (click)="onLogout()">Logout</a></li>
           </ul>

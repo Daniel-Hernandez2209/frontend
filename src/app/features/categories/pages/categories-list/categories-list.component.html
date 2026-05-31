@@ -2,61 +2,51 @@
   <!-- Header -->
   <div class="flex justify-between items-center">
     <h1 class="text-3xl font-bold text-gray-900">Categories</h1>
-    <a
-      routerLink="/admin/categories/create"
-      class="btn btn-primary"
-    >
-      + New Category
-    </a>
+    <a routerLink="/admin/categories/create" class="btn btn-primary"> + New Category </a>
   </div>
 
   <!-- Filter Section -->
   <div class="card bg-base-100 shadow-sm">
     <div class="card-body">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <!-- Search -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Search</span>
-          </div>
-          <input
-            type="text"
-            [(ngModel)]="searchQuery"
-            (ngModelChange)="onSearchChange()"
-            placeholder="Search by name or slug..."
-            class="input input-bordered w-full"
-          />
-        </label>
-      </div>
+        <!-- Search -->
+        <div>
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Search</span>
+            </div>
+            <input
+              type="text"
+              [(ngModel)]="searchQuery"
+              (ngModelChange)="onSearchChange()"
+              placeholder="Search by name or slug..."
+              class="input input-bordered w-full"
+            />
+          </label>
+        </div>
 
-      <!-- Status Filter -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Status</span>
-          </div>
-          <select
-            [(ngModel)]="selectedStatus"
-            (ngModelChange)="onStatusChange()"
-            class="select select-bordered w-full"
-          >
-            <option *ngFor="let opt of statusOptions" [value]="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
-        </label>
-      </div>
+        <!-- Status Filter -->
+        <div>
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Status</span>
+            </div>
+            <select
+              [(ngModel)]="selectedStatus"
+              (ngModelChange)="onStatusChange()"
+              class="select select-bordered w-full"
+            >
+              <option *ngFor="let opt of statusOptions" [value]="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </label>
+        </div>
 
-      <!-- Reset Button -->
-      <div class="flex items-end">
-        <button
-          (click)="resetFilters()"
-          class="btn btn-secondary w-full"
-        >
-          Reset Filters
-        </button>
-      </div>
+        <!-- Reset Button -->
+        <div class="flex items-end">
+          <button (click)="resetFilters()" class="btn btn-secondary w-full">Reset Filters</button>
+        </div>
       </div>
     </div>
   </div>
@@ -88,10 +78,16 @@
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Name</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Slug</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Description</th>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
+              Description
+            </th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">
+              Status
+            </th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Created</th>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Actions</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y hover:bg-gray-50">
@@ -103,10 +99,16 @@
               <p class="text-sm text-gray-600 font-mono">{{ category.slug }}</p>
             </td>
             <td class="px-6 py-3">
-              <p class="text-sm text-gray-600 truncate max-w-xs">{{ category.description || '-' }}</p>
+              <p class="text-sm text-gray-600 truncate max-w-xs">
+                {{ category.description || '-' }}
+              </p>
             </td>
             <td class="px-6 py-3 text-center">
-              <span class="badge" [class.badge-success]="category.isActive" [class.badge-error]="!category.isActive">
+              <span
+                class="badge"
+                [class.badge-success]="category.isActive"
+                [class.badge-error]="!category.isActive"
+              >
                 {{ getStatusLabel(category.isActive) }}
               </span>
             </td>
@@ -137,11 +139,7 @@
 
   <!-- Pagination -->
   <div *ngIf="paginatedCategories().length > 0" class="flex justify-between items-center mt-6">
-    <button
-      (click)="previousPage()"
-      [disabled]="currentPage() === 1"
-      class="btn btn-outline"
-    >
+    <button (click)="previousPage()" [disabled]="currentPage() === 1" class="btn btn-outline">
       ← Previous
     </button>
 

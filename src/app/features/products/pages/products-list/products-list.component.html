@@ -1,210 +1,215 @@
 <div class="p-6 space-y-6">
   <div class="flex justify-between items-center">
     <h1 class="text-3xl font-bold text-gray-900">Products</h1>
-    <a
-      routerLink="/admin/products/create"
-      class="btn btn-primary"
-    >
-      + New Product
-    </a>
+    <a routerLink="/admin/products/create" class="btn btn-primary"> + New Product </a>
   </div>
 
   <!-- Filters -->
   <div class="card bg-base-100 shadow-sm">
     <div class="card-body">
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      <!-- Search -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Search</span>
+        <!-- Search -->
+        <div>
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Search</span>
+            </div>
+            <input
+              type="text"
+              [(ngModel)]="searchQuery"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Product name or SKU"
+              class="input input-bordered w-full"
+            />
+          </label>
+        </div>
+
+        <!-- Category -->
+        <div>
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Category</span>
+            </div>
+            <select
+              [(ngModel)]="selectedCategory"
+              (ngModelChange)="onCategoryChange($event)"
+              class="select select-bordered w-full"
+            >
+              <option value="">All Categories</option>
+              <option value="hombre">Hombre</option>
+              <option value="mujer">Mujer</option>
+              <option value="deportivos">Deportivos</option>
+              <option value="hoodies-sacos">Hoodies/Sacos</option>
+              <option value="chaquetas">Chaquetas</option>
+            </select>
+          </label>
+
+          <!-- Min Price -->
+          <div>
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text">Min Price</span>
+              </div>
+              <input
+                type="number"
+                [(ngModel)]="minPrice"
+                (ngModelChange)="onFilterChange()"
+                placeholder="0"
+                class="input input-bordered w-full"
+              />
+            </label>
           </div>
-          <input
-            type="text"
-            [(ngModel)]="searchQuery"
-            (ngModelChange)="onSearchChange($event)"
-            placeholder="Product name or SKU"
-            class="input input-bordered w-full"
-          />
-        </label>
+
+          <!-- Max Price -->
+          <div>
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text">Max Price</span>
+              </div>
+              <input
+                type="number"
+                [(ngModel)]="maxPrice"
+                (ngModelChange)="onFilterChange()"
+                placeholder="∞"
+                class="input input-bordered w-full"
+              />
+            </label>
+          </div>
+
+          <!-- Reset -->
+          <div class="flex items-end">
+            <button (click)="resetFilters()" class="btn btn-secondary w-full">Reset Filters</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading()" class="flex justify-center items-center h-96">
+      <div class="text-center">
+        <span class="loading loading-spinner loading-lg"></span>
+        <p class="text-gray-600 mt-4">Loading products...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error()" class="alert alert-error">
+      {{ error() }}
+    </div>
+
+    <!-- Products Table -->
+    <div
+      *ngIf="!isLoading() && paginatedProducts().length > 0"
+      class="card bg-base-100 shadow-sm overflow-hidden"
+    >
+      <div class="overflow-x-auto">
+        <table class="table table-zebra">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
+                Product
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">SKU</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
+                Category
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">
+                Price
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">
+                Stock
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">
+                Sales
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr *ngFor="let product of paginatedProducts()" class="hover:bg-gray-50">
+              <td class="px-6 py-4">
+                <div class="flex items-center space-x-3">
+                  <img
+                    *ngIf="product.images && product.images[0]"
+                    [src]="product.images[0].url"
+                    alt="{{ product.name }}"
+                    class="w-10 h-10 rounded object-cover"
+                  />
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
+                    <p class="text-xs text-gray-500">{{ product.slug }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ product.sku }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600 capitalize">{{ product.category }}</td>
+              <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
+                <span *ngIf="product.discountPrice" class="line-through text-gray-400 mr-1"
+                  >${{ product.price }}</span
+                >
+                ${{ product.discountPrice || product.price }}
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600 text-right">
+                {{ getTotalStock(product) }} units
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600 text-right">{{ product.sales }}</td>
+              <td class="px-6 py-4 text-center">
+                <div class="flex justify-center gap-2">
+                  <a
+                    [routerLink]="['/admin/products', product._id, 'edit']"
+                    class="btn btn-sm btn-outline btn-info"
+                  >
+                    Edit
+                  </a>
+                  <button
+                    (click)="deleteProduct(product._id)"
+                    class="btn btn-sm btn-outline btn-error"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <!-- Category -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Category</span>
-          </div>
-          <select
-            [(ngModel)]="selectedCategory"
-            (ngModelChange)="onCategoryChange($event)"
-            class="select select-bordered w-full"
+      <!-- Empty State -->
+      <div *ngIf="!isLoading() && paginatedProducts().length === 0" class="text-center py-12">
+        <p class="text-gray-600">No products found</p>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="totalPages() > 1" class="flex justify-center items-center gap-4 mt-6">
+        <button (click)="previousPage()" [disabled]="currentPage() === 1" class="btn btn-outline">
+          ← Previous
+        </button>
+
+        <div class="flex gap-1">
+          <button
+            *ngFor="let page of getPageNumbers()"
+            (click)="goToPage(page)"
+            [class.btn-active]="page === currentPage()"
+            class="btn btn-sm"
           >
-          <option value="">All Categories</option>
-          <option value="hombre">Hombre</option>
-          <option value="mujer">Mujer</option>
-          <option value="deportivos">Deportivos</option>
-          <option value="hoodies-sacos">Hoodies/Sacos</option>
-          <option value="chaquetas">Chaquetas</option>
-        </select>
-        </label>
+            {{ page }}
+          </button>
+        </div>
 
-      <!-- Min Price -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Min Price</span>
-          </div>
-          <input
-            type="number"
-            [(ngModel)]="minPrice"
-            (ngModelChange)="onFilterChange()"
-            placeholder="0"
-            class="input input-bordered w-full"
-          />
-        </label>
-      </div>
-
-      <!-- Max Price -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Max Price</span>
-          </div>
-          <input
-            type="number"
-            [(ngModel)]="maxPrice"
-            (ngModelChange)="onFilterChange()"
-            placeholder="∞"
-            class="input input-bordered w-full"
-          />
-        </label>
-      </div>
-
-      <!-- Reset -->
-      <div class="flex items-end">
         <button
-          (click)="resetFilters()"
-          class="btn btn-secondary w-full"
+          (click)="nextPage()"
+          [disabled]="currentPage() === totalPages()"
+          class="btn btn-outline"
         >
-          Reset Filters
+          Next →
         </button>
       </div>
+
+      <div class="text-center text-sm text-gray-600">
+        Page {{ currentPage() }} of {{ totalPages() }} | {{ totalFilteredProducts() }} products
       </div>
     </div>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="isLoading()" class="flex justify-center items-center h-96">
-    <div class="text-center">
-      <span class="loading loading-spinner loading-lg"></span>
-      <p class="text-gray-600 mt-4">Loading products...</p>
-    </div>
-  </div>
-
-  <!-- Error State -->
-  <div *ngIf="error()" class="alert alert-error">
-    {{ error() }}
-  </div>
-
-  <!-- Products Table -->
-  <div *ngIf="!isLoading() && paginatedProducts().length > 0" class="card bg-base-100 shadow-sm overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="table table-zebra">
-      <thead class="bg-gray-50 border-b border-gray-200">
-        <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Product</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">SKU</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Category</th>
-          <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Price</th>
-          <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Stock</th>
-          <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Sales</th>
-          <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200">
-        <tr *ngFor="let product of paginatedProducts()" class="hover:bg-gray-50">
-          <td class="px-6 py-4">
-            <div class="flex items-center space-x-3">
-              <img
-                *ngIf="product.images && product.images[0]"
-                [src]="product.images[0].url"
-                alt="{{ product.name }}"
-                class="w-10 h-10 rounded object-cover"
-              />
-              <div>
-                <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
-                <p class="text-xs text-gray-500">{{ product.slug }}</p>
-              </div>
-            </div>
-          </td>
-          <td class="px-6 py-4 text-sm text-gray-600">{{ product.sku }}</td>
-          <td class="px-6 py-4 text-sm text-gray-600 capitalize">{{ product.category }}</td>
-          <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
-            <span *ngIf="product.discountPrice" class="line-through text-gray-400 mr-1">${{ product.price }}</span>
-            ${{ product.discountPrice || product.price }}
-          </td>
-          <td class="px-6 py-4 text-sm text-gray-600 text-right">
-            {{ getTotalStock(product) }} units
-          </td>
-          <td class="px-6 py-4 text-sm text-gray-600 text-right">{{ product.sales }}</td>
-          <td class="px-6 py-4 text-center">
-            <div class="flex justify-center gap-2">
-              <a
-                [routerLink]="['/admin/products', product._id, 'edit']"
-                class="btn btn-sm btn-outline btn-info"
-              >
-                Edit
-              </a>
-              <button
-                (click)="deleteProduct(product._id)"
-                class="btn btn-sm btn-outline btn-error"
-              >
-                Delete
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-  <!-- Empty State -->
-  <div *ngIf="!isLoading() && paginatedProducts().length === 0" class="text-center py-12">
-    <p class="text-gray-600">No products found</p>
-  </div>
-
-  <!-- Pagination -->
-  <div *ngIf="totalPages() > 1" class="flex justify-center items-center gap-4 mt-6">
-    <button
-      (click)="previousPage()"
-      [disabled]="currentPage() === 1"
-      class="btn btn-outline"
-    >
-      ← Previous
-    </button>
-
-    <div class="flex gap-1">
-      <button
-        *ngFor="let page of getPageNumbers()"
-        (click)="goToPage(page)"
-        [class.btn-active]="page === currentPage()"
-        class="btn btn-sm"
-      >
-        {{ page }}
-      </button>
-    </div>
-
-    <button
-      (click)="nextPage()"
-      [disabled]="currentPage() === totalPages()"
-      class="btn btn-outline"
-    >
-      Next →
-    </button>
-  </div>
-
-  <div class="text-center text-sm text-gray-600">
-    Page {{ currentPage() }} of {{ totalPages() }} | {{ totalFilteredProducts() }} products
   </div>
 </div>
