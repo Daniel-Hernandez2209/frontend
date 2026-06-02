@@ -1,0 +1,241 @@
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { ApiService } from '../../../core/services/api.service';
+
+export interface Product {
+  _id: string;
+  name: string;
+  sku: string;
+  description: string;
+  price: number;
+  discountPrice?: number;
+  category: string;
+  images: string[];
+  sizes: Array<{ size: string; stock: number }>;
+  totalStock: number;
+  isActive: boolean;
+  isFeatured: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShopFilters {
+  search: string;
+  category: string;
+  minPrice: number;
+  maxPrice: number;
+  page: number;
+  limit: number;
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ShopService {
+  private apiService = inject(ApiService);
+
+  // ── Estado ──────────────────────────────────────────────────────────
+  private products = signal<Product[]>([]);
+  private categories = signal<string[]>([]);
+  private loading = signal(false);
+  private error = signal<string | null>(null);
+
+  // Filtros
+  private searchQuery = signal('');
+  private selectedCategory = signal('');
+  private minPrice = signal(0);
+  private maxPrice = signal(10000);
+  private currentPage = signal(1);
+  private pageSize = signal(12);
+
+  // ── Computed (productos filtrados) ──────────────────────────────────
+  filteredProducts = computed(() => {
+    let result = this.products();
+    const search = this.searchQuery().toLowerCase();
+    const category = this.selectedCategory();
+    const min = this.minPrice();
+    const max = this.maxPrice();
+
+    // Filtrar por búsqueda
+    if (search) {
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(search) ||
+          p.description.toLowerCase().includes(search) ||
+          p.sku.toLowerCase().includes(search),
+      );
+    }
+
+    // Filtrar por categoría
+    if (category) {
+      result = result.filter((p) => p.category === category);
+    }
+
+    // Filtrar por precio
+    result = result.filter(
+      (p) => (p.discountPrice || p.price) >= min &&
+             (p.discountPrice || p.price) <= max,
+    );
+
+    return result;
+  });
+
+  totalProducts = computed(() => this.filteredProducts().length);
+  totalPages = computed(() =>
+    Math.ceil(this.totalProducts() / this.pageSize()),
+  );
+
+  paginatedProducts = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    const end = start + this.pageSize();
+    return this.filteredProducts().slice(start, end);
+  });
+
+  // ── Getters para estado ─────────────────────────────────────────────
+  isLoading = computed(() => this.loading());
+  errorMessage = computed(() => this.error());
+  getCategories = computed(() => this.categories());
+
+  constructor() {
+    this.loadProducts();
+    this.loadCategories();
+  }
+
+  // ── MÉTODOS PÚBLICOS ────────────────────────────────────────────────
+
+  /**
+   * Cargar todos los productos públicos
+   */
+  async loadProducts(): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      const response = await this.apiService.get<{ products: Product[] }>(
+        '/products'
+      );
+      this.products.set(response.products.filter((p) => p.isActive));
+    } catch (err: any) {
+      this.error.set(err?.message || 'Failed to load products');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  /**
+   * Cargar categorías
+   */
+  async loadCategories(): Promise<void> {
+    try {
+      const response = await this.apiService.get<{ categories: any[] }>(
+        '/categories'
+      );
+      const activeCategories = response.categories
+        .filter((c) => c.isActive)
+        .map((c) => c.name);
+      this.categories.set(activeCategories);
+    } catch {
+      // Silenciosamente fallar si hay error
+      console.error('Failed to load categories');
+    }
+  }
+
+  /**
+   * Obtener detalle de un producto
+   */
+  async getProductDetail(id: string): Promise<Product> {
+    try {
+      return await this.apiService.get<Product>(`/products/${id}`);
+    } catch (err) {
+      throw new Error('Product not found');
+    }
+  }
+
+  /**
+   * Buscar productos
+   */
+  setSearchQuery(query: string): void {
+    this.searchQuery.set(query);
+    this.currentPage.set(1);
+  }
+
+  /**
+   * Filtrar por categoría
+   */
+  setCategory(category: string): void {
+    this.selectedCategory.set(category);
+    this.currentPage.set(1);
+  }
+
+  /**
+   * Establecer rango de precios
+   */
+  setPriceRange(min: number, max: number): void {
+    this.minPrice.set(min);
+    this.maxPrice.set(max);
+    this.currentPage.set(1);
+  }
+
+  /**
+   * Ir a página específica
+   */
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  /**
+   * Obtener números de página para paginación
+   */
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages();
+    const current = this.currentPage();
+
+    // Mostrar siempre un rango de 5 páginas
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, start + 4);
+
+    if (end - start < 4) {
+      start = Math.max(1, end - 4);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+
+  /**
+   * Resetear filtros
+   */
+  resetFilters(): void {
+    this.searchQuery.set('');
+    this.selectedCategory.set('');
+    this.minPrice.set(0);
+    this.maxPrice.set(10000);
+    this.currentPage.set(1);
+  }
+
+  /**
+   * Obtener precio con descuento
+   */
+  getDisplayPrice(product: Product): number {
+    return product.discountPrice || product.price;
+  }
+
+  /**
+   * Calcular porcentaje de descuento
+   */
+  getDiscountPercentage(product: Product): number {
+    if (!product.discountPrice) return 0;
+    return Math.round(((product.price - product.discountPrice) / product.price) * 100);
+  }
+
+  /**
+   * Verificar si hay stock disponible
+   */
+  hasStock(product: Product): boolean {
+    return product.totalStock > 0;
+  }
+}

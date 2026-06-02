@@ -14,6 +14,16 @@ export const routes: Routes = [
       import('./features/auth/pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 'store',
+    loadChildren: () =>
+      import('./features/shop/shop.routes').then((m) => m.SHOP_ROUTES),
+  },
+  {
+    path: 'checkout',
+    loadComponent: () =>
+      import('./features/shop/pages/checkout/checkout.component').then((m) => m.CheckoutComponent),
+  },
+  {
     path: 'admin',
     component: AdminLayoutComponent,
     canActivate: [authGuard],

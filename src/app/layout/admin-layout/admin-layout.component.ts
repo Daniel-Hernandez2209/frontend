@@ -9,7 +9,7 @@ import { SidebarComponent } from '../../shared/components/sidebar/sidebar.compon
   standalone: true,
   imports: [CommonModule, RouterOutlet, NavbarComponent, SidebarComponent],
   template: `
-    <div class="flex flex-col h-screen bg-gray-100">
+    <div class="flex flex-col h-screen bg-base-200">
       <!-- Navbar -->
       <app-navbar></app-navbar>
 
