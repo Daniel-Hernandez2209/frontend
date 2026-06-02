@@ -199,12 +199,15 @@ import { ApiService } from '../../../core/services/api.service';
 
                 <!-- Items -->
                 <div class="space-y-2 mb-4 max-h-64 overflow-y-auto">
-                  <div *ngFor="let item of cartService.getItems()" class="flex justify-between text-sm">
+                  <div
+                    *ngFor="let item of cartService.getItems()"
+                    class="flex justify-between text-sm"
+                  >
                     <span class="text-base-600">
                       {{ item.productName }}
                       <span class="text-xs">x{{ item.quantity }}</span>
                     </span>
-                    <span class="font-semibold">{{ (item.price * item.quantity) | currency }}</span>
+                    <span class="font-semibold">{{ item.price * item.quantity | currency }}</span>
                   </div>
                 </div>
 
@@ -247,9 +250,7 @@ import { ApiService } from '../../../core/services/api.service';
                 </button>
 
                 <!-- Back Button -->
-                <a routerLink="/store/cart" class="btn btn-outline w-full">
-                  Back to Cart
-                </a>
+                <a routerLink="/store/cart" class="btn btn-outline w-full"> Back to Cart </a>
 
                 <!-- Trust Badges -->
                 <div class="mt-4 p-3 bg-base-200 rounded text-xs text-base-600 text-center">
@@ -287,11 +288,7 @@ export class CheckoutComponent {
 
   // Computed - Total final
   finalTotal = computed(() => {
-    return (
-      this.cartService.subtotal() +
-      this.cartService.tax() +
-      this.shippingCost()
-    );
+    return this.cartService.subtotal() + this.cartService.tax() + this.shippingCost();
   });
 
   // Validar si el formulario está completo
@@ -343,7 +340,7 @@ export class CheckoutComponent {
 
       // Enviar orden al backend
       const response = await this.apiService.post('/orders', orderData);
-      
+
       // Limpiar carrito
       this.cartService.clearCart();
 

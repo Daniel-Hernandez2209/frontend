@@ -72,17 +72,14 @@ export class ShopService {
 
     // Filtrar por precio
     result = result.filter(
-      (p) => (p.discountPrice || p.price) >= min &&
-             (p.discountPrice || p.price) <= max,
+      (p) => (p.discountPrice || p.price) >= min && (p.discountPrice || p.price) <= max,
     );
 
     return result;
   });
 
   totalProducts = computed(() => this.filteredProducts().length);
-  totalPages = computed(() =>
-    Math.ceil(this.totalProducts() / this.pageSize()),
-  );
+  totalPages = computed(() => Math.ceil(this.totalProducts() / this.pageSize()));
 
   paginatedProducts = computed(() => {
     const start = (this.currentPage() - 1) * this.pageSize();
@@ -109,9 +106,7 @@ export class ShopService {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const response = await this.apiService.get<{ products: Product[] }>(
-        '/products'
-      );
+      const response = await this.apiService.get<{ products: Product[] }>('/products');
       this.products.set(response.products.filter((p) => p.isActive));
     } catch (err: any) {
       this.error.set(err?.message || 'Failed to load products');
@@ -125,12 +120,8 @@ export class ShopService {
    */
   async loadCategories(): Promise<void> {
     try {
-      const response = await this.apiService.get<{ categories: any[] }>(
-        '/categories'
-      );
-      const activeCategories = response.categories
-        .filter((c) => c.isActive)
-        .map((c) => c.name);
+      const response = await this.apiService.get<{ categories: any[] }>('/categories');
+      const activeCategories = response.categories.filter((c) => c.isActive).map((c) => c.name);
       this.categories.set(activeCategories);
     } catch {
       // Silenciosamente fallar si hay error

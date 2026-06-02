@@ -18,7 +18,9 @@ import { CartService } from '../../services/cart.service';
       <!-- Empty State -->
       <div *ngIf="cartService.itemCount() === 0" class="alert alert-info text-center py-12">
         <div class="text-lg">Your cart is empty</div>
-        <div class="text-sm text-base-600 mt-2">Browse our products and add items to get started!</div>
+        <div class="text-sm text-base-600 mt-2">
+          Browse our products and add items to get started!
+        </div>
         <a routerLink="/store" class="btn btn-primary mt-4">Start Shopping</a>
       </div>
 
@@ -50,14 +52,19 @@ import { CartService } from '../../services/cart.service';
                             [alt]="item.productName"
                             class="w-full h-full object-cover rounded-lg"
                           />
-                          <div *ngIf="!item.image" class="w-full h-full flex items-center justify-center text-2xl">
+                          <div
+                            *ngIf="!item.image"
+                            class="w-full h-full flex items-center justify-center text-2xl"
+                          >
                             📦
                           </div>
                         </div>
                         <div>
                           <p class="font-medium text-base-900">{{ item.productName }}</p>
                           <p class="text-xs text-base-500 mt-1">SKU: {{ item.sku }}</p>
-                          <p *ngIf="item.size" class="text-xs text-base-500">Size: {{ item.size }}</p>
+                          <p *ngIf="item.size" class="text-xs text-base-500">
+                            Size: {{ item.size }}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -70,10 +77,7 @@ import { CartService } from '../../services/cart.service';
                     <!-- Quantity -->
                     <td>
                       <div class="flex items-center gap-2">
-                        <button
-                          (click)="decreaseQuantity(item)"
-                          class="btn btn-sm btn-ghost"
-                        >
+                        <button (click)="decreaseQuantity(item)" class="btn btn-sm btn-ghost">
                           −
                         </button>
                         <input
@@ -83,10 +87,7 @@ import { CartService } from '../../services/cart.service';
                           min="1"
                           class="input input-bordered input-sm w-16 text-center"
                         />
-                        <button
-                          (click)="increaseQuantity(item)"
-                          class="btn btn-sm btn-ghost"
-                        >
+                        <button (click)="increaseQuantity(item)" class="btn btn-sm btn-ghost">
                           +
                         </button>
                       </div>
@@ -95,7 +96,7 @@ import { CartService } from '../../services/cart.service';
                     <!-- Subtotal -->
                     <td>
                       <span class="font-semibold">
-                        {{ (item.price * item.quantity) | currency }}
+                        {{ item.price * item.quantity | currency }}
                       </span>
                     </td>
 
@@ -137,29 +138,22 @@ import { CartService } from '../../services/cart.service';
               <!-- Total -->
               <div class="flex justify-between items-center py-4 mb-4">
                 <span class="text-lg font-bold text-base-900">Total</span>
-                <span class="text-2xl font-bold text-primary">{{ cartService.total() | currency }}</span>
+                <span class="text-2xl font-bold text-primary">{{
+                  cartService.total() | currency
+                }}</span>
               </div>
 
               <!-- Buttons -->
-              <button
-                routerLink="/checkout"
-                class="btn btn-primary w-full mb-3"
-              >
+              <button routerLink="/checkout" class="btn btn-primary w-full mb-3">
                 Proceed to Checkout
               </button>
 
-              <button
-                (click)="continueShopping()"
-                class="btn btn-outline w-full"
-              >
+              <button (click)="continueShopping()" class="btn btn-outline w-full">
                 Continue Shopping
               </button>
 
               <!-- Clear Cart -->
-              <button
-                (click)="confirmClear()"
-                class="btn btn-ghost w-full mt-4 text-error"
-              >
+              <button (click)="confirmClear()" class="btn btn-ghost w-full mt-4 text-error">
                 Clear Cart
               </button>
             </div>

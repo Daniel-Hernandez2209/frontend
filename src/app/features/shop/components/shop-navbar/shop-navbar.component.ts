@@ -10,19 +10,13 @@ import { CartService } from '../../../shared/services/cart.service';
   template: `
     <div class="navbar bg-base-100 shadow-sm sticky top-0 z-50">
       <div class="flex-1">
-        <a routerLink="/store" class="btn btn-ghost text-2xl font-bold">
-          🎨 ATHENA BRAND
-        </a>
+        <a routerLink="/store" class="btn btn-ghost text-2xl font-bold"> 🎨 ATHENA BRAND </a>
       </div>
 
       <div class="flex-none gap-4">
         <!-- Cart Button with Badge -->
         <div class="dropdown dropdown-end">
-          <a
-            tabindex="0"
-            routerLink="/store/cart"
-            class="btn btn-ghost btn-circle indicator"
-          >
+          <a tabindex="0" routerLink="/store/cart" class="btn btn-ghost btn-circle indicator">
             <span
               *ngIf="cartService.itemCount() > 0"
               class="indicator-item badge badge-primary badge-sm"
@@ -56,9 +50,7 @@ import { CartService } from '../../../shared/services/cart.service';
         </div>
 
         <!-- Admin Link -->
-        <a routerLink="/admin/dashboard" class="btn btn-outline btn-sm">
-          Admin Panel
-        </a>
+        <a routerLink="/admin/dashboard" class="btn btn-outline btn-sm"> Admin Panel </a>
       </div>
     </div>
   `,

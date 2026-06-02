@@ -29,9 +29,7 @@ export class CartService {
   // ── Computed (valores derivados) ─────────────────────────────────────
   itemCount = computed(() => this.cartItems().length);
 
-  totalQuantity = computed(() =>
-    this.cartItems().reduce((sum, item) => sum + item.quantity, 0),
-  );
+  totalQuantity = computed(() => this.cartItems().reduce((sum, item) => sum + item.quantity, 0));
 
   subtotal = computed(() =>
     this.cartItems().reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -68,9 +66,7 @@ export class CartService {
   addToCart(product: Partial<CartItem>, quantity: number = 1): void {
     const items = this.cartItems();
     const existingItem = items.find(
-      (item) =>
-        item.productId === product.productId &&
-        item.size === product.size,
+      (item) => item.productId === product.productId && item.size === product.size,
     );
 
     if (existingItem) {
@@ -100,8 +96,7 @@ export class CartService {
    */
   removeFromCart(productId: string, size?: string): void {
     const items = this.cartItems().filter(
-      (item) =>
-        !(item.productId === productId && item.size === size),
+      (item) => !(item.productId === productId && item.size === size),
     );
     this.cartItems.set(items);
   }
@@ -111,9 +106,7 @@ export class CartService {
    */
   updateQuantity(productId: string, quantity: number, size?: string): void {
     const items = this.cartItems();
-    const item = items.find(
-      (i) => i.productId === productId && i.size === size,
-    );
+    const item = items.find((i) => i.productId === productId && i.size === size);
 
     if (item) {
       if (quantity <= 0) {
@@ -129,9 +122,7 @@ export class CartService {
    * Obtener item específico
    */
   getItem(productId: string, size?: string): CartItem | undefined {
-    return this.cartItems().find(
-      (item) => item.productId === productId && item.size === size,
-    );
+    return this.cartItems().find((item) => item.productId === productId && item.size === size);
   }
 
   /**
