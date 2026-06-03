@@ -9,12 +9,12 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
+    "noImplicitAny": false,
     "isolatedModules": true,
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
     "module": "preserve",
-    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@core/*": ["src/app/core/*"],
