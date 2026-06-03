@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { ApiService } from '../../../core/services/api.service';
+import { firstValueFrom } from 'rxjs';
 
 export interface Product {
   _id: string;
@@ -14,6 +15,8 @@ export interface Product {
   totalStock: number;
   isActive: boolean;
   isFeatured: boolean;
+  rating?: number; // ✨ NUEVO - Calificación del producto (0-5)
+  reviews?: number; // ✨ NUEVO - Cantidad de reseñas
   createdAt: string;
   updatedAt: string;
 }
@@ -44,7 +47,7 @@ export class ShopService {
   private selectedCategory = signal('');
   private minPrice = signal(0);
   private maxPrice = signal(10000);
-  private currentPage = signal(1);
+  public currentPage = signal(1);
   private pageSize = signal(12);
 
   // ── Computed (productos filtrados) ──────────────────────────────────
@@ -106,10 +109,15 @@ export class ShopService {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const response = await this.apiService.get<{ products: Product[] }>('/products');
+      const response = await firstValueFrom(
+        this.apiService.get<{ products: Product[] }>('/products'),
+      );
       this.products.set(response.products.filter((p) => p.isActive));
+      this.error.set(null);
     } catch (err: any) {
-      this.error.set(err?.message || 'Failed to load products');
+      const errorMessage = err?.message || 'Failed to load products';
+      this.error.set(errorMessage);
+      console.error('Error loading products:', errorMessage);
     } finally {
       this.loading.set(false);
     }
@@ -120,12 +128,15 @@ export class ShopService {
    */
   async loadCategories(): Promise<void> {
     try {
-      const response = await this.apiService.get<{ categories: any[] }>('/categories');
+      const response = await firstValueFrom(
+        this.apiService.get<{ categories: any[] }>('/categories'),
+      );
       const activeCategories = response.categories.filter((c) => c.isActive).map((c) => c.name);
       this.categories.set(activeCategories);
-    } catch {
+    } catch (err) {
       // Silenciosamente fallar si hay error
-      console.error('Failed to load categories');
+      console.error('Failed to load categories:', err);
+      this.categories.set([]);
     }
   }
 
@@ -133,10 +144,17 @@ export class ShopService {
    * Obtener detalle de un producto
    */
   async getProductDetail(id: string): Promise<Product> {
+    this.loading.set(true);
+    this.error.set(null);
     try {
-      return await this.apiService.get<Product>(`/products/${id}`);
-    } catch (err) {
-      throw new Error('Product not found');
+      const product = await firstValueFrom(this.apiService.get<Product>(`/products/${id}`));
+      return product;
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Product not found';
+      this.error.set(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      this.loading.set(false);
     }
   }
 
@@ -228,5 +246,33 @@ export class ShopService {
    */
   hasStock(product: Product): boolean {
     return product.totalStock > 0;
+  }
+
+  /**
+   * Obtener calificación promedio del producto
+   */
+  getRating(product: Product): number {
+    return product.rating || 0;
+  }
+
+  /**
+   * Obtener cantidad de reseñas del producto
+   */
+  getReviewCount(product: Product): number {
+    return product.reviews || 0;
+  }
+
+  /**
+   * Obtener todos los productos (sin filtrar)
+   */
+  getAllProducts(): Product[] {
+    return this.products();
+  }
+
+  /**
+   * Buscar un producto por ID
+   */
+  getProductById(id: string): Product | undefined {
+    return this.products().find((p) => p._id === id);
   }
 }

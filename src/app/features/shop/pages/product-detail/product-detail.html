@@ -1,0 +1,234 @@
+<div class="min-h-screen bg-base-200 p-6">
+  <div class="max-w-6xl mx-auto">
+    <!-- Back Button -->
+    <a routerLink="/store" class="btn btn-ghost mb-6">← Back to Shop</a>
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="flex justify-center items-center h-96">
+        <div class="text-center">
+          <span class="loading loading-spinner loading-lg"></span>
+          <p class="text-base-600 mt-4">Loading product...</p>
+        </div>
+      </div>
+    }
+
+    <!-- Error State -->
+    @if (error()) {
+      <div class="alert alert-error mb-6">
+        <span>{{ error() }}</span>
+        <button (click)="clearError()" class="btn btn-sm btn-ghost">✕</button>
+      </div>
+    }
+
+    <!-- Success State -->
+    @if (success()) {
+      <div class="alert alert-success mb-6 animate-pulse">
+        <span>{{ success() }}</span>
+        <button (click)="clearSuccess()" class="btn btn-sm btn-ghost">✕</button>
+      </div>
+    }
+
+    <!-- Product Content -->
+    @if (product() && !loading()) {
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Image Gallery -->
+        <div class="flex flex-col gap-4">
+          <!-- Main Image -->
+          <div
+            class="h-96 bg-base-300 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+          >
+            @if (currentImage()) {
+              <img
+                [src]="currentImage()!"
+                [alt]="product()!.name"
+                class="w-full h-full object-cover hover:scale-105 transition-transform"
+              />
+            } @else {
+              <div class="w-full h-full flex items-center justify-center text-6xl">📦</div>
+            }
+          </div>
+
+          <!-- Thumbnails -->
+          @if ((product()!.images || []).length > 0) {
+            <div class="flex gap-2 overflow-x-auto">
+              @for (image of product()!.images; let i = $index; track i) {
+                <button
+                  (click)="selectImage(i)"
+                  [class.ring-2]="imageIndex() === i"
+                  class="h-20 w-20 flex-shrink-0 rounded-lg bg-base-300 overflow-hidden ring-primary cursor-pointer hover:shadow-md transition-shadow"
+                >
+                  <img [src]="image" [alt]="'Thumbnail ' + i" class="w-full h-full object-cover" />
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Product Details -->
+        <div class="card bg-base-100 shadow-sm">
+          <div class="card-body">
+            <!-- Category & Featured -->
+            <div class="flex items-center gap-2 mb-4">
+              <span class="badge badge-ghost">{{ product()!.category }}</span>
+              @if (product()!.isFeatured) {
+                <span class="badge badge-primary">⭐ Featured</span>
+              }
+            </div>
+
+            <!-- Name -->
+            <h1 class="text-4xl font-bold text-base-900 mb-4">{{ product()!.name }}</h1>
+
+            <!-- Description -->
+            <p class="text-base-600 mb-6 leading-relaxed">{{ product()!.description }}</p>
+
+            <!-- Rating (si existe) -->
+            @if (product()!.rating) {
+              <div class="flex items-center gap-2 mb-4 text-sm">
+                <span class="text-warning">⭐ {{ product()!.rating }}/5</span>
+                <span class="text-base-500">({{ product()!.reviews || 0 }} reviews)</span>
+              </div>
+            }
+
+            <!-- Price -->
+            <div class="flex items-center gap-3 mb-4 py-4 border-y border-base-300">
+              <span class="text-4xl font-bold text-primary">
+                {{ shopService.getDisplayPrice(product()!) | currency }}
+              </span>
+              @if (product()!.discountPrice) {
+                <span class="text-lg line-through text-base-500">
+                  {{ product()!.price | currency }}
+                </span>
+                <span class="badge badge-error">
+                  -{{ shopService.getDiscountPercentage(product()!) }}%
+                </span>
+              }
+            </div>
+
+            <!-- Stock Status -->
+            <div class="mb-6">
+              @if (shopService.hasStock(product()!)) {
+                <span class="badge badge-success badge-lg">
+                  ✓ In Stock ({{ product()!.totalStock }} available)
+                </span>
+              } @else {
+                <span class="badge badge-error badge-lg"> ✕ Out of Stock </span>
+              }
+            </div>
+
+            <!-- Sizes -->
+            <div class="mb-6">
+              <label class="block text-sm font-semibold text-base-900 mb-3">Select Size</label>
+              <div class="flex flex-wrap gap-2">
+                @for (size of product()!.sizes; track size.size) {
+                  <button
+                    (click)="selectSize(size.size)"
+                    [disabled]="size.stock === 0"
+                    [class.btn-active]="selectedSize() === size.size"
+                    class="btn btn-outline"
+                  >
+                    {{ size.size }}
+                    @if (size.stock === 0) {
+                      <span class="text-xs">(Out)</span>
+                    }
+                  </button>
+                }
+              </div>
+              @if (!selectedSize()) {
+                <p class="text-sm text-error mt-2">Please select a size</p>
+              }
+            </div>
+
+            <!-- Quantity -->
+            <div class="mb-6">
+              <label class="block text-sm font-semibold text-base-900 mb-3">
+                Quantity
+                <span class="text-xs text-base-500 ml-2">Max: {{ maxQuantity() }}</span>
+              </label>
+              <div class="flex items-center gap-3">
+                <button
+                  (click)="decreaseQuantity()"
+                  [disabled]="quantity() <= 1"
+                  class="btn btn-outline btn-sm"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  [value]="quantity()"
+                  [min]="1"
+                  [max]="maxQuantity()"
+                  (change)="updateQuantity($event)"
+                  class="input input-bordered w-20 text-center"
+                />
+                <button
+                  (click)="increaseQuantity()"
+                  [disabled]="quantity() >= maxQuantity()"
+                  class="btn btn-outline btn-sm"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <!-- Add to Cart Button -->
+            <button
+              (click)="addToCart()"
+              [disabled]="!canAddToCart()"
+              class="btn btn-primary btn-lg w-full mb-4"
+            >
+              @if (isAddingToCart()) {
+                <span class="loading loading-spinner loading-sm"></span>
+                <span>Adding to Cart...</span>
+              } @else {
+                <span>🛒 Add to Cart - {{ totalPrice() | currency }}</span>
+              }
+            </button>
+
+            <!-- Go to Cart Button -->
+            <button (click)="goToCart()" class="btn btn-outline w-full mb-4">
+              View Cart ({{ cartService.itemCount() }} items)
+            </button>
+
+            <!-- SKU & Details -->
+            <div class="divider"></div>
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between">
+                <span class="text-base-600">SKU:</span>
+                <span class="font-mono font-semibold">{{ product()!.sku }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-base-600">Category:</span>
+                <span>{{ product()!.category }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-base-600">Available Stock:</span>
+                <span class="font-semibold">{{ product()!.totalStock }} units</span>
+              </div>
+              @if (selectedSize()) {
+                <div class="flex justify-between bg-base-200 p-2 rounded">
+                  <span class="text-base-600">Stock for {{ selectedSize() }}:</span>
+                  <span class="font-semibold">{{ getSizeStock(selectedSize()!) }} units</span>
+                </div>
+              }
+              <div class="flex justify-between">
+                <span class="text-base-600">Created:</span>
+                <span>{{ product()!.createdAt | date: 'short' }}</span>
+              </div>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="mt-6 p-4 bg-base-200 rounded-lg space-y-2">
+              <p class="text-xs text-base-600">
+                <span class="block">✓ Free shipping on orders over $50</span>
+                <span class="block">✓ 30-day return policy</span>
+                <span class="block">✓ Secure checkout</span>
+                <span class="block">✓ Fast delivery</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../services/dashboard.service';
 import { WebsocketService } from '../../../../core/services/websocket.service';
-import { OrderService } from '../../orders/services/order.service';
+import { OrderService } from '../../../orders/services/order.service';
 
 @Component({
   selector: 'app-dashboard',

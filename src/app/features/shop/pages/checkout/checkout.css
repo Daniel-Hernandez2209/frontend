@@ -1,0 +1,140 @@
+/* checkout.component.css */
+
+/* Animación para alertas */
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert {
+  animation: slideInDown 0.3s ease-in-out;
+}
+
+/* Text truncate para descripciones largas */
+.line-clamp {
+  /* Soporte estándar (Firefox 68+, Chrome 90+, Safari 15.4+) */
+  line-clamp: var(--line-clamp, 3);
+
+  /* Fallback para navegadores más antiguos */
+  display: -webkit-box;
+  -webkit-line-clamp: var(--line-clamp, 3);
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  /* Overflow ellipsis */
+  text-overflow: ellipsis;
+}
+
+/* Utilidades específicas de line-clamp */
+.line-clamp-1 {
+  line-clamp: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  line-clamp: 2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  line-clamp: 3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-4 {
+  line-clamp: 4;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Mejorar hover en items del carrito */
+.hover\:bg-base-200:hover {
+  background-color: var(--fallback-b2, oklch(var(--b2) / 1));
+}
+
+/* Estilos para labels de pago */
+.label {
+  padding: 0.75rem;
+}
+
+.label:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .form-control {
+    margin-bottom: 0.5rem;
+  }
+
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Sticky position fallback */
+@supports not (position: sticky) {
+  .sticky {
+    position: fixed;
+    top: 0;
+  }
+}
+
+/* Animación para botón de envío */
+.btn-primary {
+  transition: all 0.3s ease;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Scroll suave en lista de items */
+.max-h-64 {
+  scroll-behavior: smooth;
+}
+
+/* Loading spinner en botón */
+.loading {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -2,7 +2,9 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { ApiService } from './api.service';
 import { Router } from '@angular/router';
-import { AppStore } from '../store/app.store';
+import { Observable, throwError } from 'rxjs';
+import { tap, catchError, finalize } from 'rxjs/operators';
+import { AppStore } from '@core/store/app.store';
 
 // ==================== TIPOS ====================
 export interface User {
@@ -64,38 +66,25 @@ export class AuthService {
   /**
    * Login - RxJS OK aquí (para formularios)
    */
-  login(credentials: LoginRequest): Promise<void> {
+  login(credentials: LoginRequest): Observable<AuthResponse> {
     this.isLoading.set(true);
     this.error.set(null);
 
-    return this.api
-      .post<AuthResponse>('/auth/login', credentials)
-      .toPromise()
-      .then((response) => {
-        if (!response) {
-          throw new Error('No response from server');
-        }
-
-        // Guardar datos con signals
+    return this.api.post<AuthResponse>('/auth/login', credentials).pipe(
+      tap((response) => {
         this.currentUser.set(response.user);
         this.isAuthenticated.set(true);
-
-        // Guardar tokens en sessionStorage
         sessionStorage.setItem('access_token', response.access_token);
         sessionStorage.setItem('refresh_token', response.refresh_token);
-
-        console.log('✅ Login exitoso');
-
-        // Navegar a dashboard
-        return this.router.navigate(['/dashboard']);
-      })
-      .catch((err: any) => {
-        this.error.set(err.message || 'Error en login');
-        throw err;
-      })
-      .finally(() => {
+        this.router.navigate(['/dashboard']);
+      }),
+      catchError((err) => {
+        this.error.set(err.error?.message || 'Error en login');
         this.isLoading.set(false);
-      });
+        throw err;
+      }),
+      finalize(() => this.isLoading.set(false)),
+    );
   }
 
   /**

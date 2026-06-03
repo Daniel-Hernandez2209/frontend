@@ -1,4 +1,5 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
+import { CouponResponse } from '@features/shop/services/cart.service';
 
 export interface CartItem {
   _id: string;
@@ -10,6 +11,7 @@ export interface CartItem {
   image?: string;
   size?: string;
   category?: string;
+  description?: string;
 }
 
 export interface Cart {
@@ -25,6 +27,7 @@ export interface Cart {
 export class CartService {
   // ── Estado ──────────────────────────────────────────────────────────
   private cartItems = signal<CartItem[]>(this.loadFromLocalStorage());
+  private appliedCoupon = signal<CouponResponse | null>(null);
 
   // ── Computed (valores derivados) ─────────────────────────────────────
   itemCount = computed(() => this.cartItems().length);
@@ -84,12 +87,33 @@ export class CartService {
         image: product.image,
         size: product.size,
         category: product.category,
+        description: product.description,
       };
       items.push(newItem);
     }
 
     this.cartItems.set([...items]);
   }
+  appliedCouponInfo = computed(() => {
+    const coupon = this.appliedCoupon();
+    return coupon
+      ? {
+          code: coupon.code,
+          discountPercentage: coupon.discountPercentage,
+          discountAmount: coupon.discountAmount,
+          message: coupon.message,
+        }
+      : null;
+  });
+  discountAmount = computed(() => {
+    const coupon = this.appliedCoupon();
+    return coupon?.discountAmount || 0;
+  });
+
+  discountPercentage = computed(() => {
+    const coupon = this.appliedCoupon();
+    return coupon?.discountPercentage || 0;
+  });
 
   /**
    * Remover producto del carrito

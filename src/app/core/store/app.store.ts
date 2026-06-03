@@ -1,13 +1,7 @@
 // src/app/core/store/app.store.ts
-import {
-  signalStore,
-  withState,
-  withMethods,
-  withComputed,
-  patchState,
-  computed,
-} from '@ngrx/signals';
+import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
 import { User } from '../services/auth.service';
+import { computed } from '@angular/core';
 
 // ==================== ESTADO ====================
 interface AppState {
