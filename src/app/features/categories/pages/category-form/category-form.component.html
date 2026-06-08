@@ -1,163 +1,416 @@
-<div class="p-6 space-y-6 max-w-2xl mx-auto">
-  <!-- Header -->
-  <div class="flex justify-between items-center">
-    <h1 class="text-3xl font-bold text-gray-900">
-      {{ isEditMode ? 'Edit Category' : 'Create New Category' }}
-    </h1>
-    <button (click)="goBack()" class="text-gray-600 hover:text-gray-900 font-medium">← Back</button>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="isLoadingCategory" class="flex justify-center items-center h-96">
-    <div class="text-center">
-      <span class="loading loading-spinner loading-lg"></span>
-      <p class="text-gray-600 mt-4">Loading category...</p>
+<div class="min-h-screen bg-base-100">
+  <!-- ═══════════════════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="sticky top-0 z-40 bg-base-100 border-b border-base-300 shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-6">
+      <div class="flex items-center gap-4">
+        <button
+          (click)="goBack()"
+          class="btn btn-ghost btn-sm gap-2"
+          aria-label="Back to categories"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Back
+        </button>
+        <div class="divider divider-horizontal mx-0"></div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-base-content">
+            {{ isEditMode() ? '✏️' : '➕' }} {{ pageTitle() }}
+          </h1>
+          <p class="text-base-content/60 text-sm mt-0.5">
+            {{ isEditMode() ? 'Update category details' : 'Add a new product category' }}
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Form -->
-  <form
-    *ngIf="!isLoadingCategory"
-    [formGroup]="categoryForm"
-    (ngSubmit)="onSubmit()"
-    class="card bg-base-100 shadow-sm max-w-2xl mx-auto"
-  >
-    <div class="card-body space-y-6">
-      <!-- Name -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Category Name <span class="text-red-600">*</span></span>
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6">
+    <!-- ─── LOADING STATE ──────────────────────────────────────── -->
+    @if (isLoadingCategory()) {
+      <div class="card bg-base-100 border border-base-300 shadow-md">
+        <div class="card-body h-96 flex flex-col items-center justify-center gap-4">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+          <div class="text-center">
+            <h3 class="font-semibold text-lg text-base-content">Loading category...</h3>
+            <p class="text-sm text-base-content/60 mt-1">Fetching category data</p>
           </div>
-          <input
-            type="text"
-            formControlName="name"
-            (change)="onNameChange()"
-            placeholder="e.g., Electronics, Clothing, Home & Garden"
-            class="input input-bordered w-full"
-          />
-          <div
-            class="label"
-            *ngIf="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched"
-          >
-            <span class="label-text-alt text-error">Name must be between 3 and 100 characters</span>
-          </div>
-        </label>
+        </div>
       </div>
+    }
 
-      <!-- Slug -->
-      <div>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Slug <span class="text-red-600">*</span></span>
-          </div>
-          <input
-            type="text"
-            formControlName="slug"
-            placeholder="e.g., electronics, clothing, home-garden"
-            class="input input-bordered w-full font-mono text-sm"
-          />
-          <div class="label">
-            <span class="label-text-alt text-gray-500"
-              >Use lowercase letters, numbers, and hyphens only</span
-            >
-          </div>
-          <div
-            class="label"
-            *ngIf="categoryForm.get('slug')?.invalid && categoryForm.get('slug')?.touched"
-          >
-            <span class="label-text-alt text-error">Slug format is invalid</span>
-          </div>
-        </label>
-      </div>
-
-      <!-- Description -->
-      <div>
-        <label class="block text-sm font-medium text-gray-900 mb-2">Description</label>
-        <textarea
-          formControlName="description"
-          rows="4"
-          placeholder="Describe this category..."
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        ></textarea>
-        <p class="text-xs text-gray-500 mt-1">
-          {{ categoryForm.get('description')?.value?.length || 0 }} / 500 characters
-        </p>
-        <p
-          *ngIf="
-            categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched
-          "
-          class="text-sm text-red-600 mt-1"
+    <!-- ─── SUCCESS MESSAGE ────────────────────────────────────── -->
+    @if (successMessage()) {
+      <div class="alert alert-success shadow-md">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
         >
-          Description must not exceed 500 characters
-        </p>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span class="font-medium">{{ successMessage() }}</span>
+        <button (click)="dismissMessage()" class="btn btn-sm btn-ghost">✕</button>
       </div>
+    }
 
-      <!-- Icon -->
-      <div>
-        <label class="block text-sm font-medium text-gray-900 mb-2">Category Icon</label>
-        <div class="space-y-3">
-          <!-- Icon Preview -->
-          <div *ngIf="imagePreview" class="flex items-center space-x-4">
-            <div class="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
-              <img [src]="imagePreview" alt="Preview" class="w-full h-full object-cover" />
+    <!-- ─── ERROR MESSAGE ──────────────────────────────────────── -->
+    @if (errorMessage()) {
+      <div class="alert alert-error shadow-md">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 14l-2-2m0 0l-2-2m2 2l2-2m-2 2l-2 2m2-2l2 2m1-9a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span class="font-medium">{{ errorMessage() }}</span>
+        <button (click)="dismissMessage()" class="btn btn-sm btn-ghost">✕</button>
+      </div>
+    }
+
+    <!-- ─── FORM ───────────────────────────────────────────────── -->
+    @if (!isLoadingCategory()) {
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- ══════════════════════════════════════════════════════
+             LEFT COLUMN: Main Fields
+             ══════════════════════════════════════════════════════ -->
+        <div class="lg:col-span-2 space-y-6">
+          <div class="card bg-base-100 border border-base-300 shadow-md">
+            <div class="card-body">
+              <h2 class="card-title text-lg flex items-center gap-2 mb-4">
+                📝 Category Information
+              </h2>
+
+              <!-- Name Field -->
+              <div class="form-control w-full">
+                <label class="label" for="categoryName">
+                  <span class="label-text font-semibold">
+                    Category Name <span class="text-error">*</span>
+                  </span>
+                  <span class="label-text-alt text-base-content/50">
+                    {{ nameCharCount() }}/100
+                  </span>
+                </label>
+                <input
+                  id="categoryName"
+                  type="text"
+                  [formControl]="categoryForm.controls.name"
+                  (input)="onNameChange()"
+                  placeholder="e.g. Electronics, Clothing, Books..."
+                  class="input input-bordered w-full transition-all"
+                  [class.input-error]="hasError('name')"
+                  [class.input-success]="
+                    !hasError('name') &&
+                    categoryForm.controls.name.valid &&
+                    categoryForm.controls.name.touched
+                  "
+                  aria-label="Category name"
+                />
+                @if (hasError('name')) {
+                  <label class="label">
+                    <span class="label-text-alt text-error font-medium">
+                      {{ getErrorMessage('name') }}
+                    </span>
+                  </label>
+                }
+              </div>
+
+              <!-- Slug Field -->
+              <div class="form-control w-full mt-4">
+                <label class="label" for="categorySlug">
+                  <span class="label-text font-semibold">
+                    Slug <span class="text-error">*</span>
+                  </span>
+                  <button
+                    type="button"
+                    (click)="regenerateSlug()"
+                    class="btn btn-xs btn-ghost gap-1 text-primary"
+                    aria-label="Regenerate slug from name"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-3 w-3"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 1119.778 5.424 1 1 0 11-1.996-.208A5.002 5.002 0 1015.999 4.101V5a1 1 0 11-2 0V3a1 1 0 011-1h4z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    Regenerate
+                  </button>
+                </label>
+                <input
+                  id="categorySlug"
+                  type="text"
+                  [formControl]="categoryForm.controls.slug"
+                  (input)="onSlugManualEdit()"
+                  placeholder="e.g. electronics, clothing, books..."
+                  class="input input-bordered w-full font-mono transition-all"
+                  [class.input-error]="hasError('slug')"
+                  [class.input-success]="
+                    !hasError('slug') &&
+                    categoryForm.controls.slug.valid &&
+                    categoryForm.controls.slug.touched
+                  "
+                  aria-label="Category slug"
+                />
+                <label class="label">
+                  @if (hasError('slug')) {
+                    <span class="label-text-alt text-error">{{ getErrorMessage('slug') }}</span>
+                  } @else {
+                    <span class="label-text-alt text-base-content/50">
+                      URL-friendly identifier. Auto-generated from name.
+                    </span>
+                  }
+                </label>
+              </div>
+
+              <!-- Description Field -->
+              <div class="form-control w-full mt-4">
+                <label class="label" for="categoryDescription">
+                  <span class="label-text font-semibold">Description</span>
+                  <span class="label-text-alt text-base-content/50">
+                    {{ descCharCount() }}/500
+                  </span>
+                </label>
+                <textarea
+                  id="categoryDescription"
+                  [formControl]="categoryForm.controls.description"
+                  placeholder="Brief description of this category..."
+                  class="textarea textarea-bordered w-full h-28 transition-all"
+                  [class.textarea-error]="hasError('description')"
+                  aria-label="Category description"
+                ></textarea>
+                @if (hasError('description')) {
+                  <label class="label">
+                    <span class="label-text-alt text-error font-medium">
+                      {{ getErrorMessage('description') }}
+                    </span>
+                  </label>
+                }
+              </div>
             </div>
-            <button
-              type="button"
-              (click)="removeImage()"
-              class="px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition font-medium text-sm"
-            >
-              Remove Image
-            </button>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════
+             RIGHT COLUMN: Settings & Image
+             ══════════════════════════════════════════════════════ -->
+        <div class="space-y-6">
+          <!-- Status Card -->
+          <div class="card bg-base-100 border border-base-300 shadow-md">
+            <div class="card-body">
+              <h2 class="card-title text-lg flex items-center gap-2 mb-4">⚙️ Settings</h2>
+
+              <!-- Active Toggle -->
+              <div class="form-control">
+                <label class="label cursor-pointer justify-start gap-4">
+                  <input
+                    type="checkbox"
+                    [formControl]="categoryForm.controls.isActive"
+                    class="toggle toggle-primary"
+                    aria-label="Category active status"
+                  />
+                  <div>
+                    <span class="label-text font-semibold block">Active</span>
+                    <span class="label-text-alt text-base-content/50">
+                      @if (categoryForm.controls.isActive.value) {
+                        Category is visible to customers
+                      } @else {
+                        Category is hidden
+                      }
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Status Preview -->
+              <div class="mt-3">
+                @if (categoryForm.controls.isActive.value) {
+                  <div class="badge badge-success gap-2 py-3 px-4">✓ Active</div>
+                } @else {
+                  <div class="badge badge-error gap-2 py-3 px-4">✕ Inactive</div>
+                }
+              </div>
+            </div>
           </div>
 
-          <!-- File Input -->
-          <div
-            *ngIf="!imagePreview"
-            class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition"
-          >
-            <input
-              type="file"
-              accept="image/*"
-              (change)="onFileSelected($event)"
-              class="hidden"
-              #fileInput
-            />
-            <button
-              type="button"
-              (click)="fileInput.click()"
-              class="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Click to upload or drag and drop
-            </button>
-            <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+          <!-- Image Card -->
+          <div class="card bg-base-100 border border-base-300 shadow-md">
+            <div class="card-body">
+              <h2 class="card-title text-lg flex items-center gap-2 mb-4">🖼️ Image</h2>
+
+              @if (imagePreview()) {
+                <!-- Image Preview -->
+                <div class="relative group mb-4">
+                  <img
+                    [src]="imagePreview()"
+                    alt="Category image preview"
+                    class="w-full h-48 object-cover rounded-lg border border-base-300"
+                  />
+                  <div
+                    class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center"
+                  >
+                    <button
+                      type="button"
+                      (click)="removeImage()"
+                      class="btn btn-sm btn-error gap-1"
+                      aria-label="Remove image"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <!-- Upload Area -->
+                <div
+                  class="border-2 border-dashed border-base-300 rounded-lg p-6 text-center hover:border-primary transition-colors"
+                >
+                  <div class="flex flex-col items-center gap-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-10 w-10 text-base-content/30"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <div>
+                      <p class="text-sm font-medium text-base-content/70">Upload an image</p>
+                      <p class="text-xs text-base-content/40 mt-1">JPG, PNG, GIF, WebP · Max 5MB</p>
+                    </div>
+                    <label class="btn btn-sm btn-outline btn-primary gap-2 cursor-pointer">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Choose File
+                      <input
+                        type="file"
+                        accept="image/*"
+                        (change)="onFileSelected($event)"
+                        class="hidden"
+                        aria-label="Upload category image"
+                      />
+                    </label>
+                  </div>
+                </div>
+              }
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Is Active -->
-      <div class="flex items-center space-x-3">
-        <input
-          type="checkbox"
-          formControlName="isActive"
-          id="isActive"
-          class="w-4 h-4 rounded border-gray-300 focus:ring-blue-500"
-        />
-        <label for="isActive" class="text-sm font-medium text-gray-900"> Active Category </label>
-      </div>
-
-      <!-- Actions -->
-      <div class="flex justify-end gap-3 pt-6 border-t">
-        <button type="button" (click)="goBack()" class="btn btn-outline">Cancel</button>
-        <button
-          type="submit"
-          [disabled]="categoryForm.invalid || isSubmitting"
-          class="btn btn-primary"
+      <!-- ─── FORM ACTIONS (sticky bottom) ─────────────────────── -->
+      <div
+        class="sticky bottom-0 z-30 bg-base-100 border-t border-base-300 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 max-w-4xl mx-auto"
         >
-          <span *ngIf="isSubmitting" class="loading loading-spinner loading-sm"></span>
-          {{ isSubmitting ? 'Saving...' : isEditMode ? 'Update Category' : 'Create Category' }}
-        </button>
+          <button
+            type="button"
+            (click)="goBack()"
+            class="btn btn-ghost gap-2"
+            [disabled]="isFormDisabled()"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            (click)="onSubmit()"
+            class="btn btn-primary gap-2 shadow-md"
+            [disabled]="isFormDisabled() || categoryForm.invalid"
+          >
+            @if (isSubmitting()) {
+              <span class="loading loading-spinner loading-sm"></span>
+              Saving...
+            } @else {
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              {{ submitLabel() }}
+            }
+          </button>
+        </div>
       </div>
-    </div>
-  </form>
+    }
+  </div>
 </div>

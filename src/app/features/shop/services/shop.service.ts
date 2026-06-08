@@ -15,19 +15,10 @@ export interface Product {
   totalStock: number;
   isActive: boolean;
   isFeatured: boolean;
-  rating?: number; // ✨ NUEVO - Calificación del producto (0-5)
-  reviews?: number; // ✨ NUEVO - Cantidad de reseñas
+  rating?: number;
+  reviews?: number;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface ShopFilters {
-  search: string;
-  category: string;
-  minPrice: number;
-  maxPrice: number;
-  page: number;
-  limit: number;
 }
 
 @Injectable({
@@ -42,7 +33,6 @@ export class ShopService {
   private loading = signal(false);
   private error = signal<string | null>(null);
 
-  // Filtros
   private searchQuery = signal('');
   private selectedCategory = signal('');
   private minPrice = signal(0);
@@ -50,15 +40,14 @@ export class ShopService {
   public currentPage = signal(1);
   private pageSize = signal(12);
 
-  // ── Computed (productos filtrados) ──────────────────────────────────
+  // ── Computed ────────────────────────────────────────────────────────
   filteredProducts = computed(() => {
     let result = this.products();
-    const search = this.searchQuery().toLowerCase();
+    const search = this.searchQuery().toLowerCase().trim();
     const category = this.selectedCategory();
     const min = this.minPrice();
     const max = this.maxPrice();
 
-    // Filtrar por búsqueda
     if (search) {
       result = result.filter(
         (p) =>
@@ -68,29 +57,27 @@ export class ShopService {
       );
     }
 
-    // Filtrar por categoría
     if (category) {
       result = result.filter((p) => p.category === category);
     }
 
-    // Filtrar por precio
-    result = result.filter(
-      (p) => (p.discountPrice || p.price) >= min && (p.discountPrice || p.price) <= max,
-    );
+    result = result.filter((p) => {
+      const displayPrice = p.discountPrice ?? p.price;
+      return displayPrice >= min && displayPrice <= max;
+    });
 
     return result;
   });
 
   totalProducts = computed(() => this.filteredProducts().length);
-  totalPages = computed(() => Math.ceil(this.totalProducts() / this.pageSize()));
+  totalPages = computed(() => Math.max(1, Math.ceil(this.totalProducts() / this.pageSize())));
 
   paginatedProducts = computed(() => {
     const start = (this.currentPage() - 1) * this.pageSize();
-    const end = start + this.pageSize();
-    return this.filteredProducts().slice(start, end);
+    return this.filteredProducts().slice(start, start + this.pageSize());
   });
 
-  // ── Getters para estado ─────────────────────────────────────────────
+  // Getters públicos
   isLoading = computed(() => this.loading());
   errorMessage = computed(() => this.error());
   getCategories = computed(() => this.categories());
@@ -102,122 +89,89 @@ export class ShopService {
 
   // ── MÉTODOS PÚBLICOS ────────────────────────────────────────────────
 
-  /**
-   * Cargar todos los productos públicos
-   */
   async loadProducts(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
     try {
+      // ✅ Ajusta la URL según tu ApiService (con o sin /api prefix)
       const response = await firstValueFrom(
         this.apiService.get<{ products: Product[] }>('/products'),
       );
-      this.products.set(response.products.filter((p) => p.isActive));
-      this.error.set(null);
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to load products';
-      this.error.set(errorMessage);
-      console.error('Error loading products:', errorMessage);
+      // ✅ Defensa: verifica que products exista en la respuesta
+      const products = response?.products ?? [];
+      this.products.set(products.filter((p) => p.isActive));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al cargar productos';
+      this.error.set(msg);
+      console.error('ShopService.loadProducts:', msg);
     } finally {
       this.loading.set(false);
     }
   }
 
-  /**
-   * Cargar categorías
-   */
   async loadCategories(): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.apiService.get<{ categories: any[] }>('/categories'),
+        this.apiService.get<{ categories: Array<{ name: string; isActive: boolean }> }>(
+          '/categories',
+        ),
       );
-      const activeCategories = response.categories.filter((c) => c.isActive).map((c) => c.name);
-      this.categories.set(activeCategories);
+      const active = (response?.categories ?? []).filter((c) => c.isActive).map((c) => c.name);
+      this.categories.set(active);
     } catch (err) {
-      // Silenciosamente fallar si hay error
-      console.error('Failed to load categories:', err);
+      console.error('ShopService.loadCategories:', err);
       this.categories.set([]);
     }
   }
 
-  /**
-   * Obtener detalle de un producto
-   */
   async getProductDetail(id: string): Promise<Product> {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const product = await firstValueFrom(this.apiService.get<Product>(`/products/${id}`));
-      return product;
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Product not found';
-      this.error.set(errorMessage);
-      throw new Error(errorMessage);
+      return await firstValueFrom(this.apiService.get<Product>(`/products/${id}`));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Producto no encontrado';
+      this.error.set(msg);
+      throw new Error(msg);
     } finally {
       this.loading.set(false);
     }
   }
 
-  /**
-   * Buscar productos
-   */
+  // ── Filtros ─────────────────────────────────────────────────────────
   setSearchQuery(query: string): void {
     this.searchQuery.set(query);
     this.currentPage.set(1);
   }
 
-  /**
-   * Filtrar por categoría
-   */
   setCategory(category: string): void {
     this.selectedCategory.set(category);
     this.currentPage.set(1);
   }
 
-  /**
-   * Establecer rango de precios
-   */
   setPriceRange(min: number, max: number): void {
     this.minPrice.set(min);
     this.maxPrice.set(max);
     this.currentPage.set(1);
   }
 
-  /**
-   * Ir a página específica
-   */
   goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages()) {
+    const total = this.totalPages();
+    if (page >= 1 && page <= total) {
       this.currentPage.set(page);
     }
   }
 
-  /**
-   * Obtener números de página para paginación
-   */
   getPageNumbers(): number[] {
-    const pages: number[] = [];
     const total = this.totalPages();
     const current = this.currentPage();
-
-    // Mostrar siempre un rango de 5 páginas
     let start = Math.max(1, current - 2);
-    let end = Math.min(total, start + 4);
-
-    if (end - start < 4) {
-      start = Math.max(1, end - 4);
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-
-    return pages;
+    const end = Math.min(total, start + 4);
+    // Ajustar start si end se acercó al límite
+    start = Math.max(1, end - 4);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
-  /**
-   * Resetear filtros
-   */
   resetFilters(): void {
     this.searchQuery.set('');
     this.selectedCategory.set('');
@@ -226,52 +180,32 @@ export class ShopService {
     this.currentPage.set(1);
   }
 
-  /**
-   * Obtener precio con descuento
-   */
+  // ── Helpers ─────────────────────────────────────────────────────────
   getDisplayPrice(product: Product): number {
-    return product.discountPrice || product.price;
+    return product.discountPrice ?? product.price;
   }
 
-  /**
-   * Calcular porcentaje de descuento
-   */
   getDiscountPercentage(product: Product): number {
     if (!product.discountPrice) return 0;
     return Math.round(((product.price - product.discountPrice) / product.price) * 100);
   }
 
-  /**
-   * Verificar si hay stock disponible
-   */
   hasStock(product: Product): boolean {
     return product.totalStock > 0;
   }
 
-  /**
-   * Obtener calificación promedio del producto
-   */
   getRating(product: Product): number {
-    return product.rating || 0;
+    return product.rating ?? 0;
   }
 
-  /**
-   * Obtener cantidad de reseñas del producto
-   */
   getReviewCount(product: Product): number {
-    return product.reviews || 0;
+    return product.reviews ?? 0;
   }
 
-  /**
-   * Obtener todos los productos (sin filtrar)
-   */
   getAllProducts(): Product[] {
     return this.products();
   }
 
-  /**
-   * Buscar un producto por ID
-   */
   getProductById(id: string): Product | undefined {
     return this.products().find((p) => p._id === id);
   }

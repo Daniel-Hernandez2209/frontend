@@ -1,170 +1,370 @@
-<div class="p-6 space-y-6">
-  <!-- Header -->
-  <div class="flex justify-between items-center">
-    <h1 class="text-3xl font-bold text-gray-900">Categories</h1>
-    <a routerLink="/admin/categories/create" class="btn btn-primary"> + New Category </a>
-  </div>
-
-  <!-- Filter Section -->
-  <div class="card bg-base-100 shadow-sm">
-    <div class="card-body">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Search -->
+<div class="min-h-screen bg-base-100">
+  <!-- ═══════════════════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="sticky top-0 z-40 bg-base-100 border-b border-base-300 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-6">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <label class="form-control w-full">
-            <div class="label">
-              <span class="label-text">Search</span>
-            </div>
-            <input
-              type="text"
-              [(ngModel)]="searchQuery"
-              (ngModelChange)="onSearchChange()"
-              placeholder="Search by name or slug..."
-              class="input input-bordered w-full"
+          <h1 class="text-4xl font-bold text-base-content">📦 Categories</h1>
+          <p class="text-base-content/60 text-sm mt-1">
+            Manage product categories and organization
+          </p>
+        </div>
+        <a
+          routerLink="/admin/categories/create"
+          class="btn btn-primary gap-2 btn-md shadow-md hover:shadow-lg"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+              clip-rule="evenodd"
             />
-          </label>
-        </div>
-
-        <!-- Status Filter -->
-        <div>
-          <label class="form-control w-full">
-            <div class="label">
-              <span class="label-text">Status</span>
-            </div>
-            <select
-              [(ngModel)]="selectedStatus"
-              (ngModelChange)="onStatusChange()"
-              class="select select-bordered w-full"
-            >
-              <option *ngFor="let opt of statusOptions" [value]="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
-        </div>
-
-        <!-- Reset Button -->
-        <div class="flex items-end">
-          <button (click)="resetFilters()" class="btn btn-secondary w-full">Reset Filters</button>
-        </div>
+          </svg>
+          New Category
+        </a>
       </div>
     </div>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading()" class="flex justify-center items-center h-96">
-    <div class="text-center">
-      <span class="loading loading-spinner loading-lg"></span>
-      <p class="text-gray-600 mt-4">Loading categories...</p>
-    </div>
-  </div>
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6">
+    <!-- ─── FILTERS ────────────────────────────────────────────── -->
+    <div class="card bg-base-100 border border-base-300 shadow-md">
+      <div class="card-body">
+        <h2 class="card-title text-xl mb-4 flex items-center gap-2">🔎 Filters</h2>
 
-  <!-- Error State -->
-  <div *ngIf="error()" class="alert alert-error">
-    {{ error() }}
-  </div>
-
-  <!-- Categories Table -->
-  <div *ngIf="!isLoading() && !error()" class="card bg-base-100 shadow-sm overflow-hidden">
-    <!-- Empty State -->
-    <div *ngIf="paginatedCategories().length === 0" class="card-body text-center">
-      <p class="text-gray-500 text-lg">No categories found</p>
-    </div>
-
-    <!-- Table -->
-    <div *ngIf="paginatedCategories().length > 0" class="overflow-x-auto">
-      <table class="table table-zebra">
-        <thead class="bg-gray-50 border-b">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Name</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Slug</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-              Description
-            </th>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">
-              Status
-            </th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Created</th>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y hover:bg-gray-50">
-          <tr *ngFor="let category of paginatedCategories()" class="hover:bg-gray-50 transition">
-            <td class="px-6 py-3">
-              <p class="text-sm font-medium text-gray-900">{{ category.name }}</p>
-            </td>
-            <td class="px-6 py-3">
-              <p class="text-sm text-gray-600 font-mono">{{ category.slug }}</p>
-            </td>
-            <td class="px-6 py-3">
-              <p class="text-sm text-gray-600 truncate max-w-xs">
-                {{ category.description || '-' }}
-              </p>
-            </td>
-            <td class="px-6 py-3 text-center">
-              <span
-                class="badge"
-                [class.badge-success]="category.isActive"
-                [class.badge-error]="!category.isActive"
-              >
-                {{ getStatusLabel(category.isActive) }}
-              </span>
-            </td>
-            <td class="px-6 py-3 text-sm text-gray-600">
-              {{ formatDate(category.createdAt) }}
-            </td>
-            <td class="px-6 py-3 text-center">
-              <div class="flex justify-center gap-2">
-                <button
-                  (click)="editCategory(category._id)"
-                  class="btn btn-sm btn-outline btn-info"
-                >
-                  Edit
-                </button>
-                <button
-                  (click)="deleteCategory(category._id)"
-                  class="btn btn-sm btn-outline btn-error"
-                >
-                  Delete
-                </button>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Search -->
+          <div>
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text font-semibold">🔍 Search</span>
               </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <input
+                type="text"
+                [value]="searchQuery()"
+                (input)="onSearchInput($event)"
+                placeholder="Search name, slug..."
+                class="input input-bordered w-full focus:input-primary transition-all"
+                aria-label="Search categories"
+              />
+            </label>
+          </div>
+
+          <!-- Status Filter -->
+          <div>
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text font-semibold">⚡ Status</span>
+              </div>
+              <select
+                [value]="selectedStatus()"
+                (change)="onStatusSelect($event)"
+                class="select select-bordered w-full focus:select-primary transition-all"
+                aria-label="Filter by status"
+              >
+                @for (opt of statusOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </label>
+          </div>
+
+          <div class="hidden lg:block"></div>
+
+          <!-- Reset -->
+          <div class="flex items-end">
+            <button
+              (click)="resetFilters()"
+              class="btn btn-secondary w-full gap-2"
+              aria-label="Reset all filters"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 1119.778 5.424 1 1 0 11-1.996-.208A5.002 5.002 0 1015.999 4.101V5a1 1 0 11-2 0V3a1 1 0 011-1h4z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <div class="divider my-2"></div>
+        <div class="text-xs text-base-content/60 font-medium">
+          {{ totalFilteredCategories() }}
+          {{ totalFilteredCategories() === 1 ? 'category' : 'categories' }} found
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- Pagination -->
-  <div *ngIf="paginatedCategories().length > 0" class="flex justify-between items-center mt-6">
-    <button (click)="previousPage()" [disabled]="currentPage() === 1" class="btn btn-outline">
-      ← Previous
-    </button>
+    <!-- ─── LOADING ────────────────────────────────────────────── -->
+    @if (isLoading()) {
+      <div class="card bg-base-100 border border-base-300 shadow-md">
+        <div class="card-body h-96 flex flex-col items-center justify-center gap-4">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+          <div class="text-center">
+            <h3 class="font-semibold text-lg text-base-content">Loading categories...</h3>
+            <p class="text-sm text-base-content/60 mt-1">Please wait</p>
+          </div>
+        </div>
+      </div>
+    }
 
-    <div class="flex gap-1">
-      <button
-        *ngFor="let page of getPageNumbers()"
-        (click)="goToPage(page)"
-        [class.btn-active]="page === currentPage()"
-        class="btn btn-sm"
-      >
-        {{ page }}
-      </button>
-    </div>
+    <!-- ─── ERROR ──────────────────────────────────────────────── -->
+    @if (errorMsg() && !isLoading()) {
+      <div class="alert alert-error shadow-lg border border-error/30">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 14l-2-2m0 0l-2-2m2 2l2-2m-2 2l-2 2m2-2l2 2m1-9a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <div>
+          <h3 class="font-bold">Error Loading Categories</h3>
+          <div class="text-xs">{{ errorMsg() }}</div>
+        </div>
+        <button (click)="loadCategories()" class="btn btn-sm btn-ghost">Retry</button>
+      </div>
+    }
 
-    <button
-      (click)="nextPage()"
-      [disabled]="currentPage() === totalPages()"
-      class="btn btn-outline"
-    >
-      Next →
-    </button>
-  </div>
+    <!-- ─── EMPTY STATE ────────────────────────────────────────── -->
+    @if (
+      !isLoading() && !errorMsg() && filteredCategories().length === 0 && categories().length === 0
+    ) {
+      <div class="card bg-base-100 border border-base-300 shadow-md">
+        <div class="card-body h-80 flex flex-col items-center justify-center gap-4 text-center">
+          <div class="text-6xl">📦</div>
+          <div>
+            <h3 class="font-bold text-xl text-base-content">No Categories Yet</h3>
+            <p class="text-sm text-base-content/60 mt-2 max-w-sm">
+              Get started by creating your first product category.
+            </p>
+          </div>
+          <a routerLink="/admin/categories/create" class="btn btn-primary gap-2 mt-4">
+            Create First Category
+          </a>
+        </div>
+      </div>
+    }
 
-  <!-- Summary -->
-  <div *ngIf="paginatedCategories().length > 0" class="text-center text-sm text-gray-600">
-    Page {{ currentPage() }} of {{ totalPages() }} | {{ totalFilteredCategories() }} categories
+    <!-- ─── NO RESULTS (after filtering) ───────────────────────── -->
+    @if (
+      !isLoading() && !errorMsg() && filteredCategories().length === 0 && categories().length > 0
+    ) {
+      <div class="card bg-base-100 border border-base-300 shadow-md">
+        <div class="card-body h-80 flex flex-col items-center justify-center gap-4 text-center">
+          <div class="text-6xl">🔍</div>
+          <div>
+            <h3 class="font-bold text-xl text-base-content">No Results Found</h3>
+            <p class="text-sm text-base-content/60 mt-2 max-w-sm">Try adjusting your filters.</p>
+          </div>
+          <button (click)="resetFilters()" class="btn btn-outline gap-2 mt-4">Clear Filters</button>
+        </div>
+      </div>
+    }
+
+    <!-- ─── TABLE ──────────────────────────────────────────────── -->
+    @if (!isLoading() && !errorMsg() && paginatedCategories().length > 0) {
+      <div class="card bg-base-100 border border-base-300 shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead class="bg-base-200 border-b-2 border-base-300">
+              <tr>
+                <th class="text-base-content font-semibold">📝 Name</th>
+                <th class="text-base-content font-semibold">Slug</th>
+                <th class="text-base-content font-semibold">Description</th>
+                <th class="text-center text-base-content font-semibold">Status</th>
+                <th class="text-base-content font-semibold">Created</th>
+                <th class="text-center text-base-content font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-base-300">
+              @for (category of paginatedCategories(); track category._id) {
+                <tr class="hover:bg-base-200 transition-colors">
+                  <!-- Name -->
+                  <td class="font-medium text-base-content">
+                    <div class="flex items-center gap-3">
+                      <div
+                        class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center"
+                      >
+                        <span class="text-lg">📂</span>
+                      </div>
+                      <p class="font-semibold text-base">{{ category.name }}</p>
+                    </div>
+                  </td>
+
+                  <!-- Slug -->
+                  <td>
+                    <code
+                      class="bg-base-300 text-base-content/80 px-3 py-1 rounded-md text-sm font-mono"
+                    >
+                      {{ category.slug }}
+                    </code>
+                  </td>
+
+                  <!-- Description -->
+                  <td>
+                    <p
+                      class="text-sm text-base-content/70 max-w-xs truncate"
+                      [title]="category.description || ''"
+                    >
+                      {{ category.description || '—' }}
+                    </p>
+                  </td>
+
+                  <!-- Status -->
+                  <td class="text-center">
+                    <div class="flex justify-center">
+                      @if (category.isActive) {
+                        <div class="badge badge-success gap-2 py-3 px-4">✓ Active</div>
+                      } @else {
+                        <div class="badge badge-error gap-2 py-3 px-4">✕ Inactive</div>
+                      }
+                    </div>
+                  </td>
+
+                  <!-- Created -->
+                  <td>
+                    <time class="text-sm text-base-content/70" [dateTime]="category.createdAt">
+                      {{ formatDate(category.createdAt) }}
+                    </time>
+                  </td>
+
+                  <!-- Actions -->
+                  <td>
+                    <div class="flex justify-center gap-2">
+                      <a
+                        [routerLink]="['/admin/categories/edit', category._id]"
+                        class="btn btn-sm btn-ghost gap-1"
+                        [attr.aria-label]="'Edit ' + category.name"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-4 w-4"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
+                          />
+                        </svg>
+                        Edit
+                      </a>
+                      <button
+                        (click)="deleteCategory(category._id)"
+                        class="btn btn-sm btn-ghost text-error hover:bg-error/10 gap-1"
+                        [attr.aria-label]="'Delete ' + category.name"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-4 w-4"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fill-rule="evenodd"
+                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ─── PAGINATION ─────────────────────────────────────── -->
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <button
+            (click)="previousPage()"
+            [disabled]="currentPage() === 1"
+            class="btn btn-outline gap-2 sm:order-1"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Previous
+          </button>
+
+          <div class="flex gap-1 flex-wrap justify-center order-2">
+            @for (page of getPageNumbers(); track page) {
+              <button
+                (click)="goToPage(page)"
+                [class.btn-active]="page === currentPage()"
+                class="btn btn-sm btn-ghost"
+                [attr.aria-current]="page === currentPage() ? 'page' : null"
+              >
+                {{ page }}
+              </button>
+            }
+          </div>
+
+          <button
+            (click)="nextPage()"
+            [disabled]="currentPage() === totalPages()"
+            class="btn btn-outline gap-2 sm:order-3"
+          >
+            Next
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="text-center text-sm text-base-content/60 font-medium">
+          <span class="font-semibold text-base-content">Page {{ currentPage() }}</span>
+          of
+          <span class="font-semibold text-base-content">{{ totalPages() }}</span>
+          •
+          <span class="font-semibold text-base-content">{{ totalFilteredCategories() }}</span>
+          total {{ totalFilteredCategories() === 1 ? 'category' : 'categories' }}
+        </div>
+      </div>
+    }
   </div>
 </div>
