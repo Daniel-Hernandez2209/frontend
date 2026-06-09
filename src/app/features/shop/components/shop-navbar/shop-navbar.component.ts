@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { CartService } from '../../../shared/services/cart.service';
+import { CartService } from '../../../../features/shop/services/cart.service';
 
 @Component({
   selector: 'app-shop-navbar',

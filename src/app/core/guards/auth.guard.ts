@@ -1,12 +1,24 @@
-import { Injectable, inject } from '@angular/core';
 import {
   CanActivateFn,
-  Router,
   ActivatedRouteSnapshot,
   RouterStateSnapshot,
+  Router,
 } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { inject } from '@angular/core';
 
+/**
+ * Auth Guard
+ * Protege rutas que requieren autenticación.
+ * Redirige a login si el usuario no está autenticado.
+ *
+ * Uso en rutas:
+ * {
+ *   path: 'dashboard',
+ *   canActivate: [authGuard],
+ *   component: DashboardComponent
+ * }
+ */
 export const authGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot,
@@ -14,30 +26,20 @@ export const authGuard: CanActivateFn = (
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.isAuthenticated()) {
+  // Verificar si el usuario está autenticado
+  const isAuthenticated = authService.isAuthenticated();
+  const currentUser = authService.currentUser();
+
+  if (isAuthenticated && currentUser) {
+    // Usuario autenticado, permitir acceso
+    console.log(`✅ Acceso concedido a ${currentUser.name}`);
     return true;
   }
 
-  // Store the attempted URL for redirecting after login
-  sessionStorage.setItem('redirectUrl', state.url);
-
-  // Navigate to login
-  router.navigate(['/login']);
-  return false;
-};
-
-export const adminGuard: CanActivateFn = (
-  route: ActivatedRouteSnapshot,
-  state: RouterStateSnapshot,
-) => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
-
-  if (authService.isAuthenticated() && authService.isAdminUser()) {
-    return true;
-  }
-
-  // Navigate to forbidden page
-  router.navigate(['/403']);
+  // No autenticado, redirigir a login
+  console.warn('❌ Usuario no autenticado. Redirigiendo a login...');
+  router.navigate(['/login'], {
+    queryParams: { returnUrl: state.url },
+  });
   return false;
 };

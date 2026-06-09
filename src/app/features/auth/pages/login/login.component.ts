@@ -113,11 +113,21 @@ export class LoginComponent {
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
-  onSubmit(): void {
-    if (this.form.valid) {
-      this.auth.login(this.form.getRawValue()).subscribe({
-        error: (err) => console.error('Login error:', err),
+  async onSubmit() {
+    if (this.form.invalid) return;
+
+    try {
+      // Cambiar de .subscribe() a .subscribe()
+      this.auth.login(this.form.getRawValue() as any).subscribe({
+        next: () => {
+          console.log('✅ Login exitoso');
+        },
+        error: (err: any) => {
+          console.error('❌ Login error:', err);
+        },
       });
+    } catch (error) {
+      console.error('Error:', error);
     }
   }
 

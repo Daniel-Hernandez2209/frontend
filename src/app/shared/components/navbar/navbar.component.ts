@@ -60,10 +60,7 @@ export class NavbarComponent {
   }
 
   onLogout(): void {
-    this.authService.logout().subscribe({
-      complete: () => {
-        this.router.navigate(['/login']);
-      },
-    });
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

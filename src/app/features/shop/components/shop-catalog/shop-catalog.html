@@ -1,0 +1,263 @@
+<div class="min-h-screen bg-base-200 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8 flex justify-between items-center">
+      <div>
+        <h1 class="text-4xl font-bold text-base-900">🛍️ Our Collection</h1>
+        <p class="text-base-600 mt-2">Browse our latest products and find your favorites</p>
+      </div>
+      <!-- Cart Counter Badge -->
+      <div class="badge badge-primary badge-lg gap-2">
+        <span>🛒</span>
+        <span>{{ cartService.itemCount() }}</span>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <!-- Sidebar Filters -->
+      <div class="md:col-span-1">
+        <div class="card bg-base-100 shadow-sm sticky top-6">
+          <div class="card-body">
+            <h2 class="text-lg font-bold text-base-900 mb-4">🔍 Filters</h2>
+
+            <!-- Search -->
+            <div class="form-control w-full mb-4">
+              <input
+                type="text"
+                placeholder="Search products..."
+                (input)="onSearch($event)"
+                class="input input-bordered w-full"
+              />
+            </div>
+
+            <!-- Category Filter -->
+            <div class="form-control w-full mb-4">
+              <label class="label">
+                <span class="label-text font-semibold">Category</span>
+              </label>
+              <select
+                [(ngModel)]="selectedCategory"
+                (ngModelChange)="onCategoryChange($event)"
+                class="select select-bordered w-full"
+              >
+                <option value="">All Categories</option>
+                @for (cat of shopService.getCategories(); track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Price Range -->
+            <div class="form-control w-full mb-4">
+              <label class="label">
+                <span class="label-text font-semibold">Price Range</span>
+                <span class="label-text-alt"> ${{ minPrice }} - ${{ maxPrice }} </span>
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="10000"
+                step="100"
+                [value]="minPrice"
+                (input)="onMinPriceChange($event)"
+                class="range range-sm"
+              />
+              <input
+                type="range"
+                min="0"
+                max="10000"
+                step="100"
+                [value]="maxPrice"
+                (input)="onMaxPriceChange($event)"
+                class="range range-sm mt-2"
+              />
+            </div>
+
+            <!-- Reset Filters -->
+            <button (click)="resetFilters()" class="btn btn-outline w-full">✕ Reset Filters</button>
+
+            <!-- Results Count -->
+            <div class="mt-6 p-3 bg-base-200 rounded-lg text-center">
+              <p class="text-sm text-base-600">
+                Showing <span class="font-bold">{{ shopService.totalProducts() }}</span> products
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="md:col-span-3">
+        <!-- Success Alert -->
+        @if (addedToCartMessage()) {
+          <div class="alert alert-success mb-4 animate-pulse">
+            <span>✅ {{ addedToCartMessage() }}</span>
+            <button (click)="clearMessage()" class="btn btn-sm btn-ghost">✕</button>
+          </div>
+        }
+
+        <!-- Loading State -->
+        @if (shopService.isLoading()) {
+          <div class="flex justify-center items-center h-96">
+            <div class="text-center">
+              <span class="loading loading-spinner loading-lg"></span>
+              <p class="text-base-600 mt-4">Loading products...</p>
+            </div>
+          </div>
+        }
+
+        <!-- Error State -->
+        @if (shopService.errorMessage()) {
+          <div class="alert alert-error mb-4">
+            <span>⚠️ {{ shopService.errorMessage() }}</span>
+            <button (click)="retryLoad()" class="btn btn-sm btn-ghost">Retry</button>
+          </div>
+        }
+
+        <!-- Empty State -->
+        @if (!shopService.isLoading() && shopService.totalProducts() === 0) {
+          <div class="alert alert-info">
+            <div class="text-center w-full">
+              <p class="text-lg">No products found</p>
+              <p class="text-sm text-base-600 mt-1">Try adjusting your filters</p>
+              <button (click)="resetFilters()" class="btn btn-sm btn-primary mt-3">
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Products Grid -->
+        @if (!shopService.isLoading() && shopService.totalProducts() > 0) {
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @for (product of shopService.paginatedProducts(); track product._id) {
+              <div class="card bg-base-100 shadow-sm hover:shadow-lg transition-shadow">
+                <!-- Product Image -->
+                <figure class="h-48 bg-base-300 relative overflow-hidden">
+                  @if (product.images && product.images[0]) {
+                    <img
+                      [src]="product.images[0]"
+                      [alt]="product.name"
+                      class="w-full h-full object-cover hover:scale-105 transition-transform"
+                    />
+                  } @else {
+                    <div class="w-full h-full flex items-center justify-center text-5xl">📦</div>
+                  }
+
+                  <!-- Discount Badge -->
+                  @if (product.discountPrice) {
+                    <div class="badge badge-error absolute top-2 right-2">
+                      -{{ shopService.getDiscountPercentage(product) }}%
+                    </div>
+                  }
+
+                  <!-- Featured Badge -->
+                  @if (product.isFeatured) {
+                    <div class="badge badge-primary absolute top-2 left-2">⭐ Featured</div>
+                  }
+                </figure>
+
+                <!-- Product Info -->
+                <div class="card-body">
+                  <!-- Category -->
+                  <span class="badge badge-ghost text-xs">{{ product.category }}</span>
+
+                  <!-- Name -->
+                  <h2 class="card-title text-lg line-clamp-2">{{ product.name }}</h2>
+
+                  <!-- Description -->
+                  <p class="text-sm text-base-600 line-clamp-2">{{ product.description }}</p>
+
+                  <!-- Price -->
+                  <div class="flex items-center gap-2 mt-2">
+                    <span class="text-2xl font-bold text-primary">
+                      {{ shopService.getDisplayPrice(product) | currency }}
+                    </span>
+                    @if (product.discountPrice) {
+                      <span class="text-sm line-through text-base-500">
+                        {{ product.price | currency }}
+                      </span>
+                    }
+                  </div>
+
+                  <!-- Stock Status -->
+                  <div class="flex items-center gap-2 text-sm mt-2">
+                    @if (shopService.hasStock(product)) {
+                      <span class="badge badge-success">
+                        ✓ In Stock ({{ product.totalStock }})
+                      </span>
+                    } @else {
+                      <span class="badge badge-error"> ✕ Out of Stock </span>
+                    }
+                  </div>
+
+                  @if (product.rating) {
+                    <div class="flex items-center gap-2 text-sm mt-2">
+                      <span class="text-warning">⭐ {{ product.rating }}/5</span>
+                      <span class="text-base-500">({{ product.reviews || 0 }} reviews)</span>
+                    </div>
+                  }
+
+                  <!-- Actions -->
+                  <div class="card-actions justify-between mt-4 gap-2">
+                    <button
+                      routerLink="/store/product/{{ product._id }}"
+                      class="btn btn-outline btn-sm flex-1"
+                    >
+                      View Details
+                    </button>
+                    <button
+                      (click)="addToCart(product)"
+                      [disabled]="!shopService.hasStock(product) || cartService.loading()"
+                      class="btn btn-primary btn-sm flex-1"
+                    >
+                      @if (cartService.loading()) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                      } @else {
+                        🛒 Add
+                      }
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Pagination -->
+        @if (shopService.totalPages() > 1) {
+          <div class="flex justify-center items-center gap-2 mt-8">
+            <button
+              (click)="previousPage()"
+              [disabled]="shopService.currentPage() === 1"
+              class="btn btn-outline btn-sm"
+            >
+              ← Previous
+            </button>
+
+            <div class="flex gap-1">
+              @for (page of shopService.getPageNumbers(); track page) {
+                <button
+                  (click)="goToPage(page)"
+                  [class.btn-active]="shopService.currentPage() === page"
+                  class="btn btn-outline btn-sm"
+                >
+                  {{ page }}
+                </button>
+              }
+            </div>
+
+            <button
+              (click)="nextPage()"
+              [disabled]="shopService.currentPage() === shopService.totalPages()"
+              class="btn btn-outline btn-sm"
+            >
+              Next →
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
