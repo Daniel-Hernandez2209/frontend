@@ -33,7 +33,7 @@ export const adminGuard: CanActivateFn = (
   // Verificar autenticación
   if (!isAuthenticated || !currentUser) {
     console.warn('❌ Usuario no autenticado. Redirigiendo a login...');
-    router.navigate(['/auth/login'], {
+    router.navigate(['/login'], {
       queryParams: { returnUrl: state.url },
     });
     return false;

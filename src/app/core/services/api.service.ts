@@ -6,7 +6,7 @@ import { environment } from '@environments/environment';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private http = inject(HttpClient);
-  private baseUrl = environment.apiUrl || 'http://localhost:3000/api';
+  private baseUrl = `${environment.apiUrl}/api` || 'http://localhost:3000/api';
 
   get<T>(endpoint: string, options?: any): Observable<T> {
     return this.http.get<T>(`${this.baseUrl}${endpoint}`, options) as any;

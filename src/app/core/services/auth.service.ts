@@ -1,12 +1,13 @@
-// src/app/core/services/auth.service.ts
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { Router } from '@angular/router';
-import { Observable, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { tap, catchError, finalize } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 import { AppStore } from '@core/store/app.store';
+import { environment } from '@environments/environment';
 
-// ==================== TIPOS ====================
 export interface User {
   id: string;
   email: string;
@@ -22,50 +23,44 @@ export interface LoginRequest {
 }
 
 export interface AuthResponse {
-  access_token: string;
-  refresh_token: string;
+  success: boolean;
+  token: {
+    accessToken: string;
+    refreshToken: string;
+  };
   user: User;
 }
 
-// ==================== SERVICE ====================
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private api = inject(ApiService);
+  private http = inject(HttpClient); // ← agregado para refresh directo
   private router = inject(Router);
   private appStore = inject(AppStore);
 
-  // ✨ SIGNALS - ESTADO REACTIVO
   currentUser = signal<User | null>(null);
   isAuthenticated = signal(false);
   isLoading = signal(false);
   error = signal<string | null>(null);
 
-  // 🧮 COMPUTED - VALORES DERIVADOS AUTOMÁTICOS
   userRole = computed(() => this.currentUser()?.role ?? 'guest');
   isAdmin = computed(() => this.userRole() === 'admin');
   displayName = computed(() => this.currentUser()?.name ?? 'Invitado');
 
   constructor() {
-    // 🔔 EFFECT - SINCRONIZAR CON SESSIONSTORAGE AUTOMÁTICAMENTE
     effect(() => {
       const user = this.currentUser();
       this.appStore.setCurrentUser(user);
       if (user) {
         sessionStorage.setItem('currentUser', JSON.stringify(user));
-        console.log('✅ Usuario guardado en sessionStorage');
       } else {
         sessionStorage.removeItem('currentUser');
-        console.log('🗑️ Usuario removido de sessionStorage');
       }
     });
 
-    // Cargar usuario que ya estaba logueado
     this.loadStoredUser();
   }
 
-  /**
-   * Login - RxJS OK aquí (para formularios)
-   */
   login(credentials: LoginRequest): Observable<AuthResponse> {
     this.isLoading.set(true);
     this.error.set(null);
@@ -74,9 +69,9 @@ export class AuthService {
       tap((response) => {
         this.currentUser.set(response.user);
         this.isAuthenticated.set(true);
-        sessionStorage.setItem('access_token', response.access_token);
-        sessionStorage.setItem('refresh_token', response.refresh_token);
-        this.router.navigate(['/dashboard']);
+        sessionStorage.setItem('access_token', response.token.accessToken);
+        sessionStorage.setItem('refresh_token', response.token.refreshToken);
+        this.router.navigate(['/admin/dashboard']);
       }),
       catchError((err) => {
         this.error.set(err.error?.message || 'Error en login');
@@ -87,21 +82,14 @@ export class AuthService {
     );
   }
 
-  /**
-   * Logout
-   */
   logout(): void {
     this.currentUser.set(null);
     this.isAuthenticated.set(false);
     this.error.set(null);
     sessionStorage.clear();
-    this.router.navigate(['/auth/login']);
-    console.log('✅ Logout exitoso');
+    this.router.navigate(['/login']);
   }
 
-  /**
-   * Refresh token automático
-   */
   async refreshToken(): Promise<boolean> {
     try {
       const refreshToken = sessionStorage.getItem('refresh_token');
@@ -110,15 +98,16 @@ export class AuthService {
         return false;
       }
 
-      const response = await this.api
-        .post<{ access_token: string }>('/auth/refresh', {
-          refreshToken,
-        })
-        .toPromise();
+      const response = await firstValueFrom(
+        this.http.post<{ token: { accessToken: string } }>(
+          `${environment.apiUrl}/api/auth/refresh-token`,
+          { refreshToken },
+          { headers: { Authorization: `Bearer ${refreshToken}` } },
+        ),
+      );
 
-      if (response) {
-        sessionStorage.setItem('access_token', response.access_token);
-        console.log('✅ Token refrescado');
+      if (response?.token?.accessToken) {
+        sessionStorage.setItem('access_token', response.token.accessToken); // ← cambio
         return true;
       }
       return false;
@@ -129,16 +118,10 @@ export class AuthService {
     }
   }
 
-  /**
-   * Obtener token actual
-   */
   getAccessToken(): string | null {
     return sessionStorage.getItem('access_token');
   }
 
-  /**
-   * Cargar usuario desde sessionStorage (al iniciar app)
-   */
   private loadStoredUser(): void {
     const userStr = sessionStorage.getItem('currentUser');
     if (userStr) {

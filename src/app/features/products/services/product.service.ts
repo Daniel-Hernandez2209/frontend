@@ -5,7 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { Product, ApiResponse, PaginatedResponse } from '../../../shared/types/interfaces';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ProductService {
   private readonly API_URL = `${environment.apiUrl}/api`;
@@ -27,7 +27,7 @@ export class ProductService {
     category: '',
     minPrice: 0,
     maxPrice: Infinity,
-    isActive: true
+    isActive: true,
   });
 
   // Computed
@@ -35,15 +35,16 @@ export class ProductService {
     const all = this.products();
     const f = this.filters();
 
-    return all.filter(p => {
-      const matchesSearch = !f.search || 
+    return all.filter((p) => {
+      const matchesSearch =
+        !f.search ||
         p.name.toLowerCase().includes(f.search.toLowerCase()) ||
         p.sku.toLowerCase().includes(f.search.toLowerCase());
-      
+
       const matchesCategory = !f.category || p.category === f.category;
-      const matchesPrice = (p.discountPrice || p.price) >= f.minPrice && 
-                          (p.discountPrice || p.price) <= f.maxPrice;
-      const matchesActive = p.isActive === f.isActive;
+      const matchesPrice =
+        (p.discountPrice || p.price) >= f.minPrice && (p.discountPrice || p.price) <= f.maxPrice;
+      const matchesActive = (p.isActive = f.isActive === null || p.isActive === f.isActive);
 
       return matchesSearch && matchesCategory && matchesPrice && matchesActive;
     });
@@ -59,9 +60,7 @@ export class ProductService {
     return filtered.slice(start, start + size);
   });
 
-  totalPages = computed(() => 
-    Math.ceil(this.totalFilteredProducts() / this.pageSize())
-  );
+  totalPages = computed(() => Math.ceil(this.totalFilteredProducts() / this.pageSize()));
 
   constructor(private http: HttpClient) {}
 
@@ -74,19 +73,21 @@ export class ProductService {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<PaginatedResponse<Product>>(
-          `${this.API_URL}/products`,
-          { params: { page: page.toString(), limit: limit.toString() } }
-        )
+        this.http.get<any>(`${this.API_URL}/products`, {
+          params: { page: page.toString(), limit: limit.toString() },
+        }),
       );
 
-      this.products.set(response.data || []);
-      this.totalProducts.set(response.pagination.total);
+      // ✅ Soporta { products: [...] } o { data: [...] }
+      const list = response.products || response.data || [];
+      const total = response.pagination?.total || response.total || list.length;
+
+      this.products.set(list);
+      this.totalProducts.set(total);
       this.currentPage.set(page);
     } catch (err: any) {
       const message = err.error?.message || 'Failed to fetch products';
       this.error.set(message);
-      console.error(message, err);
     } finally {
       this.isLoading.set(false);
     }
@@ -101,9 +102,7 @@ export class ProductService {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<ApiResponse<Product>>(
-          `${this.API_URL}/products/${slug}`
-        )
+        this.http.get<ApiResponse<Product>>(`${this.API_URL}/products/${slug}`),
       );
 
       if (response.data) {
@@ -126,7 +125,7 @@ export class ProductService {
   async getFeatured(): Promise<Product[]> {
     try {
       const response = await firstValueFrom(
-        this.http.get<{ data: Product[] }>(`${this.API_URL}/products/featured`)
+        this.http.get<{ data: Product[] }>(`${this.API_URL}/products/featured`),
       );
       return response.data || [];
     } catch (err) {
@@ -145,14 +144,11 @@ export class ProductService {
     try {
       const params = {
         q: query,
-        ...filters
+        ...filters,
       };
 
       const response = await firstValueFrom(
-        this.http.get<{ data: Product[] }>(
-          `${this.API_URL}/products/search`,
-          { params }
-        )
+        this.http.get<{ data: Product[] }>(`${this.API_URL}/products/search`, { params }),
       );
 
       this.products.set(response.data || []);
@@ -172,7 +168,7 @@ export class ProductService {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<ApiResponse<Product>>(`${this.API_URL}/products`, data)
+        this.http.post<ApiResponse<Product>>(`${this.API_URL}/products`, data),
       );
 
       if (response.data) {
@@ -200,12 +196,12 @@ export class ProductService {
 
     try {
       const response = await firstValueFrom(
-        this.http.put<ApiResponse<Product>>(`${this.API_URL}/products/${id}`, data)
+        this.http.put<ApiResponse<Product>>(`${this.API_URL}/products/${id}`, data),
       );
 
       if (response.data) {
         // Update in products list
-        const updated = this.products().map(p => p._id === id ? response.data : p);
+        const updated = this.products().map((p) => (p._id === id ? response.data : p));
         this.products.set(updated);
 
         // Update selected product if it's the one being edited
@@ -234,12 +230,10 @@ export class ProductService {
     this.error.set(null);
 
     try {
-      await firstValueFrom(
-        this.http.delete(`${this.API_URL}/products/${id}`)
-      );
+      await firstValueFrom(this.http.delete(`${this.API_URL}/products/${id}`));
 
       // Remove from products list
-      const updated = this.products().filter(p => p._id !== id);
+      const updated = this.products().filter((p) => p._id !== id);
       this.products.set(updated);
 
       // Clear selected if it was deleted
@@ -260,9 +254,7 @@ export class ProductService {
    */
   async updateStock(id: string, size: string, stock: number): Promise<void> {
     try {
-      await firstValueFrom(
-        this.http.put(`${this.API_URL}/products/${id}/stock`, { size, stock })
-      );
+      await firstValueFrom(this.http.put(`${this.API_URL}/products/${id}/stock`, { size, stock }));
 
       // Refresh product
       await this.getBySlug(id);
@@ -277,13 +269,10 @@ export class ProductService {
   async uploadImages(files: File[]): Promise<string[]> {
     try {
       const formData = new FormData();
-      files.forEach(file => formData.append('files', file));
+      files.forEach((file) => formData.append('files', file));
 
       const response = await firstValueFrom(
-        this.http.post<{ urls: string[] }>(
-          `${this.API_URL}/upload/products`,
-          formData
-        )
+        this.http.post<{ urls: string[] }>(`${this.API_URL}/upload/products`, formData),
       );
 
       return response.urls || [];
@@ -298,7 +287,7 @@ export class ProductService {
   async getAnalytics(): Promise<any> {
     try {
       const response = await firstValueFrom(
-        this.http.get(`${this.API_URL}/products/admin/analytics/stats`)
+        this.http.get(`${this.API_URL}/products/admin/analytics/stats`),
       );
       return response;
     } catch (err) {
@@ -310,7 +299,10 @@ export class ProductService {
   /**
    * Update filter
    */
-  updateFilter(key: 'search' | 'category' | 'minPrice' | 'maxPrice' | 'isActive', value: any): void {
+  updateFilter(
+    key: 'search' | 'category' | 'minPrice' | 'maxPrice' | 'isActive',
+    value: any,
+  ): void {
     const current = this.filters();
     this.filters.set({ ...current, [key]: value });
     this.currentPage.set(1); // Reset to first page
@@ -325,7 +317,7 @@ export class ProductService {
       category: '',
       minPrice: 0,
       maxPrice: Infinity,
-      isActive: true
+      isActive: true,
     });
     this.currentPage.set(1);
   }

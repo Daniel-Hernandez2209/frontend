@@ -9,33 +9,33 @@ import {
   CreateUserRequest,
   UpdateUserRequest,
   ApiResponse,
-  PaginatedResponse
+  PaginatedResponse,
 } from '../../../shared/types/interfaces';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UserService {
-  private apiUrl = `${environment.apiUrl}/api/users`;
+  private apiUrl = `${environment.apiUrl}/api/admin/users`;
 
   // ── Estado principal ──────────────────────────────────────────────────────
-  users         = signal<User[]>([]);
-  selectedUser  = signal<User | null>(null);
-  isLoading     = signal(false);
-  error         = signal<string | null>(null);
-  successMsg    = signal<string | null>(null);
+  users = signal<User[]>([]);
+  selectedUser = signal<User | null>(null);
+  isLoading = signal(false);
+  error = signal<string | null>(null);
+  successMsg = signal<string | null>(null);
 
   // ── Paginación ────────────────────────────────────────────────────────────
-  currentPage   = signal(1);
-  pageSize      = signal(10);
-  totalUsers    = signal(0);
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalUsers = signal(0);
 
   // ── Filtros ───────────────────────────────────────────────────────────────
   filters = signal<UserFilters>({
-    search:     '',
-    role:       null,
-    isActive:   null,
-    isVerified: null
+    search: '',
+    role: null,
+    isActive: null,
+    isVerified: null,
   });
 
   // ── Computed ──────────────────────────────────────────────────────────────
@@ -43,15 +43,16 @@ export class UserService {
     const all = this.users();
     const { search, role, isActive, isVerified } = this.filters();
 
-    return all.filter(u => {
-      const fullName  = `${u.firstName} ${u.lastName}`.toLowerCase();
-      const matchName = !search ||
+    return all.filter((u) => {
+      const fullName = `${u.firstName} ${u.lastName}`.toLowerCase();
+      const matchName =
+        !search ||
         fullName.includes(search.toLowerCase()) ||
         u.email.toLowerCase().includes(search.toLowerCase()) ||
         (u.phone ?? '').includes(search);
 
-      const matchRole     = role       === null || u.role      === role;
-      const matchActive   = isActive   === null || u.isActive  === isActive;
+      const matchRole = role === null || u.role === role;
+      const matchActive = isActive === null || u.isActive === isActive;
       const matchVerified = isVerified === null || u.isVerified === isVerified;
 
       return matchName && matchRole && matchActive && matchVerified;
@@ -64,9 +65,7 @@ export class UserService {
     return filtered.slice(start, start + this.pageSize());
   });
 
-  totalPages = computed(() =>
-    Math.ceil(this.filteredUsers().length / this.pageSize()) || 1
-  );
+  totalPages = computed(() => Math.ceil(this.filteredUsers().length / this.pageSize()) || 1);
 
   totalFiltered = computed(() => this.filteredUsers().length);
 
@@ -77,12 +76,12 @@ export class UserService {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     return {
-      total:        all.length,
-      active:       all.filter(u => u.isActive).length,
-      inactive:     all.filter(u => !u.isActive).length,
-      admins:       all.filter(u => u.role === 'admin').length,
-      verified:     all.filter(u => u.isVerified).length,
-      newThisMonth: all.filter(u => new Date(u.createdAt) >= startOfMonth).length
+      total: all.length,
+      active: all.filter((u) => u.isActive).length,
+      inactive: all.filter((u) => !u.isActive).length,
+      admins: all.filter((u) => u.role === 'admin').length,
+      verified: all.filter((u) => u.isVerified).length,
+      newThisMonth: all.filter((u) => new Date(u.createdAt) >= startOfMonth).length,
     };
   });
 
@@ -96,15 +95,12 @@ export class UserService {
       this.isLoading.set(true);
       this.error.set(null);
 
-      const response = await firstValueFrom(
-        this.http.get<any>(`${this.apiUrl}?limit=200`)
-      );
+      const response = await firstValueFrom(this.http.get<any>(`${this.apiUrl}?limit=200`));
 
       // Soporta { data: [...] } o { data: { users: [...] } }
-      const list: User[] =
-        Array.isArray(response?.data)
-          ? response.data
-          : response?.data?.users ?? [];
+      const list: User[] = Array.isArray(response?.data)
+        ? response.data
+        : (response?.data?.users ?? []);
 
       this.users.set(list);
       this.totalUsers.set(list.length);
@@ -123,7 +119,7 @@ export class UserService {
       this.error.set(null);
 
       const response = await firstValueFrom(
-        this.http.get<ApiResponse<User>>(`${this.apiUrl}/${id}`)
+        this.http.get<ApiResponse<User>>(`${this.apiUrl}/${id}`),
       );
       this.selectedUser.set(response.data ?? null);
       return response.data ?? null;
@@ -142,12 +138,12 @@ export class UserService {
       this.error.set(null);
 
       const response = await firstValueFrom(
-        this.http.post<ApiResponse<User>>(`${this.apiUrl}`, data)
+        this.http.post<ApiResponse<User>>(`${this.apiUrl}`, data),
       );
 
       if (response.data) {
-        this.users.update(list => [response.data!, ...list]);
-        this.totalUsers.update(n => n + 1);
+        this.users.update((list) => [response.data!, ...list]);
+        this.totalUsers.update((n) => n + 1);
         this.successMsg.set('Usuario creado exitosamente');
         this._clearSuccess();
       }
@@ -168,13 +164,11 @@ export class UserService {
       this.error.set(null);
 
       const response = await firstValueFrom(
-        this.http.put<ApiResponse<User>>(`${this.apiUrl}/${id}`, data)
+        this.http.put<ApiResponse<User>>(`${this.apiUrl}/${id}`, data),
       );
 
       if (response.data) {
-        this.users.update(list =>
-          list.map(u => u._id === id ? response.data! : u)
-        );
+        this.users.update((list) => list.map((u) => (u._id === id ? response.data! : u)));
         if (this.selectedUser()?._id === id) {
           this.selectedUser.set(response.data);
         }
@@ -197,12 +191,10 @@ export class UserService {
       this.isLoading.set(true);
       this.error.set(null);
 
-      await firstValueFrom(
-        this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`)
-      );
+      await firstValueFrom(this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`));
 
-      this.users.update(list => list.filter(u => u._id !== id));
-      this.totalUsers.update(n => n - 1);
+      this.users.update((list) => list.filter((u) => u._id !== id));
+      this.totalUsers.update((n) => n - 1);
 
       if (this.selectedUser()?._id === id) {
         this.selectedUser.set(null);
@@ -226,13 +218,11 @@ export class UserService {
       this.error.set(null);
 
       const response = await firstValueFrom(
-        this.http.patch<ApiResponse<User>>(`${this.apiUrl}/${id}/status`, { isActive })
+        this.http.patch<ApiResponse<User>>(`${this.apiUrl}/${id}/status`, { isActive }),
       );
 
       if (response.data) {
-        this.users.update(list =>
-          list.map(u => u._id === id ? { ...u, isActive } : u)
-        );
+        this.users.update((list) => list.map((u) => (u._id === id ? { ...u, isActive } : u)));
         this.successMsg.set(isActive ? 'Usuario activado' : 'Usuario desactivado');
         this._clearSuccess();
       }
@@ -249,13 +239,11 @@ export class UserService {
       this.error.set(null);
 
       const response = await firstValueFrom(
-        this.http.patch<ApiResponse<User>>(`${this.apiUrl}/${id}/role`, { role })
+        this.http.patch<ApiResponse<User>>(`${this.apiUrl}/${id}/role`, { role }),
       );
 
       if (response.data) {
-        this.users.update(list =>
-          list.map(u => u._id === id ? { ...u, role } : u)
-        );
+        this.users.update((list) => list.map((u) => (u._id === id ? { ...u, role } : u)));
         this.successMsg.set(`Rol cambiado a ${role === 'admin' ? 'Administrador' : 'Usuario'}`);
         this._clearSuccess();
       }
@@ -269,7 +257,7 @@ export class UserService {
   // ── Filtros ───────────────────────────────────────────────────────────────
 
   updateFilter(key: keyof UserFilters, value: any): void {
-    this.filters.update(f => ({ ...f, [key]: value }));
+    this.filters.update((f) => ({ ...f, [key]: value }));
     this.currentPage.set(1);
   }
 
@@ -287,7 +275,7 @@ export class UserService {
   }
 
   getPageNumbers(): number[] {
-    const total   = this.totalPages();
+    const total = this.totalPages();
     const current = this.currentPage();
     const adj = 2;
     const pages: number[] = [];
@@ -320,9 +308,7 @@ export class UserService {
   }
 
   getVerifiedColor(isVerified: boolean): string {
-    return isVerified
-      ? 'bg-teal-100 text-teal-800'
-      : 'bg-yellow-100 text-yellow-800';
+    return isVerified ? 'bg-teal-100 text-teal-800' : 'bg-yellow-100 text-yellow-800';
   }
 
   getVerifiedLabel(isVerified: boolean): string {
@@ -335,10 +321,20 @@ export class UserService {
 
   getAvatarColor(user: User): string {
     const colors = [
-      'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500',
-      'bg-lime-500', 'bg-green-500', 'bg-teal-500', 'bg-cyan-500',
-      'bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500',
-      'bg-pink-500', 'bg-rose-500'
+      'bg-red-500',
+      'bg-orange-500',
+      'bg-amber-500',
+      'bg-yellow-500',
+      'bg-lime-500',
+      'bg-green-500',
+      'bg-teal-500',
+      'bg-cyan-500',
+      'bg-blue-500',
+      'bg-indigo-500',
+      'bg-violet-500',
+      'bg-purple-500',
+      'bg-pink-500',
+      'bg-rose-500',
     ];
     const index = user.firstName.charCodeAt(0) % colors.length;
     return colors[index];
@@ -346,9 +342,9 @@ export class UserService {
 
   formatDate(date: string | Date): string {
     return new Intl.DateTimeFormat('es-CO', {
-      year:   'numeric',
-      month:  'short',
-      day:    'numeric'
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     }).format(new Date(date));
   }
 
