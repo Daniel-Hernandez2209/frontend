@@ -1,230 +1,207 @@
 import { Component, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl } from '@angular/forms';
+import { CurrencyPipe } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CartService } from '../../../../shared/services/cart.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ApiService } from '../../../../core/services/api.service';
 import { firstValueFrom } from 'rxjs';
 
-interface OrderData {
-  customer: {
-    name: string;
+// ── Tipos alineados con el backend ───────────────────────────────────────────
+
+interface CreateOrderPayload {
+  items: { product: string; size: string; quantity: number }[];
+  shippingAddress: {
+    firstName: string;
+    lastName: string;
+    street: string;
+    city: string;
+    department: string;
+    zipCode: string;
+    country: string;
+  };
+  payment: { method: 'pse' | 'cash_on_delivery' | 'bank_transfer' };
+  guestInfo?: {
     email: string;
+    firstName: string;
+    lastName: string;
     phone: string;
-    address: {
-      street: string;
-      city: string;
-      postalCode: string;
-      country: string;
-    };
   };
-  items: any[];
-  totals: {
-    subtotal: number;
-    tax: number;
-    shipping: number;
-    total: number;
-  };
-  paymentMethod: 'transfer' | 'stripe' | 'cod';
-  status: string;
 }
 
-interface OrderResponse {
-  _id: string;
-  [key: string]: any;
+interface OrderCreatedData {
+  orderNumber: string;
+  total: number;
+  status: string;
+  estimatedDelivery?: string;
+  guestToken?: string;
 }
+
+interface CreateOrderResponse {
+  success: boolean;
+  message: string;
+  data: OrderCreatedData;
+}
+
+// ── Constantes ────────────────────────────────────────────────────────────────
+
+const COLOMBIAN_DEPARTMENTS = [
+  'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bolívar', 'Boyacá',
+  'Caldas', 'Caquetá', 'Casanare', 'Cauca', 'Cesar', 'Chocó', 'Córdoba',
+  'Cundinamarca', 'Guainía', 'Guaviare', 'Huila', 'La Guajira', 'Magdalena',
+  'Meta', 'Nariño', 'Norte de Santander', 'Putumayo', 'Quindío', 'Risaralda',
+  'San Andrés y Providencia', 'Santander', 'Sucre', 'Tolima', 'Valle del Cauca',
+  'Vaupés', 'Vichada',
+];
+
+// ── Componente ────────────────────────────────────────────────────────────────
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [ReactiveFormsModule, CurrencyPipe, RouterModule],
   templateUrl: './checkout.html',
   styleUrl: './checkout.css',
 })
 export class CheckoutComponent {
-  cartService = inject(CartService);
-  apiService = inject(ApiService);
-  router = inject(Router);
+  private fb      = inject(FormBuilder);
+  private api     = inject(ApiService);
+  private router  = inject(Router);
 
-  // ── Estado del formulario ──────────────────────────────────────────
-  formData = {
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: 'Colombia',
-    paymentMethod: 'transfer' as 'transfer' | 'stripe' | 'cod',
-  };
+  protected cart  = inject(CartService);
+  protected auth  = inject(AuthService);
 
-  // ── Signals ────────────────────────────────────────────────────────
-  isProcessing = signal(false);
-  error = signal<string | null>(null);
-  success = signal<string | null>(null);
-  shippingCost = signal(5); // $5 flat rate
+  readonly departments = COLOMBIAN_DEPARTMENTS;
 
-  // ── Computed ───────────────────────────────────────────────────────
-  /**
-   * Total final (subtotal + impuestos + envío)
-   */
-  finalTotal = computed(() => {
-    return this.cartService.subtotal() + this.cartService.tax() + this.shippingCost();
+  // ── Estado ──────────────────────────────────────────────────────────────────
+  isProcessing  = signal(false);
+  serverError   = signal<string | null>(null);
+  placedOrder   = signal<OrderCreatedData | null>(null);
+
+  // ── Formulario ───────────────────────────────────────────────────────────────
+  form = this.fb.nonNullable.group({
+    // Datos de envío
+    firstName:  ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+    lastName:   ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+    street:     ['', [Validators.required, Validators.minLength(10), Validators.maxLength(200)]],
+    city:       ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+    department: ['', [Validators.required]],
+    zipCode:    [''],   // opcional en Colombia
+    country:    ['Colombia'],
+
+    // Contacto — solo requerido si el usuario no está autenticado
+    email: ['', [Validators.email]],
+    phone: [''],
+
+    // Método de pago
+    paymentMethod: ['pse' as 'pse' | 'cash_on_delivery' | 'bank_transfer', Validators.required],
   });
 
-  /**
-   * Verificar si el carrito está vacío
-   */
-  isCartEmpty = computed(() => this.cartService.isEmpty());
-
-  /**
-   * Verificar si el formulario es válido
-   */
-  isFormValid = computed(() => {
-    const { firstName, lastName, email, phone, address, city, postalCode, country } = this.formData;
-
-    return (
-      firstName.trim() !== '' &&
-      lastName.trim() !== '' &&
-      email.trim() !== '' &&
-      this.isValidEmail(email) &&
-      phone.trim() !== '' &&
-      address.trim() !== '' &&
-      city.trim() !== '' &&
-      postalCode.trim() !== '' &&
-      country.trim() !== ''
-    );
-  });
-
-  /**
-   * Verificar si el botón debe estar deshabilitado
-   */
-  isButtonDisabled = computed(() => {
-    return this.isProcessing() || !this.isFormValid() || this.isCartEmpty();
-  });
-
-  /**
-   * Validar email
-   */
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  /**
-   * Limpiar mensaje de error
-   */
-  clearError(): void {
-    this.error.set(null);
-  }
-
-  /**
-   * Limpiar mensaje de éxito
-   */
-  clearSuccess(): void {
-    this.success.set(null);
-  }
-
-  /**
-   * Validar formulario antes de enviar
-   */
-  validateForm(): boolean {
-    if (this.isCartEmpty()) {
-      this.error.set('Your cart is empty');
-      return false;
+  // Añadir validadores extra de contacto si no está autenticado
+  constructor() {
+    if (!this.auth.isAuthenticated()) {
+      this.form.controls.email.addValidators([Validators.required]);
+      this.form.controls.phone.addValidators([Validators.required]);
+      this.form.controls.email.updateValueAndValidity();
+      this.form.controls.phone.updateValueAndValidity();
     }
 
-    if (!this.isFormValid()) {
-      this.error.set('Please fill in all fields correctly');
-      return false;
+    // Prefill si está autenticado
+    const user = this.auth.currentUser();
+    if (user) {
+      this.form.patchValue({
+        firstName: user.firstName,
+        lastName:  user.lastName,
+        email:     user.email,
+      });
     }
-
-    return true;
   }
 
-  /**
-   * Crear objeto de datos para la orden
-   */
-  private createOrderData(): OrderData {
-    return {
-      customer: {
-        name: `${this.formData.firstName.trim()} ${this.formData.lastName.trim()}`,
-        email: this.formData.email.trim(),
-        phone: this.formData.phone.trim(),
-        address: {
-          street: this.formData.address.trim(),
-          city: this.formData.city.trim(),
-          postalCode: this.formData.postalCode.trim(),
-          country: this.formData.country.trim(),
-        },
-      },
-      items: this.cartService.items(),
-      totals: {
-        subtotal: this.cartService.subtotal(),
-        tax: this.cartService.tax(),
-        shipping: this.shippingCost(),
-        total: this.finalTotal(),
-      },
-      paymentMethod: this.formData.paymentMethod,
-      status: 'pending',
-    };
+  // ── Computed ─────────────────────────────────────────────────────────────────
+  isGuest      = computed(() => !this.auth.isAuthenticated());
+  canSubmit    = computed(() => !this.isProcessing() && !this.cart.isEmpty());
+
+  // ── Helpers de validación ────────────────────────────────────────────────────
+  field(name: keyof typeof this.form.controls): AbstractControl {
+    return this.form.controls[name];
   }
 
-  /**
-   * Procesar la orden
-   */
-  async placeOrder(): Promise<void> {
-    // Limpiar mensajes previos
-    this.error.set(null);
-    this.success.set(null);
+  isInvalid(name: keyof typeof this.form.controls): boolean {
+    const c = this.field(name);
+    return c.invalid && (c.dirty || c.touched);
+  }
 
-    // Validar
-    if (!this.validateForm()) {
+  fieldError(name: keyof typeof this.form.controls): string {
+    const errors = this.field(name).errors;
+    if (!errors) return '';
+    if (errors['required'])   return 'Campo requerido';
+    if (errors['email'])      return 'Email inválido';
+    if (errors['minlength'])  return `Mínimo ${errors['minlength'].requiredLength} caracteres`;
+    if (errors['maxlength'])  return `Máximo ${errors['maxlength'].requiredLength} caracteres`;
+    return 'Valor inválido';
+  }
+
+  // ── Submit ────────────────────────────────────────────────────────────────────
+  async onSubmit(): Promise<void> {
+    this.form.markAllAsTouched();
+    this.serverError.set(null);
+
+    if (this.form.invalid) return;
+    if (this.cart.isEmpty()) {
+      this.serverError.set('Tu carrito está vacío');
       return;
     }
 
     this.isProcessing.set(true);
 
     try {
-      const orderData = this.createOrderData();
+      const v = this.form.getRawValue();
 
-      // 📤 Enviar orden al backend
-      const response = await firstValueFrom(
-        this.apiService.post<OrderResponse>('/orders', orderData),
-      );
+      const payload: CreateOrderPayload = {
+        items: this.cart.toOrderItems(),
+        shippingAddress: {
+          firstName:  v.firstName.trim(),
+          lastName:   v.lastName.trim(),
+          street:     v.street.trim(),
+          city:       v.city.trim(),
+          department: v.department.trim(),
+          zipCode:    v.zipCode.trim(),
+          country:    v.country.trim(),
+        },
+        payment: { method: v.paymentMethod },
+      };
 
-      if (!response || !response._id) {
-        throw new Error('Invalid response from server');
+      // Incluir guestInfo solo para usuarios no autenticados
+      if (!this.auth.isAuthenticated()) {
+        payload.guestInfo = {
+          email:     v.email.trim(),
+          firstName: v.firstName.trim(),
+          lastName:  v.lastName.trim(),
+          phone:     v.phone.trim(),
+        };
       }
 
-      // ✅ Éxito
-      this.success.set(
-        `Order placed successfully!\nOrder ID: ${response._id}\n\nYou will receive an email confirmation shortly.`,
+      const response = await firstValueFrom(
+        this.api.post<CreateOrderResponse>('/orders', payload),
       );
 
-      // 🧹 Limpiar carrito después de 1 segundo
-      setTimeout(() => {
-        this.cartService.clearCart();
-      }, 1000);
+      if (!response.success || !response.data?.orderNumber) {
+        throw new Error(response.message || 'Respuesta inesperada del servidor');
+      }
 
-      // 🔄 Redirigir después de 2 segundos
-      setTimeout(() => {
-        this.router.navigate(['/admin/orders']);
-      }, 2000);
-    } catch (error: any) {
-      const errorMessage = error?.error?.message || error?.message || 'Failed to place order';
-      this.error.set(`Error: ${errorMessage}`);
-      console.error('Order placement error:', error);
+      // Limpiar carrito y mostrar confirmación
+      this.cart.clearCart();
+      this.placedOrder.set(response.data);
+
+    } catch (err: any) {
+      const msg = err?.error?.message ?? err?.message ?? 'Error al procesar el pedido';
+      this.serverError.set(msg);
     } finally {
       this.isProcessing.set(false);
     }
   }
 
-  /**
-   * Obtener items del carrito
-   */
-  getCartItems() {
-    return this.cartService.items();
+  goToStore(): void {
+    this.router.navigate(['/store']);
   }
 }

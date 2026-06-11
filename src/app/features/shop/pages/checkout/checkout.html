@@ -1,280 +1,379 @@
-<div class="min-h-screen bg-base-200 p-6">
-  <div class="max-w-4xl mx-auto">
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold text-base-900">🛒 Checkout</h1>
-      <p class="text-base-600 mt-2">Complete your purchase</p>
+<!-- ── Header mínimo ─────────────────────────────────────────────────────── -->
+<header class="bg-base-100 border-b border-base-200 px-6 py-3 flex items-center justify-between">
+  <a routerLink="/store" class="flex items-center gap-2 font-extrabold text-lg tracking-tight">
+    <div class="w-7 h-7 bg-primary rounded-md flex items-center justify-center">
+      <span class="text-primary-content font-bold text-xs">AB</span>
     </div>
-
-    <!-- Error Alert -->
-    @if (error()) {
-      <div class="alert alert-error mb-6">
-        <span>{{ error() }}</span>
-        <button (click)="clearError()" class="btn btn-sm btn-ghost">✕</button>
-      </div>
-    }
-
-    <!-- Success Alert -->
-    @if (success()) {
-      <div class="alert alert-success mb-6">
-        <span>{{ success() }}</span>
-        <button (click)="clearSuccess()" class="btn btn-sm btn-ghost">✕</button>
-      </div>
-    }
-
-    <!-- Empty Cart -->
-    @if (isCartEmpty()) {
-      <div class="alert alert-warning">
-        <p>Your cart is empty. <a routerLink="/store" class="link">Continue shopping</a></p>
-      </div>
-    }
-
-    <!-- Checkout Form -->
-    @if (!isCartEmpty()) {
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Form Section -->
-        <div class="lg:col-span-2 space-y-6">
-          <!-- Shipping Information -->
-          <div class="card bg-base-100 shadow-sm">
-            <div class="card-body">
-              <h2 class="text-2xl font-bold text-base-900 mb-6">📮 Shipping Information</h2>
-
-              <div class="grid grid-cols-2 gap-4">
-                <!-- First Name -->
-                <div class="form-control w-full">
-                  <label class="label">
-                    <span class="label-text font-semibold">First Name</span>
-                  </label>
-                  <input
-                    type="text"
-                    [(ngModel)]="formData.firstName"
-                    placeholder="John"
-                    class="input input-bordered w-full"
-                  />
-                </div>
-
-                <!-- Last Name -->
-                <div class="form-control w-full">
-                  <label class="label">
-                    <span class="label-text font-semibold">Last Name</span>
-                  </label>
-                  <input
-                    type="text"
-                    [(ngModel)]="formData.lastName"
-                    placeholder="Doe"
-                    class="input input-bordered w-full"
-                  />
-                </div>
-              </div>
-
-              <!-- Email -->
-              <div class="form-control w-full mt-4">
-                <label class="label">
-                  <span class="label-text font-semibold">Email</span>
-                </label>
-                <input
-                  type="email"
-                  [(ngModel)]="formData.email"
-                  placeholder="john@example.com"
-                  class="input input-bordered w-full"
-                />
-              </div>
-
-              <!-- Phone -->
-              <div class="form-control w-full mt-4">
-                <label class="label">
-                  <span class="label-text font-semibold">Phone Number</span>
-                </label>
-                <input
-                  type="tel"
-                  [(ngModel)]="formData.phone"
-                  placeholder="+1 (555) 000-0000"
-                  class="input input-bordered w-full"
-                />
-              </div>
-
-              <!-- Address -->
-              <div class="form-control w-full mt-4">
-                <label class="label">
-                  <span class="label-text font-semibold">Street Address</span>
-                </label>
-                <input
-                  type="text"
-                  [(ngModel)]="formData.address"
-                  placeholder="123 Main St"
-                  class="input input-bordered w-full"
-                />
-              </div>
-
-              <div class="grid grid-cols-2 gap-4 mt-4">
-                <!-- City -->
-                <div class="form-control w-full">
-                  <label class="label">
-                    <span class="label-text font-semibold">City</span>
-                  </label>
-                  <input
-                    type="text"
-                    [(ngModel)]="formData.city"
-                    placeholder="San Pedro"
-                    class="input input-bordered w-full"
-                  />
-                </div>
-
-                <!-- Postal Code -->
-                <div class="form-control w-full">
-                  <label class="label">
-                    <span class="label-text font-semibold">Postal Code</span>
-                  </label>
-                  <input
-                    type="text"
-                    [(ngModel)]="formData.postalCode"
-                    placeholder="12345"
-                    class="input input-bordered w-full"
-                  />
-                </div>
-              </div>
-
-              <!-- Country -->
-              <div class="form-control w-full mt-4">
-                <label class="label">
-                  <span class="label-text font-semibold">Country</span>
-                </label>
-                <input
-                  type="text"
-                  [(ngModel)]="formData.country"
-                  placeholder="Colombia"
-                  class="input input-bordered w-full"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Payment Method -->
-          <div class="card bg-base-100 shadow-sm">
-            <div class="card-body">
-              <h2 class="text-2xl font-bold text-base-900 mb-6">💳 Payment Method</h2>
-
-              <div class="space-y-3">
-                <!-- Bank Transfer -->
-                <label class="label cursor-pointer border border-base-300 rounded-lg p-3">
-                  <span class="label-text">🏦 Bank Transfer</span>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="transfer"
-                    [(ngModel)]="formData.paymentMethod"
-                    class="radio"
-                  />
-                </label>
-
-                <!-- Credit Card -->
-                <label class="label cursor-pointer border border-base-300 rounded-lg p-3">
-                  <span class="label-text">💰 Credit Card (Stripe)</span>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="stripe"
-                    [(ngModel)]="formData.paymentMethod"
-                    class="radio"
-                  />
-                </label>
-
-                <!-- Cash on Delivery -->
-                <label class="label cursor-pointer border border-base-300 rounded-lg p-3">
-                  <span class="label-text">🚚 Cash on Delivery</span>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="cod"
-                    [(ngModel)]="formData.paymentMethod"
-                    class="radio"
-                  />
-                </label>
-              </div>
-
-              <p class="text-xs text-base-600 mt-4 space-y-1">
-                <span class="block">✓ Secure payment processing</span>
-                <span class="block">✓ Your information is encrypted</span>
-                <span class="block">✓ We don't store card details</span>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Summary Section -->
-        <div class="lg:col-span-1">
-          <div class="card bg-base-100 shadow-sm sticky top-6">
-            <div class="card-body">
-              <h2 class="text-2xl font-bold text-base-900 mb-4">📋 Order Summary</h2>
-
-              <!-- Items -->
-              <div class="space-y-2 mb-4 max-h-64 overflow-y-auto">
-                @for (item of getCartItems(); track item.productId + item.size) {
-                  <div class="flex justify-between text-sm hover:bg-base-200 p-2 rounded">
-                    <span class="text-base-600">
-                      {{ item.productName }}
-                      <span class="text-xs">x{{ item.quantity }}</span>
-                    </span>
-                    <span class="font-semibold">{{ item.price * item.quantity | currency }}</span>
-                  </div>
-                }
-              </div>
-
-              <div class="divider"></div>
-
-              <!-- Subtotal -->
-              <div class="flex justify-between mb-2">
-                <span class="text-base-600">Subtotal</span>
-                <span class="font-semibold">{{ cartService.subtotal() | currency }}</span>
-              </div>
-
-              <!-- Shipping -->
-              <div class="flex justify-between mb-2">
-                <span class="text-base-600">Shipping</span>
-                <span class="font-semibold">{{ shippingCost() | currency }}</span>
-              </div>
-
-              <!-- Tax -->
-              <div class="flex justify-between mb-2">
-                <span class="text-base-600">Tax (10%)</span>
-                <span class="font-semibold">{{ cartService.tax() | currency }}</span>
-              </div>
-
-
-              <div class="divider"></div>
-
-              <!-- Total -->
-              <div class="flex justify-between text-lg mb-6">
-                <span class="font-bold text-base-900">Total</span>
-                <span class="text-2xl font-bold text-primary">{{ finalTotal() | currency }}</span>
-              </div>
-
-              <!-- Place Order Button -->
-              <button
-                (click)="placeOrder()"
-                [disabled]="isButtonDisabled()"
-                class="btn btn-primary w-full mb-3"
-              >
-                @if (isProcessing()) {
-                  <span class="loading loading-spinner loading-sm"></span>
-                  <span>Processing...</span>
-                } @else {
-                  <span>🛒 Place Order</span>
-                }
-              </button>
-
-              <!-- Back Button -->
-              <a routerLink="/store/cart" class="btn btn-outline w-full">← Back to Cart</a>
-
-              <!-- Trust Badges -->
-              <div class="mt-4 p-3 bg-base-200 rounded text-xs text-base-600 text-center space-y-1">
-                <p>🔒 Secure Checkout | ✓ 30-day Returns</p>
-                <p>✓ Money-back guarantee</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
+    ATHENA BRAND
+  </a>
+  <div class="flex items-center gap-1.5 text-sm text-base-content/60">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+         stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+    </svg>
+    Pago seguro
   </div>
-</div>
+</header>
+
+<!-- ── Contenido principal ──────────────────────────────────────────────────── -->
+<main class="min-h-[calc(100vh-57px)] bg-base-200/50 py-8 px-4">
+  <div class="max-w-5xl mx-auto">
+
+    <!-- ══ PANTALLA DE CONFIRMACIÓN ══════════════════════════════════════════ -->
+    @if (placedOrder()) {
+      <div class="flex flex-col items-center justify-center py-16 gap-6 text-center">
+        <div class="flex h-20 w-20 items-center justify-center rounded-full bg-success/15">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-success" fill="none"
+               viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+
+        <div>
+          <h1 class="text-3xl font-bold">¡Pedido confirmado!</h1>
+          <p class="text-base-content/60 mt-1">
+            Gracias por tu compra. Recibirás un email de confirmación pronto.
+          </p>
+        </div>
+
+        <div class="card bg-base-100 shadow-sm w-full max-w-sm">
+          <div class="card-body gap-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-base-content/60">Número de pedido</span>
+              <span class="font-bold font-mono text-primary">
+                {{ placedOrder()!.orderNumber }}
+              </span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-base-content/60">Total cobrado</span>
+              <span class="font-semibold">
+                {{ placedOrder()!.total | currency:'COP':'symbol':'1.0-0' }}
+              </span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-base-content/60">Estado</span>
+              <span class="badge badge-warning badge-sm">{{ placedOrder()!.status }}</span>
+            </div>
+            @if (placedOrder()!.estimatedDelivery) {
+              <div class="flex justify-between text-sm">
+                <span class="text-base-content/60">Entrega estimada</span>
+                <span>{{ placedOrder()!.estimatedDelivery }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-2">
+          <button class="btn btn-primary" (click)="goToStore()">
+            Seguir comprando
+          </button>
+        </div>
+
+        <p class="text-xs text-base-content/40 max-w-xs">
+          Guarda tu número de pedido para hacer seguimiento.
+          @if (placedOrder()!.guestToken) {
+            También lo recibirás por email junto con un enlace de seguimiento.
+          }
+        </p>
+      </div>
+    }
+
+    <!-- ══ CARRITO VACÍO ═════════════════════════════════════════════════════ -->
+    @if (!placedOrder() && cart.isEmpty()) {
+      <div class="flex flex-col items-center justify-center py-24 gap-4 text-center">
+        <span class="text-6xl opacity-30">🛒</span>
+        <p class="text-xl font-medium">Tu carrito está vacío</p>
+        <a routerLink="/store" class="btn btn-primary">Ver catálogo</a>
+      </div>
+    }
+
+    <!-- ══ FORMULARIO DE CHECKOUT ════════════════════════════════════════════ -->
+    @if (!placedOrder() && !cart.isEmpty()) {
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+          <!-- ── Columna izquierda: formulario ─────────────────────────────── -->
+          <div class="lg:col-span-3 flex flex-col gap-4">
+
+            <!-- ─ Error del servidor ────────────────────────────────────────── -->
+            @if (serverError()) {
+              <div role="alert" class="alert alert-error shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+                <span>{{ serverError() }}</span>
+                <button type="button" class="btn btn-ghost btn-xs"
+                        (click)="serverError.set(null)">✕</button>
+              </div>
+            }
+
+            <!-- ─ Dirección de envío ─────────────────────────────────────────── -->
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-4">
+                <h2 class="font-bold text-lg flex items-center gap-2">
+                  <span class="text-primary">①</span> Dirección de envío
+                </h2>
+
+                <!-- Nombre y Apellido -->
+                <div class="grid grid-cols-2 gap-3">
+                  <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Nombre *</legend>
+                    <input formControlName="firstName" type="text" placeholder="Ej. María"
+                           class="input w-full"
+                           [class.input-error]="isInvalid('firstName')" />
+                    @if (isInvalid('firstName')) {
+                      <p class="fieldset-label text-error">{{ fieldError('firstName') }}</p>
+                    }
+                  </fieldset>
+
+                  <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Apellido *</legend>
+                    <input formControlName="lastName" type="text" placeholder="Ej. García"
+                           class="input w-full"
+                           [class.input-error]="isInvalid('lastName')" />
+                    @if (isInvalid('lastName')) {
+                      <p class="fieldset-label text-error">{{ fieldError('lastName') }}</p>
+                    }
+                  </fieldset>
+                </div>
+
+                <!-- Dirección completa -->
+                <fieldset class="fieldset">
+                  <legend class="fieldset-legend">Dirección completa *</legend>
+                  <input formControlName="street" type="text"
+                         placeholder="Ej. Calle 10 # 5-23, Barrio El Centro"
+                         class="input w-full"
+                         [class.input-error]="isInvalid('street')" />
+                  @if (isInvalid('street')) {
+                    <p class="fieldset-label text-error">{{ fieldError('street') }}</p>
+                  } @else {
+                    <p class="fieldset-label">Incluye barrio, edificio o referencia</p>
+                  }
+                </fieldset>
+
+                <!-- Ciudad y Departamento -->
+                <div class="grid grid-cols-2 gap-3">
+                  <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Ciudad *</legend>
+                    <input formControlName="city" type="text" placeholder="Ej. San Pedro"
+                           class="input w-full"
+                           [class.input-error]="isInvalid('city')" />
+                    @if (isInvalid('city')) {
+                      <p class="fieldset-label text-error">{{ fieldError('city') }}</p>
+                    }
+                  </fieldset>
+
+                  <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Departamento *</legend>
+                    <select formControlName="department" class="select w-full"
+                            [class.select-error]="isInvalid('department')">
+                      <option value="">Seleccionar…</option>
+                      @for (dept of departments; track dept) {
+                        <option [value]="dept">{{ dept }}</option>
+                      }
+                    </select>
+                    @if (isInvalid('department')) {
+                      <p class="fieldset-label text-error">{{ fieldError('department') }}</p>
+                    }
+                  </fieldset>
+                </div>
+
+                <!-- Código postal (opcional) -->
+                <fieldset class="fieldset">
+                  <legend class="fieldset-legend">Código postal (opcional)</legend>
+                  <input formControlName="zipCode" type="text" placeholder="Ej. 054010"
+                         class="input w-full input-sm" />
+                </fieldset>
+
+              </div>
+            </div>
+
+            <!-- ─ Datos de contacto (solo invitados) ─────────────────────────── -->
+            @if (isGuest()) {
+              <div class="card bg-base-100 shadow-sm">
+                <div class="card-body gap-4">
+                  <h2 class="font-bold text-lg flex items-center gap-2">
+                    <span class="text-primary">②</span> Datos de contacto
+                  </h2>
+                  <p class="text-sm text-base-content/60 -mt-2">
+                    Para enviarte la confirmación y el seguimiento de tu pedido.
+                  </p>
+
+                  <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Email *</legend>
+                    <input formControlName="email" type="email" placeholder="tu@email.com"
+                           class="input w-full"
+                           [class.input-error]="isInvalid('email')" />
+                    @if (isInvalid('email')) {
+                      <p class="fieldset-label text-error">{{ fieldError('email') }}</p>
+                    }
+                  </fieldset>
+
+                  <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Teléfono *</legend>
+                    <input formControlName="phone" type="tel" placeholder="+57 300 000 0000"
+                           class="input w-full"
+                           [class.input-error]="isInvalid('phone')" />
+                    @if (isInvalid('phone')) {
+                      <p class="fieldset-label text-error">{{ fieldError('phone') }}</p>
+                    }
+                  </fieldset>
+                </div>
+              </div>
+            }
+
+            <!-- Número del paso varía si hay sección de contacto -->
+            <!-- ─ Método de pago ──────────────────────────────────────────────── -->
+            <div class="card bg-base-100 shadow-sm">
+              <div class="card-body gap-3">
+                <h2 class="font-bold text-lg flex items-center gap-2">
+                  <span class="text-primary">{{ isGuest() ? '③' : '②' }}</span> Método de pago
+                </h2>
+
+                <div class="flex flex-col gap-2" formGroupName="">
+                  <!-- PSE -->
+                  <label class="flex items-center gap-4 p-3 rounded-lg border-2 cursor-pointer
+                                transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5
+                                border-base-200 hover:border-base-300">
+                    <input formControlName="paymentMethod" type="radio" value="pse"
+                           class="radio radio-primary" />
+                    <div class="flex-1">
+                      <p class="font-medium text-sm">PSE — Débito bancario</p>
+                      <p class="text-xs text-base-content/50">Paga directamente desde tu cuenta</p>
+                    </div>
+                    <span class="text-lg">🏦</span>
+                  </label>
+
+                  <!-- Transferencia bancaria -->
+                  <label class="flex items-center gap-4 p-3 rounded-lg border-2 cursor-pointer
+                                transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5
+                                border-base-200 hover:border-base-300">
+                    <input formControlName="paymentMethod" type="radio" value="bank_transfer"
+                           class="radio radio-primary" />
+                    <div class="flex-1">
+                      <p class="font-medium text-sm">Transferencia bancaria</p>
+                      <p class="text-xs text-base-content/50">
+                        Recibirás los datos de la cuenta por email
+                      </p>
+                    </div>
+                    <span class="text-lg">💸</span>
+                  </label>
+
+                  <!-- Contraentrega -->
+                  <label class="flex items-center gap-4 p-3 rounded-lg border-2 cursor-pointer
+                                transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5
+                                border-base-200 hover:border-base-300">
+                    <input formControlName="paymentMethod" type="radio" value="cash_on_delivery"
+                           class="radio radio-primary" />
+                    <div class="flex-1">
+                      <p class="font-medium text-sm">Pago contra entrega</p>
+                      <p class="text-xs text-base-content/50">Paga en efectivo al recibir</p>
+                    </div>
+                    <span class="text-lg">📦</span>
+                  </label>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ── Columna derecha: resumen ──────────────────────────────────── -->
+          <div class="lg:col-span-2">
+            <div class="card bg-base-100 shadow-sm sticky top-6">
+              <div class="card-body gap-4">
+                <h2 class="font-bold text-lg">Resumen del pedido</h2>
+
+                <!-- Lista de items -->
+                <ul class="flex flex-col gap-2 max-h-52 overflow-y-auto pr-1">
+                  @for (item of cart.items(); track item.productId + item.size) {
+                    <li class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-md overflow-hidden bg-base-200 flex-shrink-0">
+                        @if (item.image) {
+                          <img [src]="item.image" [alt]="item.productName"
+                               class="w-full h-full object-cover" />
+                        } @else {
+                          <div class="w-full h-full flex items-center justify-center text-lg opacity-40">
+                            👕
+                          </div>
+                        }
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate">{{ item.productName }}</p>
+                        <p class="text-xs text-base-content/50">
+                          {{ item.size }} · x{{ item.quantity }}
+                        </p>
+                      </div>
+                      <span class="text-sm font-semibold flex-shrink-0">
+                        {{ item.price * item.quantity | currency:'COP':'symbol':'1.0-0' }}
+                      </span>
+                    </li>
+                  }
+                </ul>
+
+                <div class="divider my-0"></div>
+
+                <!-- Desglose -->
+                <div class="flex flex-col gap-1.5 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-base-content/60">Subtotal</span>
+                    <span>{{ cart.subtotal() | currency:'COP':'symbol':'1.0-0' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-base-content/60">Envío</span>
+                    @if (cart.shipping() === 0) {
+                      <span class="text-success font-medium">Gratis</span>
+                    } @else {
+                      <span>{{ cart.shipping() | currency:'COP':'symbol':'1.0-0' }}</span>
+                    }
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-base-content/60">IVA (19%)</span>
+                    <span>{{ cart.tax() | currency:'COP':'symbol':'1.0-0' }}</span>
+                  </div>
+                </div>
+
+                <div class="divider my-0"></div>
+
+                <div class="flex justify-between items-baseline">
+                  <span class="font-bold">Total</span>
+                  <span class="text-2xl font-bold text-primary">
+                    {{ cart.total() | currency:'COP':'symbol':'1.0-0' }}
+                  </span>
+                </div>
+
+                <!-- CTA -->
+                <button type="submit" class="btn btn-primary w-full"
+                        [disabled]="!canSubmit() || form.invalid">
+                  @if (isProcessing()) {
+                    <span class="loading loading-spinner loading-sm"></span>
+                    Procesando…
+                  } @else {
+                    Realizar pedido
+                  }
+                </button>
+
+                <a routerLink="/store/cart" class="btn btn-ghost btn-sm w-full">
+                  ← Volver al carrito
+                </a>
+
+                <!-- Trust badges -->
+                <div class="flex justify-center gap-4 text-xs text-base-content/40 pt-1">
+                  <span>🔒 Compra segura</span>
+                  <span>📦 30 días devolución</span>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </form>
+    }
+
+  </div>
+</main>
