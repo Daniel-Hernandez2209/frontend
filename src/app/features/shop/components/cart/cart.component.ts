@@ -1,337 +1,182 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { CartService } from '../../services/cart.service';
-import { AuthService } from '../../../../core/services/auth.service';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+import { CartService, CartItem } from '../../services/cart.service';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, CurrencyPipe],
   template: `
     <div class="p-6 max-w-6xl mx-auto">
       <!-- Header -->
       <div class="flex justify-between items-center mb-8">
-        <h1 class="text-4xl font-bold text-base-900">🛒 Shopping Cart</h1>
-        <a routerLink="/store" class="btn btn-ghost">← Continue Shopping</a>
+        <h1 class="text-3xl font-bold">Carrito de compras</h1>
+        <a routerLink="/store" class="btn btn-ghost btn-sm">← Seguir comprando</a>
       </div>
 
-      <!-- Error Alert -->
-      @if (cartService.cartError()) {
-        <div class="alert alert-error mb-6">
-          <span>{{ cartService.cartError() }}</span>
-          <button (click)="dismissError()" class="btn btn-sm btn-ghost">✕</button>
-        </div>
-      }
-
       <!-- Empty State -->
-      @if (cartService.itemCount() === 0) {
-        <div class="alert alert-info text-center py-12">
-          <div class="text-lg">Your cart is empty</div>
-          <div class="text-sm text-base-600 mt-2">
-            Browse our products and add items to get started!
-          </div>
-          <a routerLink="/store" class="btn btn-primary mt-4">Start Shopping</a>
+      @if (cart.isEmpty()) {
+        <div class="flex flex-col items-center justify-center py-20 gap-4">
+          <span class="text-6xl">🛒</span>
+          <p class="text-xl font-medium">Tu carrito está vacío</p>
+          <p class="text-base-content/60">Agrega productos para comenzar</p>
+          <a routerLink="/store" class="btn btn-primary mt-2">Ver catálogo</a>
         </div>
       }
 
       <!-- Cart Content -->
-      @if (cartService.itemCount() > 0) {
+      @if (!cart.isEmpty()) {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Items Section -->
-          <div class="lg:col-span-2">
-            <div class="card bg-base-100 shadow-sm overflow-hidden">
-              <div class="overflow-x-auto">
-                <table class="table w-full">
-                  <thead class="bg-base-200">
-                    <tr>
-                      <th>Product</th>
-                      <th>Price</th>
-                      <th>Quantity</th>
-                      <th>Subtotal</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (item of cartService.getItems(); track item.productId + item.size) {
-                      <tr class="hover:bg-base-50 transition">
-                        <!-- Product Info -->
-                        <td>
-                          <div class="flex items-center gap-4">
-                            <div class="w-16 h-16 bg-base-300 rounded-lg flex-shrink-0">
-                              @if (item.image) {
-                                <img
-                                  [src]="item.image"
-                                  [alt]="item.productName"
-                                  class="w-full h-full object-cover rounded-lg"
-                                />
-                              } @else {
-                                <div
-                                  class="w-full h-full flex items-center justify-center text-2xl"
-                                >
-                                  📦
-                                </div>
-                              }
-                            </div>
-                            <div>
-                              <p class="font-medium text-base-900">
-                                {{ item.productName }}
-                              </p>
-                              <p class="text-xs text-base-500 mt-1">SKU: {{ item.sku || 'N/A' }}</p>
-                              @if (item.size) {
-                                <p class="text-xs text-base-500">Size: {{ item.size }}</p>
-                              }
-                            </div>
-                          </div>
-                        </td>
 
-                        <!-- Price -->
-                        <td>
-                          <span class="font-medium">{{ item.price | currency }}</span>
-                        </td>
-
-                        <!-- Quantity -->
-                        <td>
-                          <div class="flex items-center gap-2">
-                            <button
-                              (click)="decreaseQuantity(item)"
-                              class="btn btn-sm btn-ghost"
-                              [disabled]="item.quantity <= 1"
-                            >
-                              −
-                            </button>
-                            <input
-                              type="number"
-                              [value]="item.quantity"
-                              (change)="updateQuantity(item, $event)"
-                              min="1"
-                              class="input input-bordered input-sm w-16 text-center"
-                            />
-                            <button (click)="increaseQuantity(item)" class="btn btn-sm btn-ghost">
-                              +
-                            </button>
-                          </div>
-                        </td>
-
-                        <!-- Subtotal -->
-                        <td>
-                          <span class="font-semibold">
-                            {{ item.price * item.quantity | currency }}
-                          </span>
-                        </td>
-
-                        <!-- Remove -->
-                        <td>
-                          <button
-                            (click)="removeItem(item)"
-                            class="btn btn-sm btn-error btn-ghost"
-                            title="Remove from cart"
-                          >
-                            🗑️
-                          </button>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <!-- Summary Section -->
-          <div class="lg:col-span-1">
-            <div class="card bg-base-100 shadow-sm sticky top-6">
-              <div class="card-body">
-                <h2 class="text-2xl font-bold text-base-900 mb-4">Order Summary</h2>
-
-                <!-- Items Count -->
-                <div class="flex justify-between items-center pb-3 border-b border-base-300">
-                  <span class="text-base-600"> Items ({{ cartService.totalQuantity() }}) </span>
-                  <span class="font-semibold">{{ cartService.subtotal() | currency }}</span>
-                </div>
-
-                <!-- Tax -->
-                <div class="flex justify-between items-center pb-3 border-b border-base-300">
-                  <span class="text-base-600">
-                    Tax ({{ cartService.getTaxRate() * 100 | number: '1.0-0' }}%)
-                  </span>
-                  <span class="font-semibold">{{ cartService.tax() | currency }}</span>
-                </div>
-
-                <!-- Discount (si hay cupón) -->
-                @if (cartService.appliedCouponInfo()) {
-                  <div
-                    class="flex justify-between items-center pb-3 border-b border-base-300 text-success"
-                  >
-                    <span class="text-base-600">
-                      Discount ({{ cartService.discountPercentage() }}%)
-                    </span>
-                    <span class="font-semibold">
-                      -{{ cartService.discountAmount() | currency }}
-                    </span>
-                  </div>
-                }
-
-                <!-- Total -->
-                <div class="flex justify-between items-center py-4 mb-4">
-                  <span class="text-lg font-bold text-base-900">Total</span>
-                  <span class="text-2xl font-bold text-primary">{{
-                    cartService.total() | currency
-                  }}</span>
-                </div>
-
-                <!-- Coupon Code Section -->
-                @if (!cartService.appliedCouponInfo()) {
-                  <div class="form-control mb-4">
-                    <label class="label">
-                      <span class="label-text">Apply Coupon Code</span>
-                    </label>
-                    <div class="input-group">
-                      <input
-                        type="text"
-                        placeholder="Enter coupon code"
-                        [(ngModel)]="couponCode"
-                        class="input input-bordered input-sm w-full"
-                      />
-                      <button
-                        (click)="applyCoupon()"
-                        [disabled]="!couponCode || cartService.loading()"
-                        class="btn btn-sm btn-primary"
-                      >
-                        Apply
-                      </button>
+          <!-- Items -->
+          <div class="lg:col-span-2 flex flex-col gap-3">
+            @for (item of cart.items(); track item.productId + item.size) {
+              <div class="card card-side bg-base-100 shadow-sm border border-base-200">
+                <!-- Imagen -->
+                <figure class="w-24 flex-shrink-0">
+                  @if (item.image) {
+                    <img [src]="item.image" [alt]="item.productName"
+                         class="w-full h-full object-cover" />
+                  } @else {
+                    <div class="w-24 h-24 bg-base-200 flex items-center justify-center text-2xl">
+                      👕
                     </div>
-                  </div>
-                } @else {
-                  <div class="alert alert-success mb-4">
-                    <div class="flex justify-between items-center w-full">
-                      <div>
-                        <p class="font-semibold">✅ Coupon Applied</p>
-                        <p class="text-sm">{{ cartService.appliedCouponInfo()?.code }}</p>
-                        <p class="text-sm">Save: {{ cartService.discountAmount() | currency }}</p>
-                      </div>
-                      <button (click)="removeCoupon()" class="btn btn-sm btn-ghost text-error">
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                }
-
-                <!-- Buttons -->
-                <button
-                  routerLink="/checkout"
-                  [disabled]="cartService.loading()"
-                  class="btn btn-primary w-full mb-3"
-                >
-                  @if (cartService.loading()) {
-                    <span class="loading loading-spinner loading-sm"></span>
                   }
-                  Proceed to Checkout
-                </button>
+                </figure>
+                <div class="card-body p-4 flex-row items-center gap-4">
+                  <!-- Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold truncate">{{ item.productName }}</p>
+                    <p class="text-sm text-base-content/60">SKU: {{ item.sku }}</p>
+                    <div class="flex gap-2 mt-1">
+                      <span class="badge badge-outline badge-sm">{{ item.size }}</span>
+                      @if (item.category) {
+                        <span class="badge badge-ghost badge-sm">{{ item.category }}</span>
+                      }
+                    </div>
+                  </div>
 
-                <button (click)="continueShopping()" class="btn btn-outline w-full">
-                  Continue Shopping
-                </button>
+                  <!-- Precio unitario -->
+                  <div class="text-right min-w-[80px]">
+                    <p class="text-sm text-base-content/60">c/u</p>
+                    <p class="font-medium">{{ item.price | currency: 'COP':'symbol':'1.0-0' }}</p>
+                  </div>
 
-                <!-- Clear Cart -->
-                <button (click)="confirmClear()" class="btn btn-ghost w-full mt-4 text-error">
-                  Clear Cart
-                </button>
+                  <!-- Cantidad -->
+                  <div class="join">
+                    <button class="btn btn-sm join-item btn-ghost"
+                            (click)="decrement(item)"
+                            [disabled]="item.quantity <= 1">−</button>
+                    <span class="btn btn-sm join-item cursor-default no-animation min-w-[2.5rem]">
+                      {{ item.quantity }}
+                    </span>
+                    <button class="btn btn-sm join-item btn-ghost"
+                            (click)="increment(item)"
+                            [disabled]="item.quantity >= item.maxStock || item.quantity >= 10">+</button>
+                  </div>
+
+                  <!-- Subtotal -->
+                  <div class="text-right min-w-[90px]">
+                    <p class="font-bold text-primary">
+                      {{ item.price * item.quantity | currency: 'COP':'symbol':'1.0-0' }}
+                    </p>
+                  </div>
+
+                  <!-- Eliminar -->
+                  <button class="btn btn-ghost btn-sm text-error"
+                          (click)="remove(item)"
+                          title="Eliminar">✕</button>
+                </div>
+              </div>
+            }
+
+            <!-- Limpiar carrito -->
+            <button class="btn btn-ghost btn-sm text-error self-start mt-2"
+                    (click)="clear()">
+              🗑 Vaciar carrito
+            </button>
+          </div>
+
+          <!-- Resumen -->
+          <div class="lg:col-span-1">
+            <div class="card bg-base-100 shadow-sm border border-base-200 sticky top-6">
+              <div class="card-body">
+                <h2 class="card-title text-lg mb-2">Resumen del pedido</h2>
+
+                <div class="flex flex-col gap-2 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-base-content/70">
+                      Subtotal ({{ cart.totalQty() }} unidades)
+                    </span>
+                    <span>{{ cart.subtotal() | currency: 'COP':'symbol':'1.0-0' }}</span>
+                  </div>
+
+                  <div class="flex justify-between">
+                    <span class="text-base-content/70">Envío</span>
+                    @if (cart.shipping() === 0) {
+                      <span class="text-success font-medium">Gratis</span>
+                    } @else {
+                      <span>{{ cart.shipping() | currency: 'COP':'symbol':'1.0-0' }}</span>
+                    }
+                  </div>
+
+                  @if (cart.shipping() > 0) {
+                    <p class="text-xs text-base-content/50">
+                      Envío gratis en compras mayores a
+                      {{ 200000 | currency: 'COP':'symbol':'1.0-0' }}
+                    </p>
+                  }
+
+                  <div class="flex justify-between">
+                    <span class="text-base-content/70">IVA (19%)</span>
+                    <span>{{ cart.tax() | currency: 'COP':'symbol':'1.0-0' }}</span>
+                  </div>
+
+                  <div class="divider my-1"></div>
+
+                  <div class="flex justify-between text-base font-bold">
+                    <span>Total</span>
+                    <span class="text-primary text-lg">
+                      {{ cart.total() | currency: 'COP':'symbol':'1.0-0' }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="card-actions flex-col mt-4 gap-2">
+                  <button class="btn btn-primary w-full" routerLink="/checkout">
+                    Ir al checkout
+                  </button>
+                  <button class="btn btn-outline w-full btn-sm" routerLink="/store">
+                    Seguir comprando
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+
         </div>
       }
     </div>
   `,
-  styles: [],
 })
 export class CartComponent {
-  cartService = inject(CartService);
-  authService = inject(AuthService);
-  couponCode: string = '';
+  protected cart = inject(CartService);
+  private router = inject(Router);
 
-  /**
-   * Aumentar cantidad de un item
-   */
-  increaseQuantity(item: any): void {
-    this.cartService.updateQuantity(item.productId, item.quantity + 1, item.size);
+  increment(item: CartItem): void {
+    this.cart.updateQuantity(item.productId, item.size, item.quantity + 1);
   }
 
-  /**
-   * Disminuir cantidad de un item
-   */
-  decreaseQuantity(item: any): void {
-    if (item.quantity > 1) {
-      this.cartService.updateQuantity(item.productId, item.quantity - 1, item.size);
-    }
+  decrement(item: CartItem): void {
+    this.cart.updateQuantity(item.productId, item.size, item.quantity - 1);
   }
 
-  /**
-   * Actualizar cantidad manualmente
-   */
-  updateQuantity(item: any, event: any): void {
-    const quantity = parseInt(event.target.value, 10);
-    if (quantity > 0) {
-      this.cartService.updateQuantity(item.productId, quantity, item.size);
-    }
+  remove(item: CartItem): void {
+    this.cart.removeItem(item.productId, item.size);
   }
 
-  /**
-   * Eliminar item del carrito
-   */
-  removeItem(item: any): void {
-    if (confirm(`Remove ${item.productName} from cart?`)) {
-      this.cartService.removeFromCart(item.productId, item.size);
-    }
-  }
-
-  /**
-   * Continuar comprando
-   */
-  continueShopping(): void {
-    window.history.back();
-  }
-
-  /**
-   * Confirmar limpiar carrito
-   */
-  confirmClear(): void {
-    if (confirm('Are you sure you want to clear your cart?')) {
-      this.cartService.clearCart();
-    }
-  }
-
-  /**
-   * Aplicar cupón de descuento
-   */
-  applyCoupon(): void {
-    if (this.couponCode.trim()) {
-      this.cartService.applyCoupon(this.couponCode).subscribe(
-        (response) => {
-          console.log('Cupón aplicado exitosamente:', response);
-        },
-        (error) => {
-          console.error('Error applying coupon:', error);
-        },
-      );
-    }
-  }
-
-  /**
-   * Remover cupón aplicado
-   */
-  removeCoupon(): void {
-    this.cartService.removeCoupon();
-    console.log('Cupón removido');
-  }
-
-  /**
-   * Descartar mensaje de error
-   */
-  dismissError(): void {
-    // El error se limpia en el servicio o esperar a que se actualice
-    console.log('Error message dismissed');
+  clear(): void {
+    this.cart.clearCart();
   }
 }

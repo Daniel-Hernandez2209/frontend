@@ -159,7 +159,7 @@ export class CheckoutComponent {
           country: this.formData.country.trim(),
         },
       },
-      items: this.cartService.getItems(),
+      items: this.cartService.items(),
       totals: {
         subtotal: this.cartService.subtotal(),
         tax: this.cartService.tax(),
@@ -225,6 +225,6 @@ export class CheckoutComponent {
    * Obtener items del carrito
    */
   getCartItems() {
-    return this.cartService.getItems();
+    return this.cartService.items();
   }
 }

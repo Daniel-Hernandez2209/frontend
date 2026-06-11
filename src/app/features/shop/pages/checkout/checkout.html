@@ -240,13 +240,6 @@
                 <span class="font-semibold">{{ cartService.tax() | currency }}</span>
               </div>
 
-              <!-- Discount (si hay cupón) -->
-              @if (cartService.appliedCouponInfo()) {
-                <div class="flex justify-between mb-2 text-success">
-                  <span class="text-base-600">Discount</span>
-                  <span class="font-semibold">-{{ cartService.discountAmount() | currency }}</span>
-                </div>
-              }
 
               <div class="divider"></div>
 

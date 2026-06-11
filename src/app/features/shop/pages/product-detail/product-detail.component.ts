@@ -189,16 +189,19 @@ export class ProductDetailComponent implements OnInit {
 
     try {
       // Agregar al carrito
-      this.cartService.addToCart(
+      const primaryImage = product.images?.[0];
+      const sizeData = product.sizes?.find((s) => s.size === size);
+
+      this.cartService.addItem(
         {
           productId: product._id,
           productName: product.name,
           sku: product.sku,
           price: this.shopService.getDisplayPrice(product),
-          image: product.images?.[0],
+          image: primaryImage,
           size,
           category: product.category,
-          description: product.description,
+          maxStock: sizeData?.stock ?? 10,
         },
         qty,
       );

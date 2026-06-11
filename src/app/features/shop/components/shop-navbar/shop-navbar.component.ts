@@ -1,12 +1,12 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CartService } from '../../../../features/shop/services/cart.service';
 
 @Component({
   selector: 'app-shop-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CurrencyPipe, RouterModule],
   template: `
     <div class="navbar bg-base-100 shadow-sm sticky top-0 z-50">
       <div class="flex-1">
@@ -17,12 +17,11 @@ import { CartService } from '../../../../features/shop/services/cart.service';
         <!-- Cart Button with Badge -->
         <div class="dropdown dropdown-end">
           <a tabindex="0" routerLink="/store/cart" class="btn btn-ghost btn-circle indicator">
-            <span
-              *ngIf="cartService.itemCount() > 0"
-              class="indicator-item badge badge-primary badge-sm"
-            >
-              {{ cartService.itemCount() }}
-            </span>
+            @if (cartService.itemCount() > 0) {
+              <span class="indicator-item badge badge-primary badge-sm">
+                {{ cartService.totalQty() }}
+              </span>
+            }
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-5 w-5"
@@ -40,8 +39,8 @@ import { CartService } from '../../../../features/shop/services/cart.service';
           </a>
           <div tabindex="0" class="card card-compact dropdown-content bg-base-100 shadow-lg">
             <div class="card-body">
-              <span class="text-lg font-bold">{{ cartService.itemCount() }} Items</span>
-              <span class="text-info">Subtotal: {{ cartService.subtotal() | currency }}</span>
+              <span class="text-lg font-bold">{{ cartService.totalQty() }} productos</span>
+              <span class="text-info">Subtotal: {{ cartService.subtotal() | currency:'COP':'symbol':'1.0-0' }}</span>
               <div class="card-actions">
                 <a routerLink="/store/cart" class="btn btn-primary btn-block">View cart</a>
               </div>

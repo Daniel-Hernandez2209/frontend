@@ -209,14 +209,10 @@
                     </button>
                     <button
                       (click)="addToCart(product)"
-                      [disabled]="!shopService.hasStock(product) || cartService.loading()"
+                      [disabled]="!shopService.hasStock(product)"
                       class="btn btn-primary btn-sm flex-1"
                     >
-                      @if (cartService.loading()) {
-                        <span class="loading loading-spinner loading-xs"></span>
-                      } @else {
-                        🛒 Add
-                      }
+                      🛒 Add
                     </button>
                   </div>
                 </div>

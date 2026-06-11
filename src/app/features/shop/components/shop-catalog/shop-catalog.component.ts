@@ -71,13 +71,18 @@ export class ShopCatalogComponent {
   addToCart(product: any): void {
     const displayPrice = this.shopService.getDisplayPrice(product);
 
-    this.cartService.addToCart({
-      productId: product._id,
+    const firstSize = product.sizes?.[0]?.size ?? 'M';
+    const maxStock  = product.sizes?.[0]?.stock ?? 1;
+
+    this.cartService.addItem({
+      productId:   product._id,
       productName: product.name,
-      sku: product.sku,
-      price: displayPrice,
-      image: product.images?.[0],
-      description: product.description,
+      sku:         product.sku,
+      price:       displayPrice,
+      image:       product.images?.[0],
+      size:        firstSize,
+      category:    product.category,
+      maxStock,
     });
 
     // Mostrar mensaje de éxito
