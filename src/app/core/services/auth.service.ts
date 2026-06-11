@@ -9,12 +9,18 @@ import { AppStore } from '@core/store/app.store';
 import { environment } from '@environments/environment';
 
 export interface User {
-  id: string;
+  _id: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  name: string;
-  role: 'admin' | 'vendor' | 'customer';
+  phone?: string;
+  address?: string;
   avatar?: string;
-  createdAt: Date;
+  role: 'user' | 'admin';
+  isActive: boolean;
+  isVerified: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface LoginRequest {
@@ -24,6 +30,7 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   success: boolean;
+  message: string;
   token: {
     accessToken: string;
     refreshToken: string;
@@ -45,7 +52,11 @@ export class AuthService {
 
   userRole = computed(() => this.currentUser()?.role ?? 'guest');
   isAdmin = computed(() => this.userRole() === 'admin');
-  displayName = computed(() => this.currentUser()?.name ?? 'Invitado');
+  displayName = computed(() => {
+    const u = this.currentUser();
+    if (!u) return 'Invitado';
+    return `${u.firstName} ${u.lastName}`.trim();
+  });
 
   constructor() {
     effect(() => {
@@ -129,7 +140,7 @@ export class AuthService {
         const user = JSON.parse(userStr) as User;
         this.currentUser.set(user);
         this.isAuthenticated.set(true);
-        console.log('✅ Usuario cargado desde storage:', user.name);
+        console.log('✅ Usuario cargado desde storage:', user.firstName, user.lastName);
       } catch (err) {
         console.error('❌ Error cargando usuario:', err);
         sessionStorage.removeItem('currentUser');

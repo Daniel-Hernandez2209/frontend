@@ -148,13 +148,14 @@ export class OrderService {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<PaginatedResponse<Order>>(`${this.API_URL}/orders`, {
-          params: { page: page.toString(), limit: limit.toString() },
-        }),
+        this.http.get<{ success: boolean; data: Order[]; pagination: { currentPage: number; totalPages: number; totalItems: number; itemsPerPage: number } }>(
+          `${this.API_URL}/orders/admin/all`,
+          { params: { page: page.toString(), limit: limit.toString() } },
+        ),
       );
 
       this.orders.set(response.data || []);
-      this.totalOrders.set(response.pagination.total);
+      this.totalOrders.set(response.pagination?.totalItems ?? response.data?.length ?? 0);
       this.currentPage.set(page);
     } catch (err: any) {
       const message = err.error?.message || 'Failed to fetch orders';
@@ -220,7 +221,7 @@ export class OrderService {
 
     try {
       const response = await firstValueFrom(
-        this.http.patch<ApiResponse<Order>>(`${this.API_URL}/orders/${id}/status`, { status }),
+        this.http.put<ApiResponse<Order>>(`${this.API_URL}/orders/${id}/status`, { status }),
       );
 
       if (response.data) {

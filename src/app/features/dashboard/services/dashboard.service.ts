@@ -231,7 +231,7 @@ export class DashboardService {
   private async _fetchStats(): Promise<DashboardStats> {
     try {
       const response = await firstValueFrom(
-        this.http.get<{ data: DashboardStats }>(`${this.API_URL}/dashboard/stats`),
+        this.http.get<{ success: boolean; data: DashboardStats }>(`${this.API_URL}/admin/stats`),
       );
       return response.data || this.stats();
     } catch (err) {

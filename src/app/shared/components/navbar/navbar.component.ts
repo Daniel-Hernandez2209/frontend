@@ -50,13 +50,9 @@ export class NavbarComponent {
   getInitials(): string {
     const user = this.authService.currentUser();
     if (!user) return 'U';
-    const initials =
-      user.name
-        ?.split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase() || 'U';
-    return initials.substring(0, 2);
+    const first = user.firstName?.[0] ?? '';
+    const last = user.lastName?.[0] ?? '';
+    return (first + last).toUpperCase() || 'U';
   }
 
   onLogout(): void {

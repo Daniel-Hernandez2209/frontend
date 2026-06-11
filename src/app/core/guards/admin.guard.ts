@@ -41,7 +41,7 @@ export const adminGuard: CanActivateFn = (
 
   // Verificar si es administrador
   if (isAdmin) {
-    console.log(`✅ Acceso concedido a ${currentUser.name}`);
+    console.log(`✅ Acceso concedido a ${currentUser.firstName} ${currentUser.lastName}`);
     return true;
   }
 

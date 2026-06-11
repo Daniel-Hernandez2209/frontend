@@ -32,12 +32,11 @@ export class ErrorInterceptor implements HttpInterceptor {
 
         // Manejo específico por código de error
         if (error.status === 401) {
-          // Unauthorized - Intenta refresh automático
           console.log('🔐 Token expirado, intentando refresh...');
           this.handleUnauthorized();
         } else if (error.status === 403) {
           this.toast.error('❌ No tienes permiso para esta acción');
-        } else if (!req.url.includes('.well-known')) {
+        } else if (error.status === 404 && !req.url.includes('.well-known')) {
           this.toast.error('❌ Recurso no encontrado');
         } else if (error.status === 500) {
           this.toast.error('❌ Error del servidor. Intenta más tarde');

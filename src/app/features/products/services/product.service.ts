@@ -44,7 +44,7 @@ export class ProductService {
       const matchesCategory = !f.category || p.category === f.category;
       const matchesPrice =
         (p.discountPrice || p.price) >= f.minPrice && (p.discountPrice || p.price) <= f.maxPrice;
-      const matchesActive = (p.isActive = f.isActive === null || p.isActive === f.isActive);
+      const matchesActive = f.isActive === null || p.isActive === f.isActive;
 
       return matchesSearch && matchesCategory && matchesPrice && matchesActive;
     });
@@ -254,10 +254,13 @@ export class ProductService {
    */
   async updateStock(id: string, size: string, stock: number): Promise<void> {
     try {
-      await firstValueFrom(this.http.put(`${this.API_URL}/products/${id}/stock`, { size, stock }));
-
-      // Refresh product
-      await this.getBySlug(id);
+      const response = await firstValueFrom(
+        this.http.put<ApiResponse<Product>>(`${this.API_URL}/products/${id}/stock`, { size, stock }),
+      );
+      if (response?.data) {
+        const updated = this.products().map((p) => (p._id === id ? response.data : p));
+        this.products.set(updated);
+      }
     } catch (err: any) {
       throw new Error(err.error?.message || 'Failed to update stock');
     }
