@@ -106,25 +106,22 @@ export class DashboardService {
     this.error.set(null);
 
     try {
-      // Load orders and products
-      await this.orderService.getAll(1, 100);
-      await this.productService.getAll(1, 100);
-      await this.userService.loadUsers();
-
-      // Load dashboard stats from API
-      const [statsResp, salesResp, statusResp, productsResp, trendsResp] = await Promise.all([
-        this._fetchStats(),
-        this._fetchSalesChart(),
-        this._fetchOrdersByStatus(),
-        this._fetchTopProducts(),
-        this._fetchMonthlyTrends(),
+      // Carga datos desde la API y actualiza signals locales
+      await Promise.all([
+        this.orderService.getAll(1, 100),
+        this.productService.getAll(1, 100),
+        this.userService.loadUsers(),
       ]);
 
+      // Stats del backend (endpoint real: /api/admin/stats)
+      const statsResp = await this._fetchStats();
       this.stats.set(statsResp);
-      this.salesChartData.set(salesResp);
-      this.ordersByStatusData.set(statusResp);
-      this.topProductsData.set(productsResp);
-      this.monthlyTrendsData.set(trendsResp);
+
+      // Los gráficos se calculan localmente desde los datos ya cargados
+      // (_updateStatsFromServices se ejecuta via effect cuando cambian los signals)
+      this.salesChartData.set(this._generateSalesChartFallback());
+      this.topProductsData.set(this._generateTopProductsFallback());
+      this.monthlyTrendsData.set(this._generateMonthlyTrendsFallback());
     } catch (err: any) {
       const message = err.error?.message || 'Failed to load dashboard';
       this.error.set(message);

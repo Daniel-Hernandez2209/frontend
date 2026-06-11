@@ -30,22 +30,29 @@ export class ErrorInterceptor implements HttpInterceptor {
           statusText: error.statusText,
         });
 
-        // Manejo específico por código de error
+        // Requests marcadas como silenciosas no muestran toast
+        const silent = req.headers.has('X-Silent');
+
         if (error.status === 401) {
           console.log('🔐 Token expirado, intentando refresh...');
           this.handleUnauthorized();
-        } else if (error.status === 403) {
-          this.toast.error('❌ No tienes permiso para esta acción');
-        } else if (error.status === 404 && !req.url.includes('.well-known')) {
-          this.toast.error('❌ Recurso no encontrado');
-        } else if (error.status === 500) {
-          this.toast.error('❌ Error del servidor. Intenta más tarde');
-        } else if (error.status === 0) {
-          this.toast.error('❌ Error de conexión. Verifica tu internet');
-        } else {
-          // Generic error
-          const message = error.error?.message || error.message || 'Error desconocido';
-          this.toast.error(`❌ ${message}`);
+        } else if (!silent) {
+          if (error.status === 403) {
+            this.toast.error('No tienes permiso para esta acción');
+          } else if (error.status === 404) {
+            // Solo mostrar toast para acciones explícitas del usuario, no para
+            // background loads (GET de datos que ya manejan su propio estado de error)
+            if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+              this.toast.error('Recurso no encontrado');
+            }
+          } else if (error.status === 500) {
+            this.toast.error('Error del servidor. Intenta más tarde');
+          } else if (error.status === 0) {
+            this.toast.error('Error de conexión. Verifica tu internet');
+          } else if (error.status >= 400) {
+            const message = error.error?.message || error.message || 'Error desconocido';
+            this.toast.error(message);
+          }
         }
 
         return throwError(() => error);
