@@ -89,14 +89,6 @@
 
       <!-- Products Grid -->
       <div class="md:col-span-3">
-        <!-- Success Alert -->
-        @if (addedToCartMessage()) {
-          <div class="alert alert-success mb-4 animate-pulse">
-            <span>✅ {{ addedToCartMessage() }}</span>
-            <button (click)="clearMessage()" class="btn btn-sm btn-ghost">✕</button>
-          </div>
-        }
-
         <!-- Loading State -->
         @if (shopService.isLoading()) {
           <div class="flex justify-center items-center h-96">

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -20,8 +20,6 @@ export class ShopCatalogComponent {
   minPrice = 0;
   maxPrice = 10000;
 
-  // Signal para mostrar mensaje de éxito
-  addedToCartMessage = signal<string>('');
 
   /**
    * Buscar productos por texto
@@ -85,13 +83,8 @@ export class ShopCatalogComponent {
       maxStock,
     });
 
-    // Mostrar mensaje de éxito
-    this.addedToCartMessage.set(`✅ ${product.name} added to cart!`);
-
-    // Limpiar el mensaje después de 3 segundos
-    setTimeout(() => {
-      this.addedToCartMessage.set('');
-    }, 3000);
+    // Abrir el drawer para que el usuario vea el carrito actualizado
+    this.cartService.openCart();
   }
 
   /**
@@ -119,13 +112,6 @@ export class ShopCatalogComponent {
    */
   goToPage(page: number): void {
     this.shopService.goToPage(page);
-  }
-
-  /**
-   * Limpiar mensaje de carrito
-   */
-  clearMessage(): void {
-    this.addedToCartMessage.set('');
   }
 
   /**

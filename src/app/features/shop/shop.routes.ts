@@ -1,19 +1,30 @@
 import { Routes } from '@angular/router';
-import { ShopCatalogComponent } from './components/shop-catalog/shop-catalog.component';
-import { ProductDetailComponent } from './pages/product-detail/product-detail.component';
-import { CartComponent } from './components/cart/cart.component';
 
 export const SHOP_ROUTES: Routes = [
   {
     path: '',
-    component: ShopCatalogComponent,
-  },
-  {
-    path: 'product/:id',
-    component: ProductDetailComponent,
-  },
-  {
-    path: 'cart',
-    component: CartComponent,
+    loadComponent: () =>
+      import('./layout/shop-layout.component').then((m) => m.ShopLayoutComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./components/shop-catalog/shop-catalog.component').then(
+            (m) => m.ShopCatalogComponent,
+          ),
+      },
+      {
+        path: 'product/:id',
+        loadComponent: () =>
+          import('./pages/product-detail/product-detail.component').then(
+            (m) => m.ProductDetailComponent,
+          ),
+      },
+      {
+        path: 'cart',
+        loadComponent: () =>
+          import('./components/cart/cart.component').then((m) => m.CartComponent),
+      },
+    ],
   },
 ];
