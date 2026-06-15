@@ -20,7 +20,9 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   formError = signal<string | null>(null);
   imagePreviews: string[] = [];
   imagesToUpload: File[] = [];
+  existingImages: { url: string; alt: string; isPrimary: boolean }[] = [];
   selectedSizes: Map<string, number> = new Map();
+  private productId: string | null = null;
 
   get isEditMode() {
     return !!this.route.snapshot.paramMap.get('id');
@@ -67,9 +69,10 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   async loadProduct(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id')!;
-    const product = await this.productService.getBySlug(id);
+    const product = await this.productService.getAdminById(id);
 
     if (product) {
+      this.productId = product._id;
       this.form.patchValue({
         name: product.name,
         description: product.description,
@@ -87,12 +90,15 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         tags: product.tags?.join(', ') || '',
       });
 
-      // Load existing images as previews
       if (product.images && product.images.length > 0) {
-        this.imagePreviews = product.images.map((img: any) => img.url);
+        this.existingImages = product.images.map((img: any) => ({
+          url: img.url,
+          alt: img.alt || product.name,
+          isPrimary: img.isPrimary || false,
+        }));
+        this.imagePreviews = this.existingImages.map((img) => img.url);
       }
 
-      // Load existing sizes
       if (product.sizes) {
         product.sizes.forEach((size: any) => {
           this.selectedSizes.set(size.size, size.stock);
@@ -144,11 +150,15 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   }
 
   removeImage(index: number): void {
-    URL.revokeObjectURL(this.imagePreviews[index]);
-    this.imagePreviews.splice(index, 1);
-    if (index < this.imagesToUpload.length) {
-      this.imagesToUpload.splice(index, 1);
+    const isExisting = index < this.existingImages.length;
+    if (isExisting) {
+      this.existingImages.splice(index, 1);
+    } else {
+      const uploadIndex = index - this.existingImages.length;
+      URL.revokeObjectURL(this.imagePreviews[index]);
+      this.imagesToUpload.splice(uploadIndex, 1);
     }
+    this.imagePreviews.splice(index, 1);
   }
 
   onSizeChange(event: Event, size: string): void {
@@ -196,22 +206,31 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
       // Prepare product data
       const formValue = this.form.value;
+      const newImages = imageUrls.map((url, i) => ({
+        url,
+        alt: formValue.name,
+        isPrimary: this.existingImages.length === 0 && i === 0,
+      }));
+      const allImages = [...this.existingImages, ...newImages];
+
       const productData: any = {
         ...formValue,
-        sizes: Array.from(this.selectedSizes.entries()).map(([size, stock]) => ({
-          size,
-          stock,
-        })),
-        tags: formValue.tags?.split(',').map((t: string) => t.trim()) || [],
-        images: imageUrls.map((url, i) => ({
-          url,
-          alt: formValue.name,
-          isPrimary: i === 0,
-        })),
+        sizes: Array.from(this.selectedSizes.entries()).map(([size, stock]) => ({ size, stock })),
+        tags: formValue.tags ? formValue.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
+        images: allImages,
       };
 
+      // Eliminar campos nulos, vacíos o generados por el backend
+      delete productData.slug; // el backend lo genera desde el nombre
+      const optionalFields = ['discountPrice', 'subcategory', 'material', 'careInstructions', 'metaTitle', 'metaDescription'];
+      optionalFields.forEach(f => {
+        if (productData[f] === null || productData[f] === undefined || productData[f] === '') {
+          delete productData[f];
+        }
+      });
+
       if (this.isEditMode) {
-        const id = this.route.snapshot.paramMap.get('id')!;
+        const id = this.productId || this.route.snapshot.paramMap.get('id')!;
         await this.productService.update(id, productData);
       } else {
         await this.productService.create(productData);

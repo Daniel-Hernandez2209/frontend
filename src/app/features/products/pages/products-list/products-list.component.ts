@@ -29,8 +29,7 @@ export class ProductsListComponent implements OnInit {
   constructor(private productService: ProductService) {}
 
   ngOnInit(): void {
-    // Load initial products
-    this.productService.getAll();
+    this.productService.getAllAdmin();
   }
 
   onSearchChange(query: string): void {

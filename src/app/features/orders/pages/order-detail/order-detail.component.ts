@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -12,9 +12,9 @@ import { OrderService } from '../../services/order.service';
   styleUrls: []
 })
 export class OrderDetailComponent implements OnInit {
-  order: any = null;
-  isLoading = true;
-  error: string | null = null;
+  order = signal<any>(null);
+  isLoading = signal(true);
+  error = signal<string | null>(null);
   noteForm: FormGroup;
   showNoteForm = false;
   submittingNote = false;
@@ -44,50 +44,54 @@ export class OrderDetailComponent implements OnInit {
 
   async loadOrder(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
-    if (!id) return;
+    if (!id) {
+      this.isLoading.set(false);
+      this.error.set('ID de orden no encontrado');
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.error.set(null);
 
     try {
-      this.isLoading = true;
       const order = await this.orderService.getById(id);
       if (order) {
-        this.order = order;
+        this.order.set(order);
       } else {
-        this.error = 'Order not found';
+        this.error.set('Orden no encontrada');
       }
     } catch (err: any) {
-      this.error = err.message || 'Failed to load order';
+      this.error.set(err.message || 'Error al cargar la orden');
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
 
   async updateStatus(newStatus: string): Promise<void> {
-    if (!this.order || newStatus === this.order.status) return;
-
-    if (!confirm(`Update order status to "${newStatus}"?`)) return;
-
+    const o = this.order();
+    if (!o || newStatus === o.status) return;
+    if (!confirm(`¿Cambiar estado a "${newStatus}"?`)) return;
     try {
-      await this.orderService.updateStatus(this.order._id, newStatus);
-      this.order.status = newStatus;
+      await this.orderService.updateStatus(o._id, newStatus);
+      this.order.update(ord => ({ ...ord, status: newStatus }));
     } catch (err: any) {
-      this.error = err.message;
+      this.error.set(err.message);
     }
   }
 
   async submitNote(): Promise<void> {
     if (this.noteForm.invalid) return;
-
     this.submittingNote = true;
     try {
       const updatedOrder = await this.orderService.addNote(
-        this.order._id,
+        this.order()._id,
         this.noteForm.get('note')?.value
       );
-      this.order = updatedOrder;
+      if (updatedOrder) this.order.set(updatedOrder);
       this.noteForm.reset();
       this.showNoteForm = false;
     } catch (err: any) {
-      this.error = err.message;
+      this.error.set(err.message);
     } finally {
       this.submittingNote = false;
     }
@@ -119,14 +123,42 @@ export class OrderDetailComponent implements OnInit {
   }
 
   getOrderTotal(): number {
-    if (!this.order) return 0;
-    return this.order.total || this.order.items.reduce((sum: number, item: any) => 
-      sum + (item.price * item.quantity), 0);
+    const o = this.order();
+    if (!o) return 0;
+    return this.orderService.getOrderTotal(o);
   }
 
   getSubtotal(): number {
-    if (!this.order) return 0;
-    return this.order.items.reduce((sum: number, item: any) => 
-      sum + (item.price * item.quantity), 0);
+    const o = this.order();
+    if (!o) return 0;
+    return Number(o.pricing?.subtotal ?? o.subtotal ?? 0);
+  }
+
+  getTax(): number {
+    const o = this.order();
+    if (!o) return 0;
+    return Number(o.pricing?.tax ?? o.tax ?? 0);
+  }
+
+  getShipping(): number {
+    const o = this.order();
+    if (!o) return 0;
+    return Number(o.pricing?.shipping ?? o.shippingCost ?? 0);
+  }
+
+  getItemPrice(item: any): number {
+    return Number(item.unitPrice ?? item.price ?? 0);
+  }
+
+  getItemSubtotal(item: any): number {
+    return Number(item.subtotal ?? (this.getItemPrice(item) * (item.quantity || 1)));
+  }
+
+  getCustomerName(): string {
+    return this.orderService.getCustomerName(this.order());
+  }
+
+  getCustomerEmail(): string {
+    return this.orderService.getCustomerEmail(this.order());
   }
 }

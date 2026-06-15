@@ -3,291 +3,229 @@
   <div class="flex justify-between items-start">
     <div>
       <h1 class="text-3xl font-bold text-gray-900">Order Details</h1>
-      <p class="text-gray-600 mt-1" *ngIf="order">
-        Order ID: <span class="font-mono">{{ order._id }}</span>
+      <p class="text-gray-600 mt-1" *ngIf="order()">
+        # <span class="font-mono font-semibold">{{ order().orderNumber }}</span>
       </p>
     </div>
-    <a routerLink="/admin/orders" class="text-gray-600 hover:text-gray-900 font-medium">
-      ← Back to Orders
-    </a>
+    <a routerLink="/admin/orders" class="btn btn-outline btn-sm">← Volver a Órdenes</a>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="flex justify-center items-center h-96">
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="flex justify-center items-center h-96">
     <div class="text-center">
       <span class="loading loading-spinner loading-lg"></span>
-      <p class="text-gray-600 mt-4">Loading order...</p>
+      <p class="text-gray-600 mt-4">Cargando orden...</p>
     </div>
   </div>
 
-  <!-- Error State -->
-  <div *ngIf="error" class="alert alert-error">
-    {{ error }}
-  </div>
+  <!-- Error -->
+  <div *ngIf="error()" class="alert alert-error">{{ error() }}</div>
 
-  <div *ngIf="!isLoading && !error && order" class="space-y-6">
-    <!-- Status Section -->
-    <div class="card bg-base-100 shadow-sm">
-      <div class="card-body space-y-4">
-        <div class="flex justify-between items-center">
-          <h2 class="text-lg font-semibold text-gray-900">Order Status</h2>
-          <div class="flex gap-2">
-            <select
-              [(ngModel)]="order.status"
-              (ngModelChange)="updateStatus($event)"
-              class="select select-bordered select-sm"
-            >
-              <option disabled>Change status...</option>
-              <option *ngFor="let status of statusOptions" [value]="status.value">
-                {{ status.label }}
-              </option>
-            </select>
-          </div>
-        </div>
+  <ng-container *ngIf="!isLoading() && !error() && order()">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <div>
-          <div class="badge" [ngClass]="getStatusColor(order.status)">
-            {{ getStatusLabel(order.status) }}
-          </div>
-        </div>
+      <!-- LEFT COLUMN -->
+      <div class="lg:col-span-2 space-y-6">
 
-        <!-- Status Timeline -->
-        <div *ngIf="order.statusHistory && order.statusHistory.length > 0" class="mt-6">
-          <h3 class="text-sm font-medium text-gray-900 mb-4">Status History</h3>
-          <div class="space-y-4">
-            <div *ngFor="let history of order.statusHistory; let last = last" class="flex gap-4">
-              <div class="flex flex-col items-center">
-                <div
-                  [class]="
-                    'w-3 h-3 rounded-full border-2 border-current ' +
-                    (history.status === order.status
-                      ? 'bg-primary border-primary'
-                      : 'bg-base-300 border-base-300')
-                  "
-                ></div>
-                <div *ngIf="!last" class="w-0.5 h-12 bg-base-300 my-2"></div>
-              </div>
-              <div class="pb-4">
-                <p class="text-sm font-medium text-gray-900">
-                  {{ getStatusLabel(history.status) }}
-                </p>
-                <p class="text-xs text-gray-500">{{ formatDate(history.changedAt) }}</p>
-                <p *ngIf="history.reason" class="text-xs text-gray-600 mt-1">
-                  {{ history.reason }}
-                </p>
+        <!-- Estado -->
+        <div class="card bg-base-100 shadow-sm">
+          <div class="card-body">
+            <div class="flex justify-between items-center">
+              <h2 class="text-lg font-semibold">Estado de la Orden</h2>
+              <select
+                [ngModel]="order().status"
+                (ngModelChange)="updateStatus($event)"
+                class="select select-bordered select-sm"
+              >
+                <option *ngFor="let s of statusOptions" [value]="s.value">{{ s.label }}</option>
+              </select>
+            </div>
+            <span class="badge mt-2" [ngClass]="getStatusColor(order().status)">
+              {{ getStatusLabel(order().status) }}
+            </span>
+
+            <!-- Historial de estados -->
+            <div *ngIf="order().statusHistory?.length" class="mt-4">
+              <h3 class="text-sm font-medium text-gray-700 mb-2">Historial</h3>
+              <div class="space-y-2">
+                <div *ngFor="let h of order().statusHistory" class="flex gap-3 text-sm">
+                  <span class="badge badge-sm" [ngClass]="getStatusColor(h.status)">{{ getStatusLabel(h.status) }}</span>
+                  <span class="text-gray-500">{{ formatDate(h.changedAt || h.timestamp) }}</span>
+                  <span *ngIf="h.reason" class="text-gray-600">— {{ h.reason }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Order Items Section -->
-      <div class="card bg-base-100 shadow-sm">
-        <div class="card-body">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Order Items</h2>
-
-          <div class="overflow-x-auto">
-            <table class="table table-zebra">
-              <thead>
-                <tr>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                    Product
-                  </th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                    SKU
-                  </th>
-                  <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">
-                    Size
-                  </th>
-                  <th class="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">
-                    Price
-                  </th>
-                  <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">
-                    Qty
-                  </th>
-                  <th class="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">
-                    Subtotal
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let item of order.items" class="hover:bg-gray-50">
-                  <td class="px-4 py-3">
-                    <p class="text-sm font-medium text-gray-900">{{ item.productName }}</p>
-                  </td>
-                  <td class="px-4 py-3 text-sm text-gray-600">{{ item.sku }}</td>
-                  <td class="px-4 py-3 text-center text-sm text-gray-600">
-                    {{ item.size || '-' }}
-                  </td>
-                  <td class="px-4 py-3 text-right text-sm text-gray-600">
-                    {{ formatCurrency(item.price) }}
-                  </td>
-                  <td class="px-4 py-3 text-center text-sm text-gray-600">{{ item.quantity }}</td>
-                  <td class="px-4 py-3 text-right text-sm font-medium text-gray-900">
-                    {{ formatCurrency(item.price * item.quantity) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Order Summary -->
-          <div class="mt-4 pt-4 border-t flex justify-end">
-            <div class="w-64 space-y-2">
-              <div class="flex justify-between text-sm">
-                <span class="text-gray-600">Subtotal:</span>
-                <span class="text-gray-900">{{ formatCurrency(getSubtotal()) }}</span>
-              </div>
-              <div *ngIf="order.shipping" class="flex justify-between text-sm">
-                <span class="text-gray-600">Shipping:</span>
-                <span class="text-gray-900">{{ formatCurrency(order.shipping) }}</span>
-              </div>
-              <div *ngIf="order.tax" class="flex justify-between text-sm">
-                <span class="text-gray-600">Tax:</span>
-                <span class="text-gray-900">{{ formatCurrency(order.tax) }}</span>
-              </div>
-              <div class="flex justify-between text-base font-semibold border-t pt-2">
-                <span class="text-gray-900">Total:</span>
-                <span class="text-gray-900">{{ formatCurrency(getOrderTotal()) }}</span>
-              </div>
-              <!-- Customer & Shipping Section -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Customer Info -->
-                <div class="card bg-base-100 shadow-sm">
-                  <div class="card-body">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Customer Information</h2>
-                    <div class="space-y-3">
-                      <div>
-                        <p class="text-sm text-gray-600">Name</p>
-                        <p class="text-gray-900 font-medium">{{ order.user?.name }}</p>
-                      </div>
-                      <div>
-                        <p class="text-sm text-gray-600">Email</p>
-                        <p class="text-gray-900">{{ order.user?.email }}</p>
-                      </div>
-                      <div *ngIf="order.user?.phone">
-                        <p class="text-sm text-gray-600">Phone</p>
-                        <p class="text-gray-900">{{ order.user.phone }}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Shipping Address -->
-                <div class="card bg-base-100 shadow-sm">
-                  <div class="card-body">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h2>
-                    <div *ngIf="order.shippingAddress" class="space-y-1">
-                      <p class="text-gray-900">{{ order.shippingAddress.street }}</p>
-                      <p class="text-gray-900">
-                        {{ order.shippingAddress.city }}, {{ order.shippingAddress.state }}
-                        {{ order.shippingAddress.zip }}
+        <!-- Items -->
+        <div class="card bg-base-100 shadow-sm">
+          <div class="card-body">
+            <h2 class="text-lg font-semibold mb-4">Productos</h2>
+            <div class="overflow-x-auto">
+              <table class="table table-zebra">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>SKU</th>
+                    <th class="text-center">Talla</th>
+                    <th class="text-right">Precio</th>
+                    <th class="text-center">Cant.</th>
+                    <th class="text-right">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of order().items" class="hover:bg-gray-50">
+                    <td>
+                      <p class="font-medium text-sm">
+                        {{ item.productSnapshot?.name || item.productName || item.product?.name }}
                       </p>
-                      <p class="text-gray-900">{{ order.shippingAddress.country }}</p>
-                    </div>
-                  </div>
+                    </td>
+                    <td class="text-sm text-gray-600">
+                      {{ item.productSnapshot?.sku || item.sku }}
+                    </td>
+                    <td class="text-center text-sm">{{ item.size || '-' }}</td>
+                    <td class="text-right text-sm">{{ formatCurrency(getItemPrice(item)) }}</td>
+                    <td class="text-center text-sm">{{ item.quantity }}</td>
+                    <td class="text-right text-sm font-medium">{{ formatCurrency(getItemSubtotal(item)) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Totales -->
+            <div class="mt-4 pt-4 border-t flex justify-end">
+              <div class="w-64 space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Subtotal:</span>
+                  <span>{{ formatCurrency(getSubtotal()) }}</span>
                 </div>
-              </div>
-
-              <!-- Payment Info -->
-              <div class="card bg-base-100 shadow-sm">
-                <div class="card-body">
-                  <h2 class="text-lg font-semibold text-gray-900 mb-4">Payment Information</h2>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <p class="text-sm text-gray-600">Method</p>
-                      <p class="text-gray-900 font-medium capitalize">
-                        {{ order.paymentInfo?.method }}
-                      </p>
-                    </div>
-                    <div>
-                      <p class="text-sm text-gray-600">Status</p>
-                      <div
-                        class="badge"
-                        [ngClass]="getStatusColor(order.paymentInfo?.status || 'pending')"
-                      >
-                        {{ order.paymentInfo?.status || 'Pending' }}
-                      </div>
-                    </div>
-                  </div>
+                <div *ngIf="getShipping() > 0" class="flex justify-between">
+                  <span class="text-gray-600">Envío:</span>
+                  <span>{{ formatCurrency(getShipping()) }}</span>
                 </div>
-              </div>
-
-              <!-- Notes Section -->
-              <div class="card bg-base-100 shadow-sm">
-                <div class="card-body">
-                  <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Admin Notes</h2>
-                    <button
-                      (click)="showNoteForm = !showNoteForm"
-                      [class]="'btn btn-sm ' + (showNoteForm ? 'btn-error' : 'btn-primary')"
-                    >
-                      {{ showNoteForm ? 'Cancel' : '+ Add Note' }}
-                    </button>
-                  </div>
-
-                  <!-- Add Note Form -->
-                  <form
-                    *ngIf="showNoteForm"
-                    [formGroup]="noteForm"
-                    (ngSubmit)="submitNote()"
-                    class="mb-6 p-4 bg-base-200 rounded-lg space-y-4"
-                  >
-                    <div class="form-control">
-                      <textarea
-                        formControlName="note"
-                        placeholder="Add internal note..."
-                        rows="3"
-                        class="textarea textarea-bordered w-full"
-                      ></textarea>
-                      <div
-                        class="label"
-                        *ngIf="noteForm.get('note')?.invalid && noteForm.get('note')?.touched"
-                      >
-                        <span class="label-text-alt text-error"
-                          >Note must be at least 5 characters</span
-                        >
-                      </div>
-                    </div>
-                    <button
-                      type="submit"
-                      [disabled]="noteForm.invalid || submittingNote"
-                      class="btn btn-primary btn-sm"
-                    >
-                      <span
-                        *ngIf="submittingNote"
-                        class="loading loading-spinner loading-sm\"
-                      ></span>
-                      {{ submittingNote ? 'Saving...' : 'Add Note' }}
-                    </button>
-                  </form>
-
-                  <!-- Notes List -->
-                  <div *ngIf="order.notes && order.notes.length > 0" class="space-y-3">
-                    <div *ngFor="let note of order.notes" class="p-3 bg-base-200 rounded-lg">
-                      <p class="text-sm text-gray-900">{{ note.text }}</p>
-                      <p class="text-xs text-gray-500 mt-2">
-                        {{ formatDate(note.createdAt) }} by {{ note.author }}
-                      </p>
-                    </div>
-                  </div>
-                  <p
-                    *ngIf="!order.notes || order.notes.length === 0"
-                    class="text-gray-500 text-sm\"
-                  >
-                    No notes yet
-                  </p>
+                <div *ngIf="getTax() > 0" class="flex justify-between">
+                  <span class="text-gray-600">IVA:</span>
+                  <span>{{ formatCurrency(getTax()) }}</span>
                 </div>
-              </div>
-
-              <!-- Order Footer -->
-              <div class="flex justify-end gap-3">
-                <a routerLink="/admin/orders" class="btn btn-outline"> Back to Orders </a>
+                <div class="flex justify-between font-semibold text-base border-t pt-2">
+                  <span>Total:</span>
+                  <span>{{ formatCurrency(getOrderTotal()) }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+
+        <!-- Notas -->
+        <div class="card bg-base-100 shadow-sm">
+          <div class="card-body">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-lg font-semibold">Notas Admin</h2>
+              <button (click)="showNoteForm = !showNoteForm"
+                [class]="'btn btn-sm ' + (showNoteForm ? 'btn-error' : 'btn-primary')">
+                {{ showNoteForm ? 'Cancelar' : '+ Agregar nota' }}
+              </button>
+            </div>
+            <form *ngIf="showNoteForm" [formGroup]="noteForm" (ngSubmit)="submitNote()"
+              class="mb-4 space-y-3 p-4 bg-base-200 rounded-lg">
+              <textarea formControlName="note" placeholder="Nota interna..." rows="3"
+                class="textarea textarea-bordered w-full"></textarea>
+              <button type="submit" [disabled]="noteForm.invalid || submittingNote" class="btn btn-primary btn-sm">
+                <span *ngIf="submittingNote" class="loading loading-spinner loading-sm"></span>
+                {{ submittingNote ? 'Guardando...' : 'Guardar nota' }}
+              </button>
+            </form>
+            <div *ngIf="order().notes?.length" class="space-y-2">
+              <div *ngFor="let note of order().notes" class="p-3 bg-base-200 rounded-lg text-sm">
+                <p>{{ note.text }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ formatDate(note.createdAt) }} — {{ note.author }}</p>
+              </div>
+            </div>
+            <p *ngIf="!order().notes?.length" class="text-sm text-gray-500">Sin notas</p>
+          </div>
+        </div>
+
+      </div><!-- /LEFT -->
+
+      <!-- RIGHT COLUMN -->
+      <div class="space-y-6">
+
+        <!-- Cliente -->
+        <div class="card bg-base-100 shadow-sm">
+          <div class="card-body">
+            <h2 class="text-lg font-semibold mb-3">Cliente</h2>
+            <div class="space-y-2 text-sm">
+              <div>
+                <p class="text-gray-500">Nombre</p>
+                <p class="font-medium">{{ getCustomerName() }}</p>
+              </div>
+              <div>
+                <p class="text-gray-500">Email</p>
+                <p>{{ getCustomerEmail() }}</p>
+              </div>
+              <div *ngIf="order().guestInfo?.phone || order().user?.phone">
+                <p class="text-gray-500">Teléfono</p>
+                <p>{{ order().guestInfo?.phone || order().user?.phone }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dirección -->
+        <div class="card bg-base-100 shadow-sm">
+          <div class="card-body">
+            <h2 class="text-lg font-semibold mb-3">Dirección de Envío</h2>
+            <div *ngIf="order().shippingAddress" class="text-sm space-y-1">
+              <p>{{ order().shippingAddress.firstName }} {{ order().shippingAddress.lastName }}</p>
+              <p>{{ order().shippingAddress.street }}</p>
+              <p>{{ order().shippingAddress.city }}, {{ order().shippingAddress.department }}</p>
+              <p>{{ order().shippingAddress.country }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pago -->
+        <div class="card bg-base-100 shadow-sm">
+          <div class="card-body">
+            <h2 class="text-lg font-semibold mb-3">Pago</h2>
+            <div class="text-sm space-y-2">
+              <div>
+                <p class="text-gray-500">Método</p>
+                <p class="font-medium capitalize">{{ order().payment?.method || order().paymentInfo?.method || '-' }}</p>
+              </div>
+              <div>
+                <p class="text-gray-500">Estado</p>
+                <span class="badge badge-sm" [ngClass]="getStatusColor(order().payment?.status || order().paymentInfo?.status || 'pending')">
+                  {{ order().payment?.status || order().paymentInfo?.status || 'Pendiente' }}
+                </span>
+              </div>
+              <div *ngIf="order().payment?.transactionId || order().paymentInfo?.transactionId">
+                <p class="text-gray-500">ID Transacción</p>
+                <p class="font-mono text-xs">{{ order().payment?.transactionId || order().paymentInfo?.transactionId }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fechas -->
+        <div class="card bg-base-100 shadow-sm">
+          <div class="card-body">
+            <h2 class="text-lg font-semibold mb-3">Fechas</h2>
+            <div class="text-sm space-y-2">
+              <div>
+                <p class="text-gray-500">Creada</p>
+                <p>{{ formatDate(order().createdAt) }}</p>
+              </div>
+              <div *ngIf="order().updatedAt">
+                <p class="text-gray-500">Actualizada</p>
+                <p>{{ formatDate(order().updatedAt) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /RIGHT -->
+    </div><!-- /grid -->
+  </ng-container>
 </div>

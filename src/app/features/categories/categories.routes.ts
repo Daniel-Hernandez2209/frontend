@@ -15,7 +15,7 @@ export const CATEGORIES_ROUTES: Routes = [
     canActivate: [adminGuard],
   },
   {
-    path: ':id/edit',
+    path: ':id/edit',  // :id holds the slug value
     component: CategoryFormComponent,
     canActivate: [adminGuard],
   },

@@ -129,10 +129,18 @@ export class OrdersListComponent implements OnInit {
   }
 
   getOrderTotal(order: any): number {
-    return order.total || order.items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+    return this.orderService.getOrderTotal(order);
+  }
+
+  getCustomerName(order: any): string {
+    return this.orderService.getCustomerName(order);
+  }
+
+  getCustomerEmail(order: any): string {
+    return this.orderService.getCustomerEmail(order);
   }
 
   getItemCount(order: any): number {
-    return order.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
+    return order.totalItems ?? order.items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) ?? 0;
   }
 }

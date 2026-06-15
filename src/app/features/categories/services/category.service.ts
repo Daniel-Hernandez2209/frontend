@@ -9,6 +9,7 @@ import { Category, ApiResponse, PaginatedResponse } from '../../../shared/types/
 })
 export class CategoryService {
   private apiUrl = `${environment.apiUrl}/api/categories`;
+  private adminUrl = `${environment.apiUrl}/api/admin/categories`;
 
   // Signals for state management
   categories = signal<Category[]>([]);
@@ -61,65 +62,56 @@ export class CategoryService {
     this.loadCategories();
   }
 
-  // Load all categories
+  // Load all categories (admin — incluye inactivas)
   async loadCategories(): Promise<void> {
     try {
       this.isLoading.set(true);
       this.error.set(null);
-
       const response = await firstValueFrom(
-        this.http.get<PaginatedResponse<Category>>(
-          `${this.apiUrl}?page=${this.currentPage()}&limit=${this.pageSize()}`
-        )
+        this.http.get<any>(`${this.adminUrl}`)
       );
-
-      this.categories.set(response.data || []);
-      this.totalCategories.set(response.pagination?.total || 0);
+      const list = response.data || [];
+      this.categories.set(list);
+      this.totalCategories.set(list.length);
     } catch (err: any) {
-      const errorMsg = err?.error?.message || 'Failed to load categories';
-      this.error.set(errorMsg);
-      console.error('Error loading categories:', err);
+      this.error.set(err?.error?.message || 'Failed to load categories');
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  // Get all categories (no pagination)
+  // Get all categories admin
   async getAll(): Promise<Category[]> {
     try {
       this.isLoading.set(true);
       this.error.set(null);
-
       const response = await firstValueFrom(
-        this.http.get<ApiResponse<Category[]>>(`${this.apiUrl}`)
+        this.http.get<any>(`${this.adminUrl}`)
       );
-
-      this.categories.set(response.data || []);
-      return response.data || [];
+      const list = response.data || [];
+      this.categories.set(list);
+      return list;
     } catch (err: any) {
-      const errorMsg = err?.error?.message || 'Failed to fetch categories';
-      this.error.set(errorMsg);
+      this.error.set(err?.error?.message || 'Failed to fetch categories');
       return [];
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  // Get category by ID
-  async getById(id: string): Promise<Category | null> {
+  // Get category by slug (for edit form)
+  async getById(slug: string): Promise<Category | null> {
     try {
       this.isLoading.set(true);
       this.error.set(null);
-
       const response = await firstValueFrom(
-        this.http.get<ApiResponse<Category>>(`${this.apiUrl}/${id}`)
+        this.http.get<any>(`${this.apiUrl}/${slug}`)
       );
-
-      this.selectedCategory.set(response.data || null);
-      return response.data || null;
+      const cat = response.data || null;
+      this.selectedCategory.set(cat);
+      return cat;
     } catch (err: any) {
-      const errorMsg = err?.error?.message || 'Failed to load category';
-      this.error.set(errorMsg);
+      this.error.set(err?.error?.message || 'Failed to load category');
       return null;
     } finally {
       this.isLoading.set(false);
@@ -131,80 +123,77 @@ export class CategoryService {
     try {
       this.isLoading.set(true);
       this.error.set(null);
-
       const response = await firstValueFrom(
-        this.http.post<ApiResponse<Category>>(`${this.apiUrl}`, category)
+        this.http.post<any>(`${this.adminUrl}`, category)
       );
-
-      if (response.data) {
-        this.categories.update(cats => [...cats, response.data!]);
-        this.totalCategories.update(total => total + 1);
+      const created = response.data || null;
+      if (created) {
+        this.categories.update(cats => [created, ...cats]);
+        this.totalCategories.update(t => t + 1);
       }
-
-      return response.data || null;
+      return created;
     } catch (err: any) {
-      const errorMsg = err?.error?.message || 'Failed to create category';
-      this.error.set(errorMsg);
-      throw new Error(errorMsg);
+      const msg = err?.error?.message || err?.error?.errors?.join(', ') || 'Failed to create category';
+      this.error.set(msg);
+      throw new Error(msg);
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  // Update category
-  async update(id: string, category: Partial<Category>): Promise<Category | null> {
+  // Update category by slug
+  async update(slug: string, category: Partial<Category>): Promise<Category | null> {
     try {
       this.isLoading.set(true);
       this.error.set(null);
-
       const response = await firstValueFrom(
-        this.http.put<ApiResponse<Category>>(`${this.apiUrl}/${id}`, category)
+        this.http.put<any>(`${this.adminUrl}/${slug}`, category)
       );
-
-      if (response.data) {
-        this.categories.update(cats =>
-          cats.map(cat => cat._id === id ? response.data! : cat)
-        );
-
-        if (this.selectedCategory()?._id === id) {
-          this.selectedCategory.set(response.data);
-        }
+      const updated = response.data || null;
+      if (updated) {
+        this.categories.update(cats => cats.map(c => c.slug === slug ? updated : c));
+        if (this.selectedCategory()?.slug === slug) this.selectedCategory.set(updated);
       }
-
-      return response.data || null;
+      return updated;
     } catch (err: any) {
-      const errorMsg = err?.error?.message || 'Failed to update category';
-      this.error.set(errorMsg);
-      throw new Error(errorMsg);
+      const msg = err?.error?.message || 'Failed to update category';
+      this.error.set(msg);
+      throw new Error(msg);
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  // Delete category
-  async delete(id: string): Promise<boolean> {
+  // Delete category by slug
+  async delete(slug: string): Promise<boolean> {
     try {
       this.isLoading.set(true);
       this.error.set(null);
-
       await firstValueFrom(
-        this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`)
+        this.http.delete<any>(`${this.adminUrl}/${slug}`)
       );
-
-      this.categories.update(cats => cats.filter(cat => cat._id !== id));
-      this.totalCategories.update(total => total - 1);
-
-      if (this.selectedCategory()?._id === id) {
-        this.selectedCategory.set(null);
-      }
-
+      this.categories.update(cats => cats.filter(c => c.slug !== slug));
+      this.totalCategories.update(t => Math.max(0, t - 1));
+      if (this.selectedCategory()?.slug === slug) this.selectedCategory.set(null);
       return true;
     } catch (err: any) {
-      const errorMsg = err?.error?.message || 'Failed to delete category';
-      this.error.set(errorMsg);
-      throw new Error(errorMsg);
+      const msg = err?.error?.message || 'Failed to delete category';
+      this.error.set(msg);
+      throw new Error(msg);
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  // Toggle active/inactive
+  async toggle(slug: string): Promise<void> {
+    try {
+      await firstValueFrom(this.http.put<any>(`${this.adminUrl}/${slug}/toggle`, {}));
+      this.categories.update(cats => cats.map(c =>
+        c.slug === slug ? { ...c, isActive: !c.isActive } : c
+      ));
+    } catch (err: any) {
+      throw new Error(err?.error?.message || 'Failed to toggle category');
     }
   }
 

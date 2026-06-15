@@ -88,14 +88,6 @@ export class DashboardService {
   ) {
     // Setup real-time updates
     this._setupWebSocketListeners();
-
-    // Auto-refresh when orders/products/users change
-    effect(
-      () => {
-        this._updateStatsFromServices();
-      },
-      { allowSignalWrites: true },
-    );
   }
 
   /**
@@ -106,20 +98,17 @@ export class DashboardService {
     this.error.set(null);
 
     try {
-      // Carga datos desde la API y actualiza signals locales
       await Promise.all([
-        this.orderService.getAll(1, 100),
-        this.productService.getAll(1, 100),
+        this.orderService.getAll(1, 200),
+        this.productService.getAllAdmin(1, 200),
         this.userService.loadUsers(),
       ]);
 
-      // Stats del backend (endpoint real: /api/admin/stats)
-      const statsResp = await this._fetchStats();
-      this.stats.set(statsResp);
+      // Calcular stats localmente desde los datos cargados
+      this._updateStatsFromServices();
 
-      // Los gráficos se calculan localmente desde los datos ya cargados
-      // (_updateStatsFromServices se ejecuta via effect cuando cambian los signals)
-      this.salesChartData.set(this._generateSalesChartFallback());
+      // Gráficos
+      this.salesChartData.set(this._generateSalesChartFromOrders());
       this.topProductsData.set(this._generateTopProductsFallback());
       this.monthlyTrendsData.set(this._generateMonthlyTrendsFallback());
     } catch (err: any) {
@@ -162,13 +151,10 @@ export class DashboardService {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Calculate derived stats
+    // Revenue — el campo real es order.pricing.total
     const totalRevenue = orders.reduce((sum, order: any) => {
-      return (
-        sum +
-        (order.total ||
-          order.items.reduce((s: number, item: any) => s + item.price * item.quantity, 0))
-      );
+      const t = Number(order.pricing?.total ?? order.total ?? order.subtotal ?? 0);
+      return sum + (isNaN(t) ? 0 : t);
     }, 0);
 
     const ordersByStatus = {
@@ -296,18 +282,43 @@ export class DashboardService {
   /**
    * Fallback data generators (if API fails)
    */
+  private _generateSalesChartFromOrders(): ChartData {
+    const orders = this.orderService.orders();
+    const monthMap = new Map<string, number>();
+
+    orders.forEach((order: any) => {
+      const d = new Date(order.createdAt);
+      const key = d.toLocaleString('es-CO', { month: 'short', year: '2-digit' });
+      const total = Number(order.pricing?.total ?? order.total ?? 0);
+      monthMap.set(key, (monthMap.get(key) || 0) + (isNaN(total) ? 0 : total));
+    });
+
+    if (monthMap.size === 0) return this._generateSalesChartFallback();
+
+    const labels = Array.from(monthMap.keys()).slice(-6);
+    const data = labels.map(k => monthMap.get(k) || 0);
+
+    return {
+      labels,
+      datasets: [{
+        label: 'Ventas ($)',
+        data,
+        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      }],
+    };
+  }
+
   private _generateSalesChartFallback(): ChartData {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
     return {
       labels: months,
-      datasets: [
-        {
-          label: 'Sales ($)',
-          data: [12000, 19000, 13000, 15000, 10000, 16000],
-          borderColor: 'rgba(59, 130, 246, 1)',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        },
-      ],
+      datasets: [{
+        label: 'Ventas ($)',
+        data: [0, 0, 0, 0, 0, 0],
+        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      }],
     };
   }
 
