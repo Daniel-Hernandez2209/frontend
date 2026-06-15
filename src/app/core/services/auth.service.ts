@@ -2,7 +2,7 @@ import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { tap, catchError, finalize } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
 import { AppStore } from '@core/store/app.store';
@@ -26,6 +26,14 @@ export interface User {
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface RegisterRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone?: string;
 }
 
 export interface AuthResponse {
@@ -87,6 +95,46 @@ export class AuthService {
       catchError((err) => {
         this.error.set(err.error?.message || 'Error en login');
         this.isLoading.set(false);
+        throw err;
+      }),
+      finalize(() => this.isLoading.set(false)),
+    );
+  }
+
+  register(data: RegisterRequest): Observable<AuthResponse> {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    return this.api.post<AuthResponse>('/auth/register', data).pipe(
+      catchError((err) => {
+        this.error.set(err.error?.message || 'Error al registrarse');
+        this.isLoading.set(false);
+        throw err;
+      }),
+      finalize(() => this.isLoading.set(false)),
+    );
+  }
+
+  forgotPassword(email: string): Observable<{ success: boolean; message: string }> {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    return this.api.post<{ success: boolean; message: string }>('/auth/forgot-password', { email }).pipe(
+      catchError((err) => {
+        this.error.set(err.error?.message || 'Error al enviar el correo');
+        throw err;
+      }),
+      finalize(() => this.isLoading.set(false)),
+    );
+  }
+
+  resetPassword(token: string, password: string): Observable<{ success: boolean; message: string }> {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    return this.api.post<{ success: boolean; message: string }>('/auth/reset-password', { token, password }).pipe(
+      catchError((err) => {
+        this.error.set(err.error?.message || 'Error al restablecer la contraseña');
         throw err;
       }),
       finalize(() => this.isLoading.set(false)),

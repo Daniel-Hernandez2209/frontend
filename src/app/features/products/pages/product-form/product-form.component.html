@@ -1,299 +1,315 @@
 <div class="p-6 space-y-6">
   <div class="flex justify-between items-center">
     <h1 class="text-3xl font-bold text-gray-900">
-      {{ isEditMode ? 'Edit Product' : 'Create Product' }}
+      {{ isEditMode ? 'Editar Producto' : 'Crear Producto' }}
     </h1>
-    <a
-      routerLink="/admin/products"
-      class="text-gray-600 hover:text-gray-900 font-medium"
-    >
-      ← Back to Products
+    <a routerLink="/admin/products" class="text-gray-600 hover:text-gray-900 font-medium">
+      ← Volver a Productos
     </a>
   </div>
 
-  <!-- Form -->
+  <!-- Formulario -->
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
     <div class="card bg-base-100 shadow-sm">
       <div class="card-body space-y-6">
-        <!-- Basic Info -->
+
+        <!-- Información Básica -->
         <div>
-        <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b">Basic Information</h2>
+          <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b">Información Básica</h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Name -->
-          <div>
-            <label class="form-control w-full">
-              <div class="label">
-                <span class="label-text">Product Name <span class="text-red-500">*</span></span>
-              </div>
-              <input
-                type="text"
-                formControlName="name"
-                placeholder="e.g., Classic T-Shirt"
-                class="input input-bordered w-full"
-              />
-              <div class="label" *ngIf="isFieldInvalid('name')">
-                <span class="label-text-alt text-error">Name is required (3-100 characters)</span>
-              </div>
-            </label>
-          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Nombre -->
+            <div>
+              <label class="form-control w-full">
+                <div class="label">
+                  <span class="label-text">Nombre del Producto <span class="text-red-500">*</span></span>
+                </div>
+                <input
+                  type="text"
+                  formControlName="name"
+                  placeholder="Ej. Camiseta Clásica"
+                  class="input input-bordered w-full"
+                />
+                @if (isFieldInvalid('name')) {
+                  <div class="label">
+                    <span class="label-text-alt text-error">El nombre es obligatorio (3-100 caracteres)</span>
+                  </div>
+                }
+              </label>
+            </div>
 
-          <!-- SKU -->
-          <div>
-            <label class="form-control w-full">
-              <div class="label">
-                <span class="label-text">SKU <span class="text-red-500">*</span></span>
-              </div>
-              <input
-                type="text"
-                formControlName="sku"
-                placeholder="e.g., ATH-TSH-2024"
-                class="input input-bordered w-full"
-              />
-              <div class="label" *ngIf="isFieldInvalid('sku')">
-                <span class="label-text-alt text-error">SKU is required and must be unique</span>
-              </div>
-            </label>
-          </div>
+            <!-- SKU -->
+            <div>
+              <label class="form-control w-full">
+                <div class="label">
+                  <span class="label-text">SKU <span class="text-red-500">*</span></span>
+                </div>
+                <input
+                  type="text"
+                  formControlName="sku"
+                  placeholder="Ej. ATH-CAM-2024"
+                  class="input input-bordered w-full"
+                />
+                @if (isFieldInvalid('sku')) {
+                  <div class="label">
+                    <span class="label-text-alt text-error">El SKU es obligatorio y debe ser único</span>
+                  </div>
+                }
+              </label>
+            </div>
 
-          <!-- Price -->
-          <div>
-            <label class="form-control w-full">
-              <div class="label">
-                <span class="label-text">Price ($) <span class="text-red-500">*</span></span>
-              </div>
-              <input
-                type="number"
-                formControlName="price"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                class="input input-bordered w-full"
-              />
-            </label>
-          </div>
+            <!-- Precio -->
+            <div>
+              <label class="form-control w-full">
+                <div class="label">
+                  <span class="label-text">Precio (COP) <span class="text-red-500">*</span></span>
+                </div>
+                <input
+                  type="number"
+                  formControlName="price"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  class="input input-bordered w-full"
+                />
+              </label>
+            </div>
 
-          <!-- Discount Price -->
-          <div>
-            <label class="form-control w-full">
-              <div class="label">
-                <span class="label-text">Discount Price ($)</span>
-              </div>
-              <input
-                type="number"
-                formControlName="discountPrice"
-                min="0"
-                step="0.01"
-                placeholder="Leave empty for no discount"
-                class="input input-bordered w-full"
-              />
-            </label>
-          </div>
+            <!-- Precio con Descuento -->
+            <div>
+              <label class="form-control w-full">
+                <div class="label">
+                  <span class="label-text">Precio con Descuento (COP)</span>
+                </div>
+                <input
+                  type="number"
+                  formControlName="discountPrice"
+                  min="0"
+                  step="1"
+                  placeholder="Dejar vacío si no hay descuento"
+                  class="input input-bordered w-full"
+                />
+              </label>
+            </div>
 
-          <!-- Category -->
-          <div>
-            <label class="form-control w-full">
-              <div class="label">
-                <span class="label-text">Category <span class="text-red-500">*</span></span>
-              </div>
-              <select
-                formControlName="category"
-                class="select select-bordered w-full"
-              >
-                <option value="">Select Category</option>
-                <option value="hombre">Hombre</option>
-                <option value="mujer">Mujer</option>
-                <option value="deportivos">Deportivos</option>
-                <option value="hoodies-sacos">Hoodies/Sacos</option>
-                <option value="chaquetas">Chaquetas</option>
-              </select>
-            </label>
-          </div>
+            <!-- Categoría -->
+            <div>
+              <label class="form-control w-full">
+                <div class="label">
+                  <span class="label-text">Categoría <span class="text-red-500">*</span></span>
+                </div>
+                <select formControlName="category" class="select select-bordered w-full">
+                  <option value="">Seleccionar Categoría</option>
+                  <option value="hombre">Hombre</option>
+                  <option value="mujer">Mujer</option>
+                  <option value="deportivos">Deportivos</option>
+                  <option value="hoodies-sacos">Hoodies / Sacos</option>
+                  <option value="chaquetas">Chaquetas</option>
+                </select>
+              </label>
+            </div>
 
-          <!-- Material -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Material
-            </label>
-            <input
-              type="text"
-              formControlName="material"
-              placeholder="e.g., 100% Cotton"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        <!-- Description -->
-        <div class="mt-6">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Description <span class="text-red-500">*</span>
-          </label>
-          <textarea
-            formControlName="description"
-            rows="4"
-            placeholder="Product description..."
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          ></textarea>
-          <p *ngIf="isFieldInvalid('description')" class="text-sm text-red-600 mt-1">
-            Description is required (10-2000 characters)
-          </p>
-        </div>
-      </div>
-
-      <!-- Image Upload -->
-      <div>
-        <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b">Product Images</h2>
-
-        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition"
-          (click)="fileInput.click()"
-          (drop)="onDrop($event)"
-          (dragover)="$event.preventDefault()">
-          <input
-            #fileInput
-            type="file"
-            multiple
-            accept="image/*"
-            (change)="onFileSelected($event)"
-            class="hidden"
-          />
-          <p class="text-gray-600">
-            Drag and drop images here, or <span class="text-blue-600 font-medium">click to select</span>
-          </p>
-          <p class="text-xs text-gray-500 mt-2">Max 10 MB per file, supports JPG, PNG, WebP</p>
-        </div>
-
-        <!-- Image Previews -->
-        <div *ngIf="imagePreviews.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-          <div *ngFor="let preview of imagePreviews; let i = index" class="relative">
-            <img
-              [src]="preview"
-              alt="Preview"
-              class="w-full h-32 object-cover rounded-lg"
-            />
-            <button
-              type="button"
-              (click)="removeImage(i)"
-              class="absolute top-2 right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-700"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-
-        <p *ngIf="uploadError()" class="text-sm text-red-600 mt-2">
-          {{ uploadError() }}
-        </p>
-      </div>
-
-      <!-- Inventory -->
-      <div>
-        <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b">Inventory</h2>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Sizes & Stock</label>
-          <div class="space-y-2">
-            <div *ngFor="let size of sizes" class="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                [value]="size"
-                (change)="onSizeChange($event, size)"
-                class="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <label class="text-sm text-gray-700 w-12">{{ size }}</label>
-              <input
-                type="number"
-                [disabled]="!isSizeSelected(size)"
-                [value]="getSizeStock(size)"
-                (change)="onStockChange($event, size)"
-                min="0"
-                placeholder="0"
-                class="w-20 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span class="text-sm text-gray-500">units</span>
+            <!-- Material -->
+            <div>
+              <label class="form-control w-full">
+                <div class="label">
+                  <span class="label-text">Material</span>
+                </div>
+                <input
+                  type="text"
+                  formControlName="material"
+                  placeholder="Ej. 100% Algodón"
+                  class="input input-bordered w-full"
+                />
+              </label>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- SEO -->
-      <div>
-        <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b">SEO</h2>
-
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
-            <input
-              type="text"
-              formControlName="metaTitle"
-              maxlength="60"
-              placeholder="Max 60 characters"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
-            <textarea
-              formControlName="metaDescription"
-              maxlength="160"
-              rows="3"
-              placeholder="Max 160 characters"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            ></textarea>
+          <!-- Descripción -->
+          <div class="mt-6">
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text">Descripción <span class="text-red-500">*</span></span>
+              </div>
+              <textarea
+                formControlName="description"
+                rows="4"
+                placeholder="Descripción del producto..."
+                class="textarea textarea-bordered w-full"
+              ></textarea>
+              @if (isFieldInvalid('description')) {
+                <div class="label">
+                  <span class="label-text-alt text-error">La descripción es obligatoria (10-2000 caracteres)</span>
+                </div>
+              }
+            </label>
           </div>
         </div>
-      </div>
 
-      <!-- Status -->
-      <div>
-        <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b">Status</h2>
+        <!-- Imágenes del Producto -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b">Imágenes del Producto</h2>
 
-        <div class="space-y-3">
-          <label class="flex items-center space-x-3">
+          <div
+            class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
+            (click)="fileInput.click()"
+            (drop)="onDrop($event)"
+            (dragover)="$event.preventDefault()"
+          >
             <input
-              type="checkbox"
-              formControlName="isActive"
-              class="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+              #fileInput
+              type="file"
+              multiple
+              accept="image/*"
+              (change)="onFileSelected($event)"
+              class="hidden"
             />
-            <span class="text-sm text-gray-700">Product is active</span>
-          </label>
+            <div class="text-4xl mb-3">🖼️</div>
+            <p class="text-gray-600 font-medium">
+              Arrastra imágenes aquí o <span class="text-primary font-semibold">haz clic para seleccionar</span>
+            </p>
+            <p class="text-xs text-gray-500 mt-2">Máx. 10 MB por archivo · JPG, PNG, WebP · hasta 5 imágenes</p>
+          </div>
 
-          <label class="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              formControlName="isFeatured"
-              class="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-            />
-            <span class="text-sm text-gray-700">Product is featured</span>
-          </label>
+          <!-- Previsualizaciones -->
+          @if (imagePreviews.length > 0) {
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              @for (preview of imagePreviews; track $index; let i = $index) {
+                <div class="relative group">
+                  <img
+                    [src]="preview"
+                    alt="Vista previa"
+                    class="w-full h-32 object-cover rounded-lg"
+                  />
+                  @if (i === 0) {
+                    <span class="absolute bottom-2 left-2 bg-primary text-white text-xs px-2 py-0.5 rounded-full">
+                      Principal
+                    </span>
+                  }
+                  <button
+                    type="button"
+                    (click)="removeImage(i)"
+                    class="absolute top-2 right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                  >
+                    ×
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
+          @if (uploadError()) {
+            <div class="alert alert-error mt-3">
+              <span>{{ uploadError() }}</span>
+            </div>
+          }
         </div>
-      </div>
+
+        <!-- Inventario -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b">Inventario</h2>
+
+          <label class="block text-sm font-medium text-gray-700 mb-3">Tallas y Stock</label>
+          <div class="space-y-3">
+            @for (size of sizes; track size) {
+              <div class="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  [checked]="isSizeSelected(size)"
+                  (change)="onSizeChange($event, size)"
+                  class="checkbox checkbox-sm"
+                />
+                <span class="text-sm font-medium text-gray-700 w-12">{{ size }}</span>
+                <input
+                  type="number"
+                  [disabled]="!isSizeSelected(size)"
+                  [value]="getSizeStock(size)"
+                  (change)="onStockChange($event, size)"
+                  min="0"
+                  placeholder="0"
+                  class="input input-bordered input-sm w-24"
+                />
+                <span class="text-sm text-gray-500">unidades</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- SEO -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b">SEO</h2>
+
+          <div class="space-y-4">
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text">Meta Título</span>
+                <span class="label-text-alt text-gray-400">Máx. 60 caracteres</span>
+              </div>
+              <input
+                type="text"
+                formControlName="metaTitle"
+                maxlength="60"
+                placeholder="Título para motores de búsqueda"
+                class="input input-bordered w-full"
+              />
+            </label>
+
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text">Meta Descripción</span>
+                <span class="label-text-alt text-gray-400">Máx. 160 caracteres</span>
+              </div>
+              <textarea
+                formControlName="metaDescription"
+                maxlength="160"
+                rows="3"
+                placeholder="Descripción para motores de búsqueda"
+                class="textarea textarea-bordered w-full"
+              ></textarea>
+            </label>
+          </div>
+        </div>
+
+        <!-- Estado -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b">Estado</h2>
+
+          <div class="space-y-3">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" formControlName="isActive" class="toggle toggle-primary toggle-sm" />
+              <span class="text-sm text-gray-700">Producto activo</span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" formControlName="isFeatured" class="toggle toggle-primary toggle-sm" />
+              <span class="text-sm text-gray-700">Producto destacado</span>
+            </label>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- Form Actions -->
+    <!-- Acciones del Formulario -->
     <div class="flex justify-between pt-6 border-t">
-      <a
-        routerLink="/admin/products"
-        class="btn btn-outline"
-      >
-        Cancel
+      <a routerLink="/admin/products" class="btn btn-outline">
+        Cancelar
       </a>
 
-      <button
-        type="submit"
-        [disabled]="isSubmitting() || form.invalid"
-        class="btn btn-primary"
-      >
-        <span *ngIf="isSubmitting()" class="loading loading-spinner loading-sm"></span>
-        {{ isSubmitting() ? 'Saving...' : (isEditMode ? 'Update Product' : 'Create Product') }}
+      <button type="submit" [disabled]="isSubmitting() || form.invalid" class="btn btn-primary">
+        @if (isSubmitting()) {
+          <span class="loading loading-spinner loading-sm"></span>
+          Guardando...
+        } @else {
+          {{ isEditMode ? 'Actualizar Producto' : 'Crear Producto' }}
+        }
       </button>
     </div>
 
-    <!-- Errors -->
-    <div *ngIf="formError()" class="alert alert-error">
-      {{ formError() }}
-    </div>
+    @if (formError()) {
+      <div class="alert alert-error">
+        {{ formError() }}
+      </div>
+    }
   </form>
 </div>

@@ -1,61 +1,90 @@
 import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CartService } from '../../services/cart.service';
+import { LangService } from '../../../../core/services/lang.service';
 
 @Component({
   selector: 'app-shop-navbar',
   standalone: true,
   imports: [RouterModule],
   template: `
-    <header class="navbar bg-base-100 shadow-sm sticky top-0 z-40 border-b border-base-200">
+    <header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-neutral-100">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
 
-      <!-- Logo -->
-      <div class="flex-1">
-        <a routerLink="/store"
-           class="btn btn-ghost normal-case text-xl font-extrabold tracking-tight gap-2">
-          <div class="w-7 h-7 bg-primary rounded-md flex items-center justify-center">
-            <span class="text-primary-content font-bold text-xs">AB</span>
-          </div>
-          ATHENA BRAND
-        </a>
-      </div>
-
-      <!-- Acciones -->
-      <div class="flex-none flex items-center gap-1">
-
-        <!-- Botón de carrito — abre el drawer -->
-        <button
-          class="btn btn-ghost btn-circle indicator"
-          (click)="cart.openCart()"
-          aria-label="Abrir carrito"
-        >
-          @if (cart.totalQty() > 0) {
-            <span class="indicator-item badge badge-primary badge-xs font-bold">
-              {{ cart.totalQty() }}
+          <!-- Logo -->
+          <a routerLink="/store" class="flex items-center gap-2 group">
+            <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center
+                        group-hover:bg-neutral-700 transition-colors duration-200">
+              <span class="text-white font-black text-xs tracking-tighter">AB</span>
+            </div>
+            <span class="font-black text-base tracking-widest uppercase text-black">
+              {{ lang.t().brand }}
             </span>
-          }
-          <!-- Icono carrito -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-               viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184
-                     1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-          </svg>
-        </button>
+          </a>
 
-        <!-- Separador -->
-        <div class="divider divider-horizontal mx-0 h-6"></div>
+          <!-- Nav links (desktop) -->
+          <nav class="hidden md:flex items-center gap-8">
+            <a routerLink="/store"
+               class="text-sm font-medium text-neutral-500 hover:text-black transition-colors tracking-wide uppercase">
+              Colección
+            </a>
+            <a routerLink="/store"
+               class="text-sm font-medium text-neutral-500 hover:text-black transition-colors tracking-wide uppercase">
+              Nuevos
+            </a>
+            <a routerLink="/store"
+               class="text-sm font-medium text-neutral-500 hover:text-black transition-colors tracking-wide uppercase">
+              Ofertas
+            </a>
+          </nav>
 
-        <!-- Panel admin -->
-        <a routerLink="/admin/dashboard"
-           class="btn btn-outline btn-sm hidden sm:flex">
-          Panel Admin
-        </a>
+          <!-- Actions -->
+          <div class="flex items-center gap-3">
+
+            <!-- Lang toggle -->
+            <button
+              (click)="lang.toggle()"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-neutral-200
+                     text-xs font-bold tracking-widest uppercase hover:bg-black hover:text-white
+                     hover:border-black transition-all duration-200"
+            >
+              <span>{{ lang.lang() === 'es' ? '🇨🇴' : '🇺🇸' }}</span>
+              <span>{{ lang.lang() === 'es' ? 'ES' : 'EN' }}</span>
+            </button>
+
+            <!-- Admin link -->
+            <a routerLink="/admin/dashboard"
+               class="hidden sm:flex text-xs font-semibold uppercase tracking-widest
+                      text-neutral-400 hover:text-black transition-colors px-2 py-1">
+              {{ lang.t().adminPanel }}
+            </a>
+
+            <!-- Cart button -->
+            <button
+              (click)="cart.openCart()"
+              class="relative flex items-center justify-center w-10 h-10 rounded-full
+                     hover:bg-neutral-100 transition-colors duration-200"
+              [attr.aria-label]="lang.t().cart"
+            >
+              @if (cart.totalQty() > 0) {
+                <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-black text-white
+                             text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {{ cart.totalQty() }}
+                </span>
+              }
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
-
     </header>
   `,
 })
 export class ShopNavbarComponent {
   protected cart = inject(CartService);
+  protected lang = inject(LangService);
 }

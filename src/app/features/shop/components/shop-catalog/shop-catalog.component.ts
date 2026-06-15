@@ -1,123 +1,114 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, computed } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ShopService } from '../../services/shop.service';
 import { CartService } from '../../services/cart.service';
+import { LangService } from '../../../../core/services/lang.service';
+
+type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'newest';
 
 @Component({
   selector: 'app-shop-catalog',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [DecimalPipe, FormsModule, RouterModule],
   templateUrl: './shop-catalog.html',
   styleUrl: './shop-catalog.css',
 })
 export class ShopCatalogComponent {
   shopService = inject(ShopService);
   cartService = inject(CartService);
+  protected lang = inject(LangService);
 
   selectedCategory = '';
-  minPrice = 0;
-  maxPrice = 10000;
+  searchQuery = '';
+  maxPrice = 99_999_999;
+  private sortOption = signal<SortOption>('relevance');
 
+  sortedProducts = computed(() => {
+    const products = [...this.shopService.paginatedProducts()];
+    switch (this.sortOption()) {
+      case 'price_asc':
+        return products.sort((a, b) => this.shopService.getDisplayPrice(a) - this.shopService.getDisplayPrice(b));
+      case 'price_desc':
+        return products.sort((a, b) => this.shopService.getDisplayPrice(b) - this.shopService.getDisplayPrice(a));
+      case 'newest':
+        return products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      default:
+        return products;
+    }
+  });
 
-  /**
-   * Buscar productos por texto
-   */
-  onSearch(event: any): void {
-    const query = (event.target as HTMLInputElement).value;
-    this.shopService.setSearchQuery(query);
+  onSearch(event: Event): void {
+    this.searchQuery = (event.target as HTMLInputElement).value;
+    this.shopService.setSearchQuery(this.searchQuery);
   }
 
-  /**
-   * Cambiar categoría seleccionada
-   */
   onCategoryChange(category: string): void {
     this.selectedCategory = category;
     this.shopService.setCategory(category);
   }
 
-  /**
-   * Cambiar precio mínimo
-   */
-  onMinPriceChange(event: any): void {
-    this.minPrice = parseInt((event.target as HTMLInputElement).value, 10);
-    this.shopService.setPriceRange(this.minPrice, this.maxPrice);
+  onSortChange(event: Event): void {
+    this.sortOption.set((event.target as HTMLSelectElement).value as SortOption);
   }
 
-  /**
-   * Cambiar precio máximo
-   */
-  onMaxPriceChange(event: any): void {
-    this.maxPrice = parseInt((event.target as HTMLInputElement).value, 10);
-    this.shopService.setPriceRange(this.minPrice, this.maxPrice);
-  }
-
-  /**
-   * Limpiar todos los filtros
-   */
   resetFilters(): void {
     this.selectedCategory = '';
-    this.minPrice = 0;
-    this.maxPrice = 10000;
+    this.searchQuery = '';
+    this.maxPrice = 99_999_999;
+    this.sortOption.set('relevance');
     this.shopService.resetFilters();
   }
 
-  /**
-   * Agregar producto al carrito
-   */
   addToCart(product: any): void {
     const displayPrice = this.shopService.getDisplayPrice(product);
-
     const firstSize = product.sizes?.[0]?.size ?? 'M';
-    const maxStock  = product.sizes?.[0]?.stock ?? 1;
+    const maxStock = product.sizes?.[0]?.stock ?? 1;
 
     this.cartService.addItem({
-      productId:   product._id,
+      productId: product._id,
       productName: product.name,
-      sku:         product.sku,
-      price:       displayPrice,
-      image:       product.images?.[0],
-      size:        firstSize,
-      category:    product.category,
+      sku: product.sku,
+      price: displayPrice,
+      image: product.images?.[0],
+      size: firstSize,
+      category: product.category,
       maxStock,
     });
 
-    // Abrir el drawer para que el usuario vea el carrito actualizado
     this.cartService.openCart();
   }
 
-  /**
-   * Ir a página anterior
-   */
   previousPage(): void {
     const current = this.shopService.currentPage();
-    if (current > 1) {
-      this.shopService.goToPage(current - 1);
-    }
+    if (current > 1) this.shopService.goToPage(current - 1);
   }
 
-  /**
-   * Ir a página siguiente
-   */
   nextPage(): void {
     const current = this.shopService.currentPage();
-    if (current < this.shopService.totalPages()) {
-      this.shopService.goToPage(current + 1);
-    }
+    if (current < this.shopService.totalPages()) this.shopService.goToPage(current + 1);
   }
 
-  /**
-   * Ir a una página específica
-   */
   goToPage(page: number): void {
     this.shopService.goToPage(page);
   }
 
-  /**
-   * Reintentar cargar productos en caso de error
-   */
   retryLoad(): void {
     this.shopService.loadProducts();
+  }
+
+  scrollToCatalog(): void {
+    document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  starsArray(rating: number): boolean[] {
+    return Array.from({ length: 5 }, (_, i) => i < Math.round(rating));
+  }
+
+  readonly fallbackImg = 'https://placehold.co/400x533/f5f5f5/a3a3a3?text=ATHENA';
+
+  onImgError(event: Event): void {
+    (event.target as HTMLImageElement).src = this.fallbackImg;
   }
 }

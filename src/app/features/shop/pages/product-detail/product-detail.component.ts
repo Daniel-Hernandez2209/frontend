@@ -1,13 +1,14 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ShopService, Product } from '../../services/shop.service';
 import { CartService } from '../../../../shared/services/cart.service';
+import { LangService } from '../../../../core/services/lang.service';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, DecimalPipe, RouterModule],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css',
 })
@@ -16,6 +17,7 @@ export class ProductDetailComponent implements OnInit {
   private router = inject(Router);
   shopService = inject(ShopService);
   cartService = inject(CartService);
+  lang = inject(LangService);
 
   // ── Estado con Signals ──────────────────────────────────────────────
   product = signal<Product | null>(null);
@@ -33,7 +35,8 @@ export class ProductDetailComponent implements OnInit {
    */
   currentImage = computed(() => {
     const p = this.product();
-    return p?.images?.[this.imageIndex()] || null;
+    const img = p?.images?.[this.imageIndex()];
+    return img?.url ?? null;
   });
 
   /**
@@ -79,17 +82,17 @@ export class ProductDetailComponent implements OnInit {
    */
   private async loadProduct(): Promise<void> {
     try {
-      const id = this.route.snapshot.paramMap.get('id');
-      if (!id) {
-        this.error.set('Product ID not found');
+      const slug = this.route.snapshot.paramMap.get('id');
+      if (!slug) {
+        this.error.set('Producto no encontrado');
         return;
       }
 
-      const product = await this.shopService.getProductDetail(id);
+      const product = await this.shopService.getProductDetail(slug);
       this.product.set(product);
 
       // Auto-seleccionar primera talla disponible
-      const firstAvailableSize = product.sizes.find((s) => s.stock > 0);
+      const firstAvailableSize = (product.sizes ?? []).find((s) => s.stock > 0);
       if (firstAvailableSize) {
         this.selectedSize.set(firstAvailableSize.size);
       }
@@ -149,6 +152,12 @@ export class ProductDetailComponent implements OnInit {
   /**
    * Limpiar mensaje de error
    */
+  readonly fallbackImg = 'https://placehold.co/600x800/f5f5f5/a3a3a3?text=ATHENA';
+
+  onImgError(event: Event): void {
+    (event.target as HTMLImageElement).src = this.fallbackImg;
+  }
+
   clearError(): void {
     this.error.set(null);
   }
@@ -189,7 +198,7 @@ export class ProductDetailComponent implements OnInit {
 
     try {
       // Agregar al carrito
-      const primaryImage = product.images?.[0];
+      const primaryImage = product.images?.[0]?.url;
       const sizeData = product.sizes?.find((s) => s.size === size);
 
       this.cartService.addItem(
@@ -237,5 +246,9 @@ export class ProductDetailComponent implements OnInit {
    */
   getSizeStock(size: string): number {
     return this.product()?.sizes.find((s) => s.size === size)?.stock || 0;
+  }
+
+  starsArray(rating: number): boolean[] {
+    return Array.from({ length: 5 }, (_, i) => i < Math.round(rating));
   }
 }

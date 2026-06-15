@@ -11,7 +11,7 @@ import { AuthService } from '../../../core/services/auth.service';
     <nav class="navbar bg-base-100 border-b border-base-300 shadow-sm">
       <div class="flex-1">
         <!-- Logo -->
-        <a routerLink="/admin/dashboard" class="btn btn-ghost normal-case text-xl gap-2">
+        <a routerLink="/store" class="btn btn-ghost normal-case text-xl gap-2">
           <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <span class="text-white font-bold text-sm">AB</span>
           </div>

@@ -33,20 +33,20 @@ export class ErrorInterceptor implements HttpInterceptor {
         // Requests marcadas como silenciosas no muestran toast
         const silent = req.headers.has('X-Silent');
 
-        if (error.status === 401) {
+        const isAuthEndpoint = req.url.includes('/auth/login') ||
+          req.url.includes('/auth/register') ||
+          req.url.includes('/auth/forgot-password') ||
+          req.url.includes('/auth/reset-password');
+
+        if (error.status === 401 && !isAuthEndpoint) {
           const msg: string = error.error?.message || '';
-          // Only refresh if the token is genuinely expired, not for permission errors
           const isTokenExpired = msg.toLowerCase().includes('expirado') || msg.toLowerCase().includes('expired');
           const isAuthRequired = msg.toLowerCase().includes('autenticación requerida') || msg.toLowerCase().includes('no proporcionado');
           if (isTokenExpired) {
-            console.log('🔐 Token expirado, intentando refresh...');
             this.handleUnauthorized();
           } else if (!isAuthRequired) {
-            // Unknown 401 — try refresh as fallback
-            console.log('🔐 401 desconocido, intentando refresh...');
             this.handleUnauthorized();
           }
-          // If "Autenticación requerida" — this is a middleware bug, don't logout
         } else if (!silent) {
           if (error.status === 403) {
             this.toast.error('No tienes permiso para esta acción');

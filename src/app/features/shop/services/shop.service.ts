@@ -2,21 +2,33 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { ApiService } from '../../../core/services/api.service';
 import { firstValueFrom } from 'rxjs';
 
+export interface ProductImage {
+  url: string;
+  alt?: string;
+  isPrimary?: boolean;
+}
+
 export interface Product {
   _id: string;
   name: string;
+  slug: string;
   sku: string;
   description: string;
   price: number;
   discountPrice?: number;
   category: string;
-  images: string[];
+  subcategory?: string;
+  images: ProductImage[];
   sizes: Array<{ size: string; stock: number }>;
+  colors?: Array<{ name: string; hex: string; image?: string }>;
   totalStock: number;
   isActive: boolean;
   isFeatured: boolean;
-  rating?: number;
-  reviews?: number;
+  rating?: { average: number; count: number };
+  material?: string;
+  tags?: string[];
+  views?: number;
+  sales?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,7 +48,7 @@ export class ShopService {
   private searchQuery = signal('');
   private selectedCategory = signal('');
   private minPrice = signal(0);
-  private maxPrice = signal(10000);
+  private maxPrice = signal(99_999_999);
   public currentPage = signal(1);
   private pageSize = signal(12);
 
@@ -124,11 +136,15 @@ export class ShopService {
     }
   }
 
-  async getProductDetail(id: string): Promise<Product> {
+  async getProductDetail(slug: string): Promise<Product> {
     this.loading.set(true);
     this.error.set(null);
     try {
-      return await firstValueFrom(this.apiService.get<Product>(`/products/${id}`));
+      const response = await firstValueFrom(
+        this.apiService.get<{ success: boolean; product: Product }>(`/products/${slug}`)
+      );
+      if (!response?.product) throw new Error('Producto no encontrado');
+      return response.product;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Producto no encontrado';
       this.error.set(msg);
@@ -176,7 +192,7 @@ export class ShopService {
     this.searchQuery.set('');
     this.selectedCategory.set('');
     this.minPrice.set(0);
-    this.maxPrice.set(10000);
+    this.maxPrice.set(99_999_999);
     this.currentPage.set(1);
   }
 
@@ -191,15 +207,22 @@ export class ShopService {
   }
 
   hasStock(product: Product): boolean {
-    return product.totalStock > 0;
+    if (typeof product.totalStock === 'number') return product.totalStock > 0;
+    return (product.sizes ?? []).reduce((acc, s) => acc + s.stock, 0) > 0;
+  }
+
+  getPrimaryImage(product: Product): string {
+    if (!product.images?.length) return '';
+    const primary = product.images.find(img => img.isPrimary);
+    return (primary ?? product.images[0]).url;
   }
 
   getRating(product: Product): number {
-    return product.rating ?? 0;
+    return product.rating?.average ?? 0;
   }
 
   getReviewCount(product: Product): number {
-    return product.reviews ?? 0;
+    return product.rating?.count ?? 0;
   }
 
   getAllProducts(): Product[] {
