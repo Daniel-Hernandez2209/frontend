@@ -6,7 +6,7 @@ import { adminGuard } from '@core/guards/admin.guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: '/admin/dashboard',
+    redirectTo: '/store',
     pathMatch: 'full',
   },
   {
@@ -41,6 +41,11 @@ export const routes: Routes = [
     path: 'checkout',
     loadComponent: () =>
       import('./features/shop/pages/checkout/checkout.component').then((m) => m.CheckoutComponent),
+  },
+  {
+    path: 'checkout/result',
+    loadComponent: () =>
+      import('./features/shop/pages/checkout-result/checkout-result.component').then((m) => m.CheckoutResultComponent),
   },
   {
     path: 'admin',

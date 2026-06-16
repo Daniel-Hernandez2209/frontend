@@ -49,6 +49,7 @@ export class ShopService {
   private selectedCategory = signal('');
   private minPrice = signal(0);
   private maxPrice = signal(99_999_999);
+  private onlyDiscountedSignal = signal(false);
   public currentPage = signal(1);
   private pageSize = signal(12);
 
@@ -59,6 +60,7 @@ export class ShopService {
     const category = this.selectedCategory();
     const min = this.minPrice();
     const max = this.maxPrice();
+    const onlyDiscounted = this.onlyDiscountedSignal();
 
     if (search) {
       result = result.filter(
@@ -71,6 +73,10 @@ export class ShopService {
 
     if (category) {
       result = result.filter((p) => p.category === category);
+    }
+
+    if (onlyDiscounted) {
+      result = result.filter((p) => !!p.discountPrice);
     }
 
     result = result.filter((p) => {
@@ -92,7 +98,13 @@ export class ShopService {
   // Getters públicos
   isLoading = computed(() => this.loading());
   errorMessage = computed(() => this.error());
-  getCategories = computed(() => this.categories());
+  getCategories = computed(() => {
+    // Siempre derivar de los productos cargados para garantizar que aparecen todas
+    const fromProducts = [...new Set(this.products().map((p) => p.category).filter(Boolean))].sort();
+    if (fromProducts.length > 0) return fromProducts;
+    // Fallback: usar las categorías de la API si los productos aún no cargaron
+    return this.categories().sort();
+  });
 
   constructor() {
     this.loadProducts();
@@ -188,11 +200,17 @@ export class ShopService {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
+  setOnlyDiscounted(value: boolean): void {
+    this.onlyDiscountedSignal.set(value);
+    this.currentPage.set(1);
+  }
+
   resetFilters(): void {
     this.searchQuery.set('');
     this.selectedCategory.set('');
     this.minPrice.set(0);
     this.maxPrice.set(99_999_999);
+    this.onlyDiscountedSignal.set(false);
     this.currentPage.set(1);
   }
 

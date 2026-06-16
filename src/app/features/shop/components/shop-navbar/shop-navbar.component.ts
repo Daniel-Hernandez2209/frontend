@@ -2,6 +2,8 @@ import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { LangService } from '../../../../core/services/lang.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-shop-navbar',
@@ -25,17 +27,17 @@ import { LangService } from '../../../../core/services/lang.service';
 
           <!-- Nav links (desktop) -->
           <nav class="hidden md:flex items-center gap-8">
-            <a routerLink="/store"
+            <a routerLink="/store" [queryParams]="{}"
                class="text-sm font-medium text-neutral-500 hover:text-black transition-colors tracking-wide uppercase">
-              Colección
+              {{ lang.t().navCollection }}
             </a>
-            <a routerLink="/store"
+            <a routerLink="/store" [queryParams]="{filter: 'new'}"
                class="text-sm font-medium text-neutral-500 hover:text-black transition-colors tracking-wide uppercase">
-              Nuevos
+              {{ lang.t().navNew }}
             </a>
-            <a routerLink="/store"
+            <a routerLink="/store" [queryParams]="{filter: 'sale'}"
                class="text-sm font-medium text-neutral-500 hover:text-black transition-colors tracking-wide uppercase">
-              Ofertas
+              {{ lang.t().navSale }}
             </a>
           </nav>
 
@@ -53,12 +55,48 @@ import { LangService } from '../../../../core/services/lang.service';
               <span>{{ lang.lang() === 'es' ? 'ES' : 'EN' }}</span>
             </button>
 
-            <!-- Admin link -->
-            <a routerLink="/admin/dashboard"
-               class="hidden sm:flex text-xs font-semibold uppercase tracking-widest
-                      text-neutral-400 hover:text-black transition-colors px-2 py-1">
-              {{ lang.t().adminPanel }}
-            </a>
+            <!-- Admin link — solo visible para admins -->
+            @if (auth.isAdmin()) {
+              <a routerLink="/admin/dashboard"
+                 class="hidden sm:flex text-xs font-semibold uppercase tracking-widest
+                        text-neutral-400 hover:text-black transition-colors px-2 py-1">
+                {{ lang.t().adminPanel }}
+              </a>
+            }
+
+            <!-- User menu -->
+            @if (auth.isAuthenticated()) {
+              <div class="relative group">
+                <button class="flex items-center gap-2 px-3 py-1.5 rounded-full
+                               hover:bg-neutral-100 transition-colors duration-200">
+                  <div class="w-7 h-7 rounded-full bg-black text-white text-xs font-bold
+                               flex items-center justify-center tracking-wider">
+                    {{ initials() }}
+                  </div>
+                  <svg class="w-3 h-3 text-neutral-400 group-hover:text-black transition-colors"
+                       fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+                <!-- Dropdown -->
+                <div class="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl shadow-xl
+                             border border-neutral-100 opacity-0 invisible
+                             group-hover:opacity-100 group-hover:visible
+                             transition-all duration-200 z-50 overflow-hidden">
+                  <div class="px-4 py-3 border-b border-neutral-100">
+                    <p class="text-xs font-bold text-black truncate">{{ auth.displayName() }}</p>
+                    <p class="text-[10px] text-neutral-400 uppercase tracking-widest mt-0.5">
+                      {{ auth.userRole() }}
+                    </p>
+                  </div>
+                  <button (click)="auth.logout()"
+                          class="w-full text-left px-4 py-3 text-xs font-semibold text-red-500
+                                 hover:bg-red-50 transition-colors tracking-wide uppercase">
+                    Cerrar sesión
+                  </button>
+                </div>
+              </div>
+            }
 
             <!-- Cart button -->
             <button
@@ -87,4 +125,12 @@ import { LangService } from '../../../../core/services/lang.service';
 export class ShopNavbarComponent {
   protected cart = inject(CartService);
   protected lang = inject(LangService);
+  protected auth = inject(AuthService);
+  private router = inject(Router);
+
+  initials(): string {
+    const u = this.auth.currentUser();
+    if (!u) return '?';
+    return ((u.firstName?.[0] ?? '') + (u.lastName?.[0] ?? '')).toUpperCase();
+  }
 }

@@ -28,6 +28,7 @@ export class ProductDetailComponent implements OnInit {
   selectedSize = signal<string | null>(null);
   quantity = signal(1);
   isAddingToCart = signal(false);
+  lightboxOpen = signal(false);
 
   // ── Computed ────────────────────────────────────────────────────────
   /**

@@ -8,38 +8,33 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <nav class="navbar bg-base-100 border-b border-base-300 shadow-sm">
-      <div class="flex-1">
-        <!-- Logo -->
-        <a routerLink="/store" class="btn btn-ghost normal-case text-xl gap-2">
-          <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span class="text-white font-bold text-sm">AB</span>
-          </div>
-          <span class="font-bold text-lg">ATHENA</span>
-        </a>
-      </div>
+    <header class="h-14 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between px-6 shrink-0">
+      <!-- Breadcrumb / título -->
+      <p class="text-neutral-500 text-sm font-medium">Panel de administración</p>
 
-      <!-- Right Section -->
-      <div class="flex-none">
-        <!-- User Menu Dropdown -->
-        <div class="dropdown dropdown-end">
-          <button tabindex="0" class="btn btn-ghost btn-circle avatar">
-            <div
-              class="w-10 rounded-full bg-secondary text-secondary-content flex items-center justify-center font-semibold"
-            >
-              {{ getInitials() }}
-            </div>
+      <!-- Usuario -->
+      <div class="relative group">
+        <button class="flex items-center gap-2.5 hover:opacity-80 transition">
+          <div class="w-8 h-8 rounded-full bg-neutral-700 text-white text-xs font-black flex items-center justify-center">
+            {{ getInitials() }}
+          </div>
+          <span class="text-neutral-300 text-sm font-semibold hidden sm:block">
+            {{ authService.displayName() }}
+          </span>
+          <svg class="w-3.5 h-3.5 text-neutral-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <!-- Dropdown -->
+        <div class="absolute right-0 top-full mt-2 w-40 bg-neutral-800 border border-neutral-700 rounded-xl shadow-xl
+                    opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+          <button (click)="onLogout()"
+                  class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-neutral-700 transition font-semibold">
+            Cerrar sesión
           </button>
-          <ul
-            tabindex="0"
-            class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-          >
-            <li><a routerLink="/admin/profile">My Profile</a></li>
-            <li><a (click)="onLogout()">Logout</a></li>
-          </ul>
         </div>
       </div>
-    </nav>
+    </header>
   `,
   styles: [],
 })

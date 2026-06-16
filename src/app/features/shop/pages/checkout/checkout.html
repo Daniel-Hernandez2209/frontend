@@ -234,47 +234,62 @@
                   <span class="text-primary">{{ isGuest() ? '③' : '②' }}</span> Método de pago
                 </h2>
 
-                <div class="flex flex-col gap-2" formGroupName="">
-                  <!-- PSE -->
-                  <label class="flex items-center gap-4 p-3 rounded-lg border-2 cursor-pointer
-                                transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5
-                                border-base-200 hover:border-base-300">
-                    <input formControlName="paymentMethod" type="radio" value="pse"
-                           class="radio radio-primary" />
-                    <div class="flex-1">
-                      <p class="font-medium text-sm">PSE — Débito bancario</p>
-                      <p class="text-xs text-base-content/50">Paga directamente desde tu cuenta</p>
-                    </div>
-                    <span class="text-lg">🏦</span>
-                  </label>
+                <div class="flex flex-col gap-2">
 
-                  <!-- Transferencia bancaria -->
-                  <label class="flex items-center gap-4 p-3 rounded-lg border-2 cursor-pointer
-                                transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5
-                                border-base-200 hover:border-base-300">
-                    <input formControlName="paymentMethod" type="radio" value="bank_transfer"
-                           class="radio radio-primary" />
-                    <div class="flex-1">
-                      <p class="font-medium text-sm">Transferencia bancaria</p>
-                      <p class="text-xs text-base-content/50">
-                        Recibirás los datos de la cuenta por email
-                      </p>
-                    </div>
-                    <span class="text-lg">💸</span>
-                  </label>
+                  @for (method of paymentMethods; track method.value) {
+                    <label
+                      class="flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-150"
+                      [class.border-black]="form.controls['paymentMethod'].value === method.value"
+                      [class.bg-neutral-50]="form.controls['paymentMethod'].value === method.value"
+                      [class.border-neutral-200]="form.controls['paymentMethod'].value !== method.value"
+                    >
+                      <input
+                        formControlName="paymentMethod"
+                        type="radio"
+                        [value]="method.value"
+                        class="hidden"
+                      />
+                      <!-- Círculo indicador -->
+                      <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors"
+                           [class.border-black]="form.controls['paymentMethod'].value === method.value"
+                           [class.border-neutral-300]="form.controls['paymentMethod'].value !== method.value">
+                        @if (form.controls['paymentMethod'].value === method.value) {
+                          <div class="w-2.5 h-2.5 rounded-full bg-black"></div>
+                        }
+                      </div>
+                      <!-- Info -->
+                      <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                          <p class="text-sm font-semibold text-black">{{ method.label }}</p>
+                          @if (method.badge) {
+                            <span class="text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
+                              {{ method.badge }}
+                            </span>
+                          }
+                        </div>
+                        <p class="text-xs text-neutral-400 mt-0.5">{{ method.desc }}</p>
+                      </div>
+                      <!-- Ícono -->
+                      <div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+                           [style.background]="method.bg">
+                        {{ method.icon }}
+                      </div>
+                    </label>
 
-                  <!-- Contraentrega -->
-                  <label class="flex items-center gap-4 p-3 rounded-lg border-2 cursor-pointer
-                                transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5
-                                border-base-200 hover:border-base-300">
-                    <input formControlName="paymentMethod" type="radio" value="cash_on_delivery"
-                           class="radio radio-primary" />
-                    <div class="flex-1">
-                      <p class="font-medium text-sm">Pago contra entrega</p>
-                      <p class="text-xs text-base-content/50">Paga en efectivo al recibir</p>
-                    </div>
-                    <span class="text-lg">📦</span>
-                  </label>
+                    <!-- Info extra del método seleccionado -->
+                    @if (form.controls['paymentMethod'].value === method.value && method.info) {
+                      <div class="ml-4 px-4 py-3 bg-neutral-50 rounded-xl border border-neutral-200 text-xs text-neutral-600 leading-relaxed">
+                        {{ method.info }}
+                        @if (method.value === 'wompi') {
+                          <div class="mt-2 flex items-center gap-1.5 text-orange-500 font-medium">
+                            <span>🔒</span>
+                            <span>Procesado de forma segura por Wompi · Bancolombia</span>
+                          </div>
+                        }
+                      </div>
+                    }
+                  }
+
                 </div>
 
               </div>
@@ -351,9 +366,9 @@
                         [disabled]="!canSubmit() || form.invalid">
                   @if (isProcessing()) {
                     <span class="loading loading-spinner loading-sm"></span>
-                    Procesando…
+                    @if (isWompi()) { Redirigiendo a Wompi… } @else { Procesando… }
                   } @else {
-                    Realizar pedido
+                    @if (isWompi()) { 💳 Pagar con Wompi } @else { Realizar pedido }
                   }
                 </button>
 

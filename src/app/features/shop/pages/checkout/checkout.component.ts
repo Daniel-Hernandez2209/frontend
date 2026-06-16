@@ -6,8 +6,9 @@ import { CartService } from '../../../../shared/services/cart.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ApiService } from '../../../../core/services/api.service';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 
-// ── Tipos alineados con el backend ───────────────────────────────────────────
+// ── Tipos ─────────────────────────────────────────────────────────────────────
 
 interface CreateOrderPayload {
   items: { product: string; size: string; quantity: number }[];
@@ -20,7 +21,7 @@ interface CreateOrderPayload {
     zipCode: string;
     country: string;
   };
-  payment: { method: 'pse' | 'cash_on_delivery' | 'bank_transfer' };
+  payment: { method: 'wompi' | 'pse' | 'cash_on_delivery' | 'bank_transfer' };
   guestInfo?: {
     email: string;
     firstName: string;
@@ -41,6 +42,17 @@ interface CreateOrderResponse {
   success: boolean;
   message: string;
   data: OrderCreatedData;
+}
+
+interface IntegrityResponse {
+  success: boolean;
+  data: {
+    integrity: string;
+    publicKey: string;
+    reference: string;
+    amountInCents: number;
+    currency: string;
+  };
 }
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -73,6 +85,36 @@ export class CheckoutComponent {
 
   readonly departments = COLOMBIAN_DEPARTMENTS;
 
+  readonly paymentMethods = [
+    {
+      value: 'wompi',
+      label: 'Tarjeta, PSE, Nequi o Daviplata',
+      desc: 'Paga con cualquier método digital vía Wompi (Bancolombia)',
+      icon: '💳',
+      bg: '#FFF7ED',
+      info: 'Serás redirigido a la pasarela segura de Wompi donde podrás elegir entre tarjeta débito/crédito, PSE, Nequi, Daviplata y más.',
+      badge: 'Recomendado',
+    },
+    {
+      value: 'bank_transfer',
+      label: 'Transferencia bancaria',
+      desc: 'Recibirás los datos de la cuenta por email',
+      icon: '💸',
+      bg: '#F0FDF4',
+      info: 'Te enviaremos los datos de nuestra cuenta Bancolombia al correo registrado. Tu pedido se procesa al confirmar el pago (1-2 días hábiles).',
+      badge: null,
+    },
+    {
+      value: 'cash_on_delivery',
+      label: 'Pago contra entrega',
+      desc: 'Paga en efectivo al recibir tu pedido',
+      icon: '📦',
+      bg: '#FFFBEB',
+      info: 'Disponible solo para ciudades con cobertura de nuestro servicio de mensajería. Ten el valor exacto listo al recibir.',
+      badge: null,
+    },
+  ] as const;
+
   // ── Estado ──────────────────────────────────────────────────────────────────
   isProcessing  = signal(false);
   serverError   = signal<string | null>(null);
@@ -80,24 +122,18 @@ export class CheckoutComponent {
 
   // ── Formulario ───────────────────────────────────────────────────────────────
   form = this.fb.nonNullable.group({
-    // Datos de envío
     firstName:  ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
     lastName:   ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
     street:     ['', [Validators.required, Validators.minLength(10), Validators.maxLength(200)]],
     city:       ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
     department: ['', [Validators.required]],
-    zipCode:    [''],   // opcional en Colombia
+    zipCode:    [''],
     country:    ['Colombia'],
-
-    // Contacto — solo requerido si el usuario no está autenticado
-    email: ['', [Validators.email]],
-    phone: [''],
-
-    // Método de pago
-    paymentMethod: ['pse' as 'pse' | 'cash_on_delivery' | 'bank_transfer', Validators.required],
+    email:      ['', [Validators.email]],
+    phone:      [''],
+    paymentMethod: ['wompi' as 'wompi' | 'pse' | 'cash_on_delivery' | 'bank_transfer', Validators.required],
   });
 
-  // Añadir validadores extra de contacto si no está autenticado
   constructor() {
     if (!this.auth.isAuthenticated()) {
       this.form.controls.email.addValidators([Validators.required]);
@@ -106,7 +142,6 @@ export class CheckoutComponent {
       this.form.controls.phone.updateValueAndValidity();
     }
 
-    // Prefill si está autenticado
     const user = this.auth.currentUser();
     if (user) {
       this.form.patchValue({
@@ -121,7 +156,11 @@ export class CheckoutComponent {
   isGuest      = computed(() => !this.auth.isAuthenticated());
   canSubmit    = computed(() => !this.isProcessing() && !this.cart.isEmpty());
 
-  // ── Helpers de validación ────────────────────────────────────────────────────
+  isWompi(): boolean {
+    return this.form.controls['paymentMethod'].value === 'wompi';
+  }
+
+  // ── Validación ────────────────────────────────────────────────────────────────
   field(name: keyof typeof this.form.controls): AbstractControl {
     return this.form.controls[name];
   }
@@ -171,7 +210,6 @@ export class CheckoutComponent {
         payment: { method: v.paymentMethod },
       };
 
-      // Incluir guestInfo solo para usuarios no autenticados
       if (!this.auth.isAuthenticated()) {
         payload.guestInfo = {
           email:     v.email.trim(),
@@ -189,9 +227,17 @@ export class CheckoutComponent {
         throw new Error(response.message || 'Respuesta inesperada del servidor');
       }
 
-      // Limpiar carrito y mostrar confirmación
+      const order = response.data;
+
+      // Wompi: redirigir a la pasarela
+      if (v.paymentMethod === 'wompi') {
+        await this.redirectToWompi(order);
+        return; // no limpiar carrito aquí — se limpia en la página de resultado
+      }
+
+      // Otros métodos: mostrar confirmación directa
       this.cart.clearCart();
-      this.placedOrder.set(response.data);
+      this.placedOrder.set(order);
 
     } catch (err: any) {
       const msg = err?.error?.message ?? err?.message ?? 'Error al procesar el pedido';
@@ -199,6 +245,36 @@ export class CheckoutComponent {
     } finally {
       this.isProcessing.set(false);
     }
+  }
+
+  private async redirectToWompi(order: OrderCreatedData): Promise<void> {
+    const amountInCents = Math.round(order.total * 100);
+
+    const intRes = await firstValueFrom(
+      this.api.post<IntegrityResponse>('/payments/wompi/integrity', {
+        reference: order.orderNumber,
+        amountInCents,
+      }),
+    );
+
+    if (!intRes.success) throw new Error('No se pudo iniciar el pago con Wompi');
+
+    const { integrity, publicKey } = intRes.data;
+    const redirectUrl = `${window.location.origin}/checkout/result`;
+
+    const params = new URLSearchParams({
+      'public-key': publicKey || environment.wompiPublicKey,
+      'currency': 'COP',
+      'amount-in-cents': String(amountInCents),
+      'reference': order.orderNumber,
+      'signature:integrity': integrity,
+      'redirect-url': redirectUrl,
+    });
+
+    // Guardar número de pedido en sessionStorage para leerlo en la página de resultado
+    sessionStorage.setItem('wompi_order', order.orderNumber);
+
+    window.location.href = `https://checkout.wompi.co/p/?${params.toString()}`;
   }
 
   goToStore(): void {

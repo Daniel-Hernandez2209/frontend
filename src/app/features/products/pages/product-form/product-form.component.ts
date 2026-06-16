@@ -24,6 +24,37 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   selectedSizes: Map<string, number> = new Map();
   private productId: string | null = null;
 
+  // Display strings for price inputs (formatted with dots: 250.000)
+  priceDisplay = '';
+  discountPriceDisplay = '';
+
+  private formatCOP(value: number | null | undefined): string {
+    if (!value) return '';
+    return value.toLocaleString('es-CO').replace(/,/g, '.');
+  }
+
+  onPriceInput(event: Event, field: 'price' | 'discountPrice'): void {
+    const input = event.target as HTMLInputElement;
+    // Remove everything except digits
+    const digits = input.value.replace(/\D/g, '');
+    const numeric = digits ? parseInt(digits, 10) : null;
+
+    // Format with dots as thousands separator
+    const formatted = numeric ? numeric.toLocaleString('es-CO').replace(/,/g, '.') : '';
+
+    // Update display and keep cursor at end
+    if (field === 'price') {
+      this.priceDisplay = formatted;
+    } else {
+      this.discountPriceDisplay = formatted;
+    }
+    // Defer so Angular re-renders before we set selectionStart
+    setTimeout(() => { input.value = formatted; input.selectionStart = input.selectionEnd = formatted.length; });
+
+    // Update reactive form with raw number
+    this.form.get(field)?.setValue(numeric, { emitEvent: false });
+  }
+
   get isEditMode() {
     return !!this.route.snapshot.paramMap.get('id');
   }
@@ -73,6 +104,8 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
     if (product) {
       this.productId = product._id;
+      this.priceDisplay = this.formatCOP(product.price);
+      this.discountPriceDisplay = this.formatCOP(product.discountPrice);
       this.form.patchValue({
         name: product.name,
         description: product.description,
