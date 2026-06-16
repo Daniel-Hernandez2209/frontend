@@ -4,6 +4,9 @@ export type Lang = 'es' | 'en';
 
 const translations = {
   es: {
+    navCollection: 'Colección',
+    navNew: 'Nuevos',
+    navSale: 'Ofertas',
     brand: 'ATHENA BRAND',
     tagline: 'Moda que define tu esencia',
     heroSub: 'Descubre nuestra colección exclusiva. Prendas diseñadas para quienes no siguen tendencias — las crean.',
@@ -66,6 +69,9 @@ const translations = {
     loadingProduct: 'Cargando producto...',
   },
   en: {
+    navCollection: 'Collection',
+    navNew: 'New In',
+    navSale: 'Sale',
     brand: 'ATHENA BRAND',
     tagline: 'Fashion that defines your essence',
     heroSub: 'Discover our exclusive collection. Garments designed for those who don\'t follow trends — they set them.',
@@ -129,10 +135,12 @@ const translations = {
   },
 };
 
+type Translations = typeof translations.es;
+
 @Injectable({ providedIn: 'root' })
 export class LangService {
   lang = signal<Lang>('es');
-  t = computed(() => translations[this.lang()]);
+  t = computed(() => translations[this.lang()] as Translations);
 
   toggle(): void {
     this.lang.set(this.lang() === 'es' ? 'en' : 'es');

@@ -90,7 +90,8 @@ export class AuthService {
         this.isAuthenticated.set(true);
         sessionStorage.setItem('access_token', response.token.accessToken);
         sessionStorage.setItem('refresh_token', response.token.refreshToken);
-        this.router.navigate(['/admin/dashboard']);
+        const destination = response.user.role === 'admin' ? '/admin/dashboard' : '/store';
+        this.router.navigate([destination]);
       }),
       catchError((err) => {
         this.error.set(err.error?.message || 'Error en login');
