@@ -2,7 +2,7 @@ import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { tap, catchError, finalize } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
 import { AppStore } from '@core/store/app.store';
@@ -88,8 +88,7 @@ export class AuthService {
       tap((response) => {
         this.currentUser.set(response.user);
         this.isAuthenticated.set(true);
-        sessionStorage.setItem('access_token', response.token.accessToken);
-        sessionStorage.setItem('refresh_token', response.token.refreshToken);
+        // Tokens ya vienen como cookies HttpOnly — no se guardan en sessionStorage
         const destination = response.user.role === 'admin' ? '/admin/dashboard' : '/store';
         this.router.navigate([destination]);
       }),
@@ -152,34 +151,19 @@ export class AuthService {
 
   async refreshToken(): Promise<boolean> {
     try {
-      const refreshToken = sessionStorage.getItem('refresh_token');
-      if (!refreshToken) {
-        console.warn('❌ No hay refresh token');
-        return false;
-      }
-
-      const response = await firstValueFrom(
-        this.http.post<{ token: { accessToken: string } }>(
+      // La cookie refresh_token se envía automáticamente por withCredentials
+      await firstValueFrom(
+        this.http.post<void>(
           `${environment.apiUrl}/api/auth/refresh-token`,
-          { refreshToken },
-          { headers: { Authorization: `Bearer ${refreshToken}` } },
+          {},
+          { withCredentials: true },
         ),
       );
-
-      if (response?.token?.accessToken) {
-        sessionStorage.setItem('access_token', response.token.accessToken); // ← cambio
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error('❌ Error refrescando token:', err);
+      return true;
+    } catch {
       this.logout();
       return false;
     }
-  }
-
-  getAccessToken(): string | null {
-    return sessionStorage.getItem('access_token');
   }
 
   private loadStoredUser(): void {
@@ -189,9 +173,7 @@ export class AuthService {
         const user = JSON.parse(userStr) as User;
         this.currentUser.set(user);
         this.isAuthenticated.set(true);
-        console.log('✅ Usuario cargado desde storage:', user.firstName, user.lastName);
-      } catch (err) {
-        console.error('❌ Error cargando usuario:', err);
+      } catch {
         sessionStorage.removeItem('currentUser');
       }
     }

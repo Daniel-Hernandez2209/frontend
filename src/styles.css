@@ -21,7 +21,8 @@
   }
 
   body {
-    @apply bg-gray-50 text-gray-900;
+    background-color: #CFBCA6;
+    @apply text-gray-900;
   }
 
   * {

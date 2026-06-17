@@ -17,11 +17,10 @@ export class WebsocketService {
   connect(): void {
     if (this.socket?.connected) return;
 
-    const token = this.authService.getAccessToken();
     this.socket = io(environment.wsUrl, {
-      auth: {
-        token: token || undefined,
-      },
+      // Tokens en cookies HttpOnly — no accesibles desde JS
+      // El backend los lee del handshake HTTP inicial con withCredentials
+      withCredentials: true,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,

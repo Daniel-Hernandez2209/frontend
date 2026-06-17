@@ -235,6 +235,13 @@ export class ShopService {
     return (primary ?? product.images[0]).url;
   }
 
+  getHoverImage(product: Product): string {
+    if (!product.images || product.images.length < 2) return '';
+    const primary = product.images.find(img => img.isPrimary) ?? product.images[0];
+    const other = product.images.find(img => img !== primary);
+    return other?.url ?? '';
+  }
+
   getRating(product: Product): number {
     return product.rating?.average ?? 0;
   }

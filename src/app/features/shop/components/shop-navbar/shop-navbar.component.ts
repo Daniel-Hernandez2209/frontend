@@ -10,16 +10,36 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [RouterModule],
   template: `
-    <header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-neutral-100">
+    <header class="sticky top-0 z-50 w-full backdrop-blur-xl border-b" style="background-color: rgba(207,188,166,0.92); border-color: rgba(168,152,128,0.4);">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
 
           <!-- Logo -->
           <a routerLink="/store" class="flex items-center gap-2 group">
-            <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center
-                        group-hover:bg-neutral-700 transition-colors duration-200">
-              <span class="text-white font-black text-xs tracking-tighter">AB</span>
-            </div>
+            <svg width="38" height="38" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
+                 class="group-hover:opacity-80 transition-opacity duration-200 shrink-0">
+              <circle cx="50" cy="50" r="50" fill="#1a1410"/>
+              <!-- Athena warrior silhouette, profile facing left -->
+              <path fill="#CFBCA6" d="
+                M 68,20
+                C 62,10 50,4 40,10
+                C 38,12 35,15 34,20
+                L 32,28
+                C 30,32 27,37 27,42
+                C 27,47 29,52 31,56
+                C 32,59 34,62 35,65
+                C 34,69 33,73 34,77
+                C 30,81 22,86 20,94
+                L 20,100
+                L 80,100
+                C 78,91 74,83 68,77
+                C 65,73 62,70 63,65
+                C 63,61 65,57 66,53
+                C 68,47 68,40 68,34
+                C 68,29 68,24 68,20
+                Z
+              "/>
+            </svg>
             <span class="font-black text-base tracking-widest uppercase text-black">
               {{ lang.t().brand }}
             </span>
