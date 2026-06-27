@@ -38,16 +38,6 @@ export const routes: Routes = [
     loadChildren: () => import('./features/shop/shop.routes').then((m) => m.SHOP_ROUTES),
   },
   {
-    path: 'checkout',
-    loadComponent: () =>
-      import('./features/shop/pages/checkout/checkout.component').then((m) => m.CheckoutComponent),
-  },
-  {
-    path: 'checkout/result',
-    loadComponent: () =>
-      import('./features/shop/pages/checkout-result/checkout-result.component').then((m) => m.CheckoutResultComponent),
-  },
-  {
     path: 'admin',
     component: AdminLayoutComponent,
     canActivate: [authGuard],

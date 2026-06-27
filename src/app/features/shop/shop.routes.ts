@@ -20,11 +20,6 @@ export const SHOP_ROUTES: Routes = [
             (m) => m.ProductDetailComponent,
           ),
       },
-      {
-        path: 'cart',
-        loadComponent: () =>
-          import('./components/cart/cart.component').then((m) => m.CartComponent),
-      },
     ],
   },
 ];
