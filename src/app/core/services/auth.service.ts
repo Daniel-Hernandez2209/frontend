@@ -39,10 +39,7 @@ export interface RegisterRequest {
 export interface AuthResponse {
   success: boolean;
   message: string;
-  token: {
-    accessToken: string;
-    refreshToken: string;
-  };
+  accessToken?: string;
   user: User;
 }
 
@@ -57,6 +54,7 @@ export class AuthService {
   isAuthenticated = signal(false);
   isLoading = signal(false);
   error = signal<string | null>(null);
+  accessToken = signal<string | null>(null);
 
   userRole = computed(() => this.currentUser()?.role ?? 'guest');
   isAdmin = computed(() => this.userRole() === 'admin');
@@ -88,7 +86,10 @@ export class AuthService {
       tap((response) => {
         this.currentUser.set(response.user);
         this.isAuthenticated.set(true);
-        // Tokens ya vienen como cookies HttpOnly — no se guardan en sessionStorage
+        if (response.accessToken) {
+          this.accessToken.set(response.accessToken);
+          sessionStorage.setItem('accessToken', response.accessToken);
+        }
         const destination = response.user.role === 'admin' ? '/admin/dashboard' : '/store';
         this.router.navigate([destination]);
       }),
@@ -144,6 +145,7 @@ export class AuthService {
   logout(): void {
     this.currentUser.set(null);
     this.isAuthenticated.set(false);
+    this.accessToken.set(null);
     this.error.set(null);
     sessionStorage.clear();
     this.router.navigate(['/login']);
@@ -151,14 +153,17 @@ export class AuthService {
 
   async refreshToken(): Promise<boolean> {
     try {
-      // La cookie refresh_token se envía automáticamente por withCredentials
-      await firstValueFrom(
-        this.http.post<void>(
+      const response = await firstValueFrom(
+        this.http.post<{ accessToken?: string }>(
           `${environment.apiUrl}/api/auth/refresh-token`,
           {},
           { withCredentials: true },
         ),
       );
+      if (response?.accessToken) {
+        this.accessToken.set(response.accessToken);
+        sessionStorage.setItem('accessToken', response.accessToken);
+      }
       return true;
     } catch {
       this.logout();
@@ -167,6 +172,9 @@ export class AuthService {
   }
 
   private loadStoredUser(): void {
+    const token = sessionStorage.getItem('accessToken');
+    if (token) this.accessToken.set(token);
+
     const userStr = sessionStorage.getItem('currentUser');
     if (userStr) {
       try {
