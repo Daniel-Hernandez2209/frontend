@@ -362,7 +362,9 @@
         @if ((productValue().images || []).length > 1) {
           <button
             (click)="
-              selectImage((imageIndex() - 1 + productValue().images.length) % productValue().images.length)
+              selectImage(
+                (imageIndex() - 1 + productValue().images.length) % productValue().images.length
+              )
             "
             class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors"
           >
