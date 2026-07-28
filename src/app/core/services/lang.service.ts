@@ -9,7 +9,8 @@ const translations = {
     navSale: 'Ofertas',
     brand: 'ATHENA BRAND',
     tagline: 'Moda que define tu esencia',
-    heroSub: 'Descubre nuestra colección exclusiva. Prendas diseñadas para quienes no siguen tendencias — las crean.',
+    heroSub:
+      'Descubre nuestra colección exclusiva. Prendas diseñadas para quienes no siguen tendencias — las crean.',
     shopNow: 'Explorar colección',
     newIn: 'Nuevo ingreso',
     featured: 'Destacado',
@@ -76,7 +77,8 @@ const translations = {
     navSale: 'Sale',
     brand: 'ATHENA BRAND',
     tagline: 'Fashion that defines your essence',
-    heroSub: 'Discover our exclusive collection. Garments designed for those who don\'t follow trends — they set them.',
+    heroSub:
+      "Discover our exclusive collection. Garments designed for those who don't follow trends — they set them.",
     shopNow: 'Explore collection',
     newIn: 'New in',
     featured: 'Featured',

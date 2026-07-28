@@ -55,7 +55,9 @@ export class ProductDetailComponent implements OnInit {
   productDescription = computed(() => {
     const product = this.product();
     if (!product) return '';
-    return this.lang.lang() === 'es' ? product.description : product.descriptionEn || product.description;
+    return this.lang.lang() === 'es'
+      ? product.description
+      : product.descriptionEn || product.description;
   });
 
   hasStock = computed(() => {
@@ -70,7 +72,10 @@ export class ProductDetailComponent implements OnInit {
   private async loadProduct(): Promise<void> {
     try {
       const slug = this.route.snapshot.paramMap.get('id');
-      if (!slug) { this.error.set('Producto no encontrado'); return; }
+      if (!slug) {
+        this.error.set('Producto no encontrado');
+        return;
+      }
 
       const product = await this.shopService.getProductDetail(slug);
       this.product.set(product);
@@ -84,7 +89,9 @@ export class ProductDetailComponent implements OnInit {
     }
   }
 
-  selectImage(index: number): void { this.imageIndex.set(index); }
+  selectImage(index: number): void {
+    this.imageIndex.set(index);
+  }
 
   selectSize(size: string): void {
     this.selectedSize.set(size);
