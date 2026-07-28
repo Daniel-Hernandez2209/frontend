@@ -67,6 +67,8 @@ const translations = {
     outOfStockBadge: 'Sin Stock',
     inStockBadge: 'En Stock',
     loadingProduct: 'Cargando producto...',
+    logout: 'Cerrar sesión',
+    contactWhatsApp: 'Consultar por WhatsApp',
   },
   en: {
     navCollection: 'Collection',
@@ -132,6 +134,8 @@ const translations = {
     outOfStockBadge: 'Out of Stock',
     inStockBadge: 'In Stock',
     loadingProduct: 'Loading product...',
+    logout: 'Logout',
+    contactWhatsApp: 'Contact via WhatsApp',
   },
 };
 

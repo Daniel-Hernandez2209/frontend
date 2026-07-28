@@ -1,7 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { ShopService, Product } from '../../services/shop.service';
+import { ShopService } from '../../services/shop.service';
+import type { Product } from '../../../../shared/types/interfaces';
 import { LangService } from '../../../../core/services/lang.service';
 import { ShopNavbarComponent } from '../../components/shop-navbar/shop-navbar.component';
 
@@ -43,6 +44,18 @@ export class ProductDetailComponent implements OnInit {
     const product = this.product();
     if (!product) return 0;
     return this.shopService.getDisplayPrice(product) * this.quantity();
+  });
+
+  productTitle = computed(() => {
+    const product = this.product();
+    if (!product) return '';
+    return this.lang.lang() === 'es' ? product.name : product.nameEn || product.name;
+  });
+
+  productDescription = computed(() => {
+    const product = this.product();
+    if (!product) return '';
+    return this.lang.lang() === 'es' ? product.description : product.descriptionEn || product.description;
   });
 
   hasStock = computed(() => {
@@ -91,11 +104,13 @@ export class ProductDetailComponent implements OnInit {
     if (!product) return;
     const size = this.selectedSize();
     const qty = this.quantity();
-    const sizeInfo = size ? ` — Talla ${size}` : '';
+    const sizeInfo = size ? ` — ${this.lang.lang() === 'es' ? 'Talla' : 'Size'} ${size}` : '';
     const qtyInfo = qty > 1 ? ` x${qty}` : '';
     const productUrl = `${window.location.origin}/store/product/${product.slug}`;
     const msg = encodeURIComponent(
-      `Hola, estoy interesado en la prenda ${product.name}${sizeInfo}${qtyInfo}, quiero más información\n${productUrl}`,
+      this.lang.lang() === 'es'
+        ? `Hola, estoy interesado en la prenda ${product.name}${sizeInfo}${qtyInfo}, quiero más información\n${productUrl}`
+        : `Hello, I am interested in the item ${product.nameEn || product.name}${sizeInfo}${qtyInfo}, I would like more information\n${productUrl}`,
     );
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank', 'noopener');
   }

@@ -95,8 +95,10 @@ export interface RegisterRequest {
 export interface Product {
   _id: string;
   name: string;
+  nameEn?: string;
   slug: string;
   description: string;
+  descriptionEn?: string;
   price: number;
   discountPrice?: number;
   images: ProductImage[];
@@ -107,6 +109,7 @@ export interface Product {
   sku: string;
   tags: string[];
   material?: string;
+  totalStock?: number;
   careInstructions?: string;
   metaTitle?: string;
   metaDescription?: string;

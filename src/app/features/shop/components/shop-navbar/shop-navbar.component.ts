@@ -51,7 +51,7 @@ import { LangService } from '../../../../core/services/lang.service';
             <a routerLink="/admin/dashboard"
                class="text-[11px] font-semibold uppercase tracking-widest text-neutral-400
                       hover:text-black transition-colors hidden sm:block">
-              Admin
+              {{ lang.t().adminPanel }}
             </a>
           }
 
@@ -72,7 +72,7 @@ import { LangService } from '../../../../core/services/lang.service';
                 <button (click)="auth.logout()"
                         class="w-full text-left px-4 py-3 text-xs font-semibold text-red-500
                                hover:bg-red-50 transition-colors">
-                  Cerrar sesión
+                  {{ lang.t().logout }}
                 </button>
               </div>
             </div>
