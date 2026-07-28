@@ -49,9 +49,9 @@
           <!-- ── LEFT: Image gallery ── -->
           <div class="flex gap-3">
             <!-- Thumbnails column -->
-            @if ((product()!.images || []).length > 1) {
+            @if ((productValue().images || []).length > 1) {
               <div class="flex flex-col gap-2 w-16 shrink-0">
-                @for (image of product()!.images; let i = $index; track i) {
+                @for (image of productValue().images; let i = $index; track i) {
                   <button
                     (click)="selectImage(i)"
                     class="w-16 h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0"
@@ -63,7 +63,7 @@
                   >
                     <img
                       [src]="image.url"
-                      [alt]="image.alt || product()!.name"
+                      [alt]="image.alt || productValue().name"
                       (error)="onImgError($event)"
                       class="w-full h-full object-cover"
                     />
@@ -79,7 +79,7 @@
             >
               <img
                 [src]="currentImage() || fallbackImg"
-                [alt]="product()!.name"
+                [alt]="productValue().name"
                 (error)="onImgError($event)"
                 class="w-full h-full object-cover object-top transition-transform duration-500 group-hover/main:scale-105"
               />
@@ -113,9 +113,9 @@
             <!-- Category + badges -->
             <div class="flex items-center gap-2 mb-3">
               <span class="text-[10px] font-bold tracking-widest uppercase text-neutral-400">
-                {{ product()!.category }}
+                {{ productValue().category }}
               </span>
-              @if (product()!.isFeatured) {
+              @if (productValue().isFeatured) {
                 <span class="badge badge-warning badge-sm font-bold"
                   >⭐ {{ lang.t().featured }}</span
                 >
@@ -135,10 +135,10 @@
             </p>
 
             <!-- Rating -->
-            @if (product()!.rating) {
+            @if (productValue().rating) {
               <div class="flex items-center gap-2 mb-5 text-sm">
                 <div class="flex items-center gap-0.5">
-                  @for (s of starsArray(product()!.rating?.average ?? 0); track $index) {
+                  @for (s of starsArray(ratingAverage()); track $index) {
                     <svg
                       class="w-3.5 h-3.5"
                       [class]="s ? 'text-yellow-400' : 'text-neutral-200'"
@@ -152,8 +152,7 @@
                   }
                 </div>
                 <span class="text-neutral-500">
-                  {{ product()!.rating?.average ?? 0 }}/5 ({{ product()!.rating?.count || 0 }}
-                  {{ lang.t().reviews }})
+                  {{ ratingAverage() }}/5 ({{ ratingCount() }} {{ lang.t().reviews }})
                 </span>
               </div>
             }
@@ -161,21 +160,21 @@
             <!-- Price -->
             <div class="flex items-baseline gap-3 mb-5 py-5 border-y border-neutral-100">
               <span class="text-4xl font-black text-black">
-                ${{ shopService.getDisplayPrice(product()!) | number: '1.0-0' }}
+                ${{ shopService.getDisplayPrice(productValue()) | number: '1.0-0' }}
               </span>
-              @if (product()!.discountPrice) {
+              @if (productValue().discountPrice) {
                 <span class="text-lg text-neutral-400 line-through font-medium">
-                  ${{ product()!.price | number: '1.0-0' }}
+                  ${{ productValue().price | number: '1.0-0' }}
                 </span>
                 <span class="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                  -{{ shopService.getDiscountPercentage(product()!) }}% {{ lang.t().off }}
+                  -{{ shopService.getDiscountPercentage(productValue()) }}% {{ lang.t().off }}
                 </span>
               }
             </div>
 
             <!-- Stock -->
             <div class="mb-5">
-              @if (shopService.hasStock(product()!)) {
+              @if (shopService.hasStock(productValue())) {
                 <span
                   class="inline-flex items-center gap-1.5 bg-green-50 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full border border-green-200"
                 >
@@ -186,7 +185,7 @@
                       clip-rule="evenodd"
                     />
                   </svg>
-                  {{ lang.t().inStockBadge }} ({{ product()!.totalStock }} {{ lang.t().units }})
+                  {{ lang.t().inStockBadge }} ({{ productValue().totalStock }} {{ lang.t().units }})
                 </span>
               } @else {
                 <span
@@ -211,7 +210,7 @@
                 }
               </div>
               <div class="flex flex-wrap gap-2">
-                @for (size of product()!.sizes; track size.size) {
+                @for (size of productValue().sizes; track size.size) {
                   <button
                     (click)="selectSize(size.size)"
                     [disabled]="size.stock === 0"
@@ -228,7 +227,7 @@
                   </button>
                 }
               </div>
-              @if (!selectedSize() && shopService.hasStock(product()!)) {
+              @if (!selectedSize() && shopService.hasStock(productValue())) {
                 <p class="text-xs text-red-500 mt-2 font-medium">{{ lang.t().sizeRequired }}</p>
               }
             </div>
@@ -309,16 +308,16 @@
               <dl class="space-y-2 text-sm">
                 <div class="flex justify-between">
                   <dt class="text-neutral-400">{{ lang.t().sku }}</dt>
-                  <dd class="font-mono font-semibold text-black">{{ product()!.sku }}</dd>
+                  <dd class="font-mono font-semibold text-black">{{ productValue().sku }}</dd>
                 </div>
                 <div class="flex justify-between">
                   <dt class="text-neutral-400">{{ lang.t().category }}</dt>
-                  <dd class="font-semibold text-black capitalize">{{ product()!.category }}</dd>
+                  <dd class="font-semibold text-black capitalize">{{ productValue().category }}</dd>
                 </div>
                 <div class="flex justify-between">
                   <dt class="text-neutral-400">{{ lang.t().availableStock }}</dt>
                   <dd class="font-semibold text-black">
-                    {{ product()!.totalStock }} {{ lang.t().units }}
+                    {{ productValue().totalStock }} {{ lang.t().units }}
                   </dd>
                 </div>
               </dl>
@@ -360,10 +359,10 @@
         </button>
 
         <!-- Navegación entre imágenes (si hay más de una) -->
-        @if ((product()?.images || []).length > 1) {
+        @if ((productValue().images || []).length > 1) {
           <button
             (click)="
-              selectImage((imageIndex() - 1 + product()!.images.length) % product()!.images.length)
+              selectImage((imageIndex() - 1 + productValue().images.length) % productValue().images.length)
             "
             class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors"
           >
@@ -378,7 +377,7 @@
             </svg>
           </button>
           <button
-            (click)="selectImage((imageIndex() + 1) % product()!.images.length)"
+            (click)="selectImage((imageIndex() + 1) % productValue().images.length)"
             class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors"
           >
             <svg
@@ -394,7 +393,7 @@
 
           <!-- Indicadores de punto -->
           <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-            @for (img of product()!.images; track $index; let i = $index) {
+            @for (img of productValue().images; track $index; let i = $index) {
               <button
                 (click)="selectImage(i)"
                 class="w-2 h-2 rounded-full transition-all"

@@ -21,6 +21,11 @@ export class ProductDetailComponent implements OnInit {
   lang = inject(LangService);
 
   product = signal<Product | null>(null);
+  productValue = computed(() => {
+    const p = this.product();
+    if (!p) throw new Error('Product not loaded');
+    return p;
+  });
   loading = signal(true);
   error = signal<string | null>(null);
   imageIndex = signal(0);
@@ -59,6 +64,9 @@ export class ProductDetailComponent implements OnInit {
       ? product.description
       : product.descriptionEn || product.description;
   });
+
+  ratingAverage = computed(() => this.product()?.rating?.average ?? 0);
+  ratingCount = computed(() => this.product()?.rating?.count ?? 0);
 
   hasStock = computed(() => {
     const product = this.product();
