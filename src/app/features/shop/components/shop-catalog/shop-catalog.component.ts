@@ -30,11 +30,13 @@ export class ShopCatalogComponent implements OnInit {
   readonly heroImage = '/assets/portada.jpg';
   readonly fallbackImg = 'https://placehold.co/400x533/f5f5f5/a3a3a3?text=ATHENA';
 
-  heroPills = computed(() =>
-    this.lang.lang() === 'es'
-      ? ['100% Prendas Premium', 'Envíos a toda Colombia', 'Atención por WhatsApp']
-      : ['100% Premium Garments', 'Shipping across Colombia', 'WhatsApp Support'],
-  );
+  heroPills = computed(() => this.lang.t().heroPills);
+
+  sectionTitle = computed(() => {
+    if (this.activeFilter === 'new') return this.lang.t().sectionNew;
+    if (this.activeFilter === 'sale') return this.lang.t().sectionSale;
+    return this.selectedCategory || this.lang.t().fullCollection;
+  });
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
@@ -76,13 +78,6 @@ export class ShopCatalogComponent implements OnInit {
   });
 
   lookbookProducts = computed(() => this.shopService.getAllProducts().slice(0, 8));
-
-  sectionTitle = computed(() => {
-    const es = this.lang.lang() === 'es';
-    if (this.activeFilter === 'new') return es ? 'NUEVOS' : 'NEW IN';
-    if (this.activeFilter === 'sale') return es ? 'OFERTAS' : 'SALE';
-    return this.selectedCategory || (es ? 'COLECCIÓN COMPLETA' : 'FULL COLLECTION');
-  });
 
   onCategoryChange(category: string): void {
     this.selectedCategory = category;

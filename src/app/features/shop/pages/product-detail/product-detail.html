@@ -113,7 +113,7 @@
             <!-- Category + badges -->
             <div class="flex items-center gap-2 mb-3">
               <span class="text-[10px] font-bold tracking-widest uppercase text-neutral-400">
-                {{ productValue().category }}
+                {{ lang.t().categories[productValue().category] || productValue().category }}
               </span>
               @if (productValue().isFeatured) {
                 <span class="badge badge-warning badge-sm font-bold"
@@ -312,7 +312,7 @@
                 </div>
                 <div class="flex justify-between">
                   <dt class="text-neutral-400">{{ lang.t().category }}</dt>
-                  <dd class="font-semibold text-black capitalize">{{ productValue().category }}</dd>
+                  <dd class="font-semibold text-black capitalize">{{ lang.t().categories[productValue().category] || productValue().category }}</dd>
                 </div>
                 <div class="flex justify-between">
                   <dt class="text-neutral-400">{{ lang.t().availableStock }}</dt>

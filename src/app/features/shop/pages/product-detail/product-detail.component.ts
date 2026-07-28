@@ -54,15 +54,17 @@ export class ProductDetailComponent implements OnInit {
   productTitle = computed(() => {
     const product = this.product();
     if (!product) return '';
-    return this.lang.lang() === 'es' ? product.name : product.nameEn || product.name;
+    const mapped = (this.lang.t().productTranslations as any)?.[product.slug]?.name;
+    if (this.lang.lang() === 'es') return mapped ?? product.name;
+    return product.nameEn || mapped || product.name;
   });
 
   productDescription = computed(() => {
     const product = this.product();
     if (!product) return '';
-    return this.lang.lang() === 'es'
-      ? product.description
-      : product.descriptionEn || product.description;
+    const mapped = (this.lang.t().productTranslations as any)?.[product.slug]?.description;
+    if (this.lang.lang() === 'es') return mapped ?? product.description;
+    return product.descriptionEn || mapped || product.description;
   });
 
   ratingAverage = computed(() => this.product()?.rating?.average ?? 0);

@@ -15,10 +15,10 @@
         Athena Brand
       </h1>
       <p class="text-xs md:text-sm tracking-[0.4em] uppercase text-white/75 mb-1.5">
-        {{ lang.lang() === 'es' ? 'MENOS RUIDO MAS ESENCIA' : 'LESS NOISE MORE ESSENCE' }}
+        {{ lang.t().heroTagline }}
       </p>
       <p class="text-[10px] tracking-[0.3em] uppercase text-white/45 mb-10">
-        COLOMBIAN STORE SINCE 2025
+        {{ lang.t().storeSince }}
       </p>
       <div class="flex flex-wrap items-center justify-center gap-2.5">
         @for (pill of heroPills(); track pill) {
@@ -58,7 +58,7 @@
             [class.border-transparent]="selectedCategory !== cat"
             [class.text-neutral-400]="selectedCategory !== cat"
           >
-            {{ cat }}
+            {{ lang.t().categories[cat] || cat }}
           </button>
         }
       </div>
@@ -73,7 +73,7 @@
         {{ sectionTitle() }}
       </h2>
       <span class="text-[11px] font-medium text-neutral-400 uppercase tracking-widest">
-        {{ shopService.totalProducts() }} {{ lang.lang() === 'es' ? 'PRENDAS' : 'ITEMS' }}
+        {{ shopService.totalProducts() }} {{ lang.t().items }}
       </span>
     </div>
 
@@ -102,7 +102,7 @@
           (click)="retryLoad()"
           class="px-6 py-3 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 transition-colors"
         >
-          {{ lang.lang() === 'es' ? 'Reintentar' : 'Retry' }}
+          {{ lang.t().retry }}
         </button>
       </div>
     }
@@ -114,20 +114,16 @@
       <div class="text-center py-24">
         <p class="text-5xl mb-5">🕵️</p>
         <h3 class="text-lg font-black text-black mb-2 uppercase tracking-tight">
-          {{ lang.lang() === 'es' ? 'Sin resultados' : 'No results' }}
+          {{ lang.t().noResults }}
         </h3>
         <p class="text-neutral-400 text-sm mb-8">
-          {{
-            lang.lang() === 'es'
-              ? 'No hay prendas en esta categoría por el momento.'
-              : 'No items in this category at the moment.'
-          }}
+          {{ lang.t().noResultsSub }}
         </p>
         <button
           (click)="onCategoryChange('')"
           class="px-6 py-3 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 transition-colors"
         >
-          {{ lang.lang() === 'es' ? 'Ver todo' : 'View all' }}
+          {{ lang.t().viewAll }}
         </button>
       </div>
     }
@@ -168,7 +164,7 @@
                     <span
                       class="bg-white text-black text-[10px] font-black px-2.5 py-1 tracking-widest uppercase border border-black/10 shadow-sm"
                     >
-                      {{ lang.lang() === 'es' ? 'NUEVO' : 'NEW' }}
+                      {{ lang.t().newBadge }}
                     </span>
                   }
                   @if (product.discountPrice) {
@@ -186,7 +182,7 @@
                     <span
                       class="text-[11px] font-black uppercase tracking-widest text-black/60 border border-black/20 px-3 py-1.5 bg-white/80"
                     >
-                      {{ lang.lang() === 'es' ? 'AGOTADO' : 'SOLD OUT' }}
+                      {{ lang.t().soldOutBadge }}
                     </span>
                   </div>
                 }
@@ -199,7 +195,7 @@
                     <button
                       (click)="openWhatsApp(product, $event)"
                       [attr.aria-label]="
-                        lang.lang() === 'es' ? 'Consultar por WhatsApp' : 'Contact via WhatsApp'
+                        lang.t().contactWhatsApp
                       "
                       class="w-full py-3 bg-black text-white text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#25D366] transition-colors duration-200"
                     >
@@ -216,7 +212,7 @@
                           d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.932-1.414A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a7.952 7.952 0 01-4.045-1.104l-.29-.173-3.007.863.844-3.093-.19-.302A7.96 7.96 0 014 12c0-4.418 3.582-8 8-8s8 3.582 8 8-3.582 8-8 8z"
                         />
                       </svg>
-                      {{ lang.lang() === 'es' ? 'Consultar' : 'Inquire' }}
+                      {{ lang.t().consult }}
                     </button>
                   </div>
                 }
@@ -225,7 +221,7 @@
               <!-- Info below image -->
               <div class="mt-3 px-0.5">
                 <p class="text-[10px] text-neutral-400 uppercase tracking-widest font-medium">
-                  {{ product.category }}
+                  {{ lang.t().categories[product.category] || product.category }}
                 </p>
                 <h3 class="text-sm font-bold text-black mt-0.5 leading-snug line-clamp-1">
                   {{ product.name }}
@@ -302,10 +298,10 @@
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 border-t border-neutral-100 pt-12">
       <div class="flex items-baseline justify-between mb-8">
         <h2 class="text-xl font-black uppercase tracking-tight text-black">
-          {{ lang.lang() === 'es' ? 'GALERÍA' : 'GALLERY' }}
+          {{ lang.t().gallery }}
         </h2>
         <span class="text-[11px] font-medium text-neutral-400 uppercase tracking-widest">
-          {{ lang.lang() === 'es' ? 'TEMPORADA 2025' : 'SEASON 2025' }}
+          {{ lang.t().season }}
         </span>
       </div>
 
@@ -347,7 +343,7 @@
       <span class="font-black tracking-widest uppercase text-sm text-black">ATHENA BRAND</span>
       <p class="text-[11px] text-neutral-400">
         © 2025 Athena Brand.
-        {{ lang.lang() === 'es' ? 'Todos los derechos reservados.' : 'All rights reserved.' }}
+        {{ lang.t().rightsReserved }}
       </p>
       <a
         href="https://instagram.com/_athena_brand"
