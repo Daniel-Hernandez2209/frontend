@@ -312,7 +312,9 @@
                 </div>
                 <div class="flex justify-between">
                   <dt class="text-neutral-400">{{ lang.t().category }}</dt>
-                  <dd class="font-semibold text-black capitalize">{{ lang.t().categories[productValue().category] || productValue().category }}</dd>
+                  <dd class="font-semibold text-black capitalize">
+                    {{ lang.t().categories[productValue().category] || productValue().category }}
+                  </dd>
                 </div>
                 <div class="flex justify-between">
                   <dt class="text-neutral-400">{{ lang.t().availableStock }}</dt>
