@@ -100,7 +100,13 @@ export class ShopService {
   errorMessage = computed(() => this.error());
   getCategories = computed(() => {
     // Siempre derivar de los productos cargados para garantizar que aparecen todas
-    const fromProducts = [...new Set(this.products().map((p) => p.category).filter(Boolean))].sort();
+    const fromProducts = [
+      ...new Set(
+        this.products()
+          .map((p) => p.category)
+          .filter(Boolean),
+      ),
+    ].sort();
     if (fromProducts.length > 0) return fromProducts;
     // Fallback: usar las categorías de la API si los productos aún no cargaron
     return this.categories().sort();
@@ -119,7 +125,7 @@ export class ShopService {
     try {
       // ✅ Ajusta la URL según tu ApiService (con o sin /api prefix)
       const response = await firstValueFrom(
-        this.apiService.get<{ products: Product[] }>('/products'),
+        this.apiService.get<{ products: Product[] }>('/products?limit=100'),
       );
       // ✅ Defensa: verifica que products exista en la respuesta
       const products = response?.products ?? [];
@@ -153,7 +159,7 @@ export class ShopService {
     this.error.set(null);
     try {
       const response = await firstValueFrom(
-        this.apiService.get<{ success: boolean; product: Product }>(`/products/${slug}`)
+        this.apiService.get<{ success: boolean; product: Product }>(`/products/${slug}`),
       );
       if (!response?.product) throw new Error('Producto no encontrado');
       return response.product;
@@ -231,14 +237,14 @@ export class ShopService {
 
   getPrimaryImage(product: Product): string {
     if (!product.images?.length) return '';
-    const primary = product.images.find(img => img.isPrimary);
+    const primary = product.images.find((img) => img.isPrimary);
     return (primary ?? product.images[0]).url;
   }
 
   getHoverImage(product: Product): string {
     if (!product.images || product.images.length < 2) return '';
-    const primary = product.images.find(img => img.isPrimary) ?? product.images[0];
-    const other = product.images.find(img => img !== primary);
+    const primary = product.images.find((img) => img.isPrimary) ?? product.images[0];
+    const other = product.images.find((img) => img !== primary);
     return other?.url ?? '';
   }
 
