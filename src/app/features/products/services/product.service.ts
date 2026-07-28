@@ -44,7 +44,7 @@ export class ProductService {
       const matchesCategory = !f.category || p.category === f.category;
       const matchesPrice =
         (p.discountPrice || p.price) >= f.minPrice && (p.discountPrice || p.price) <= f.maxPrice;
-      const matchesActive = (p.isActive = f.isActive === null || p.isActive === f.isActive);
+      const matchesActive = f.isActive === null || p.isActive === f.isActive;
 
       return matchesSearch && matchesCategory && matchesPrice && matchesActive;
     });
@@ -65,29 +65,69 @@ export class ProductService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Fetch all products
+   * Fetch all products (public)
    */
   async getAll(page: number = 1, limit: number = 10): Promise<void> {
     this.isLoading.set(true);
     this.error.set(null);
-
     try {
       const response = await firstValueFrom(
         this.http.get<any>(`${this.API_URL}/products`, {
           params: { page: page.toString(), limit: limit.toString() },
         }),
       );
-
-      // ✅ Soporta { products: [...] } o { data: [...] }
       const list = response.products || response.data || [];
-      const total = response.pagination?.total || response.total || list.length;
-
+      const total = response.pagination?.totalItems || response.pagination?.total || response.total || list.length;
       this.products.set(list);
       this.totalProducts.set(total);
       this.currentPage.set(page);
     } catch (err: any) {
-      const message = err.error?.message || 'Failed to fetch products';
-      this.error.set(message);
+      this.error.set(err.error?.message || 'Failed to fetch products');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  /**
+   * Fetch all products including inactive (admin only)
+   */
+  async getAllAdmin(page: number = 1, limit: number = 50): Promise<void> {
+    this.isLoading.set(true);
+    this.error.set(null);
+    try {
+      const response = await firstValueFrom(
+        this.http.get<any>(`${this.API_URL}/products/admin/all`, {
+          params: { page: page.toString(), limit: limit.toString() },
+        }),
+      );
+      const list = response.products || [];
+      const total = response.pagination?.totalItems || list.length;
+      this.products.set(list);
+      this.totalProducts.set(total);
+      this.currentPage.set(page);
+    } catch (err: any) {
+      this.error.set(err.error?.message || 'Failed to fetch products');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  /**
+   * Get product by ID (admin only)
+   */
+  async getAdminById(id: string): Promise<Product | null> {
+    this.isLoading.set(true);
+    this.error.set(null);
+    try {
+      const response = await firstValueFrom(
+        this.http.get<any>(`${this.API_URL}/products/admin/${id}`),
+      );
+      const product = response.product || null;
+      if (product) this.selectedProduct.set(product);
+      return product;
+    } catch (err: any) {
+      this.error.set(err.error?.message || 'Product not found');
+      return null;
     } finally {
       this.isLoading.set(false);
     }
@@ -99,20 +139,15 @@ export class ProductService {
   async getBySlug(slug: string): Promise<Product | null> {
     this.isLoading.set(true);
     this.error.set(null);
-
     try {
       const response = await firstValueFrom(
-        this.http.get<ApiResponse<Product>>(`${this.API_URL}/products/${slug}`),
+        this.http.get<any>(`${this.API_URL}/products/${slug}`),
       );
-
-      if (response.data) {
-        this.selectedProduct.set(response.data);
-        return response.data;
-      }
-      return null;
+      const product = response.product || response.data || null;
+      if (product) this.selectedProduct.set(product);
+      return product;
     } catch (err: any) {
-      const message = err.error?.message || 'Product not found';
-      this.error.set(message);
+      this.error.set(err.error?.message || 'Product not found');
       return null;
     } finally {
       this.isLoading.set(false);
@@ -165,21 +200,21 @@ export class ProductService {
   async create(data: Partial<Product>): Promise<Product> {
     this.isLoading.set(true);
     this.error.set(null);
-
     try {
       const response = await firstValueFrom(
-        this.http.post<ApiResponse<Product>>(`${this.API_URL}/products`, data),
+        this.http.post<any>(`${this.API_URL}/products`, data),
       );
-
-      if (response.data) {
-        // Add to products list
-        this.products.set([...this.products(), response.data]);
-        return response.data;
+      const product = response.product || response.data;
+      if (product) {
+        this.products.set([product, ...this.products()]);
+        return product;
       }
-
       throw new Error('Failed to create product');
     } catch (err: any) {
-      const message = err.error?.message || 'Failed to create product';
+      const errors = err.error?.errors;
+      const detail = errors ? ' → ' + errors.map((e: any) => `${e.field || e.path}: ${e.message}`).join(', ') : '';
+      const message = (err.error?.message || err.message || 'Failed to create product') + detail;
+      console.error('Create product validation errors:', err.error);
       this.error.set(message);
       throw new Error(message);
     } finally {
@@ -193,28 +228,19 @@ export class ProductService {
   async update(id: string, data: Partial<Product>): Promise<Product> {
     this.isLoading.set(true);
     this.error.set(null);
-
     try {
       const response = await firstValueFrom(
-        this.http.put<ApiResponse<Product>>(`${this.API_URL}/products/${id}`, data),
+        this.http.put<any>(`${this.API_URL}/products/${id}`, data),
       );
-
-      if (response.data) {
-        // Update in products list
-        const updated = this.products().map((p) => (p._id === id ? response.data : p));
-        this.products.set(updated);
-
-        // Update selected product if it's the one being edited
-        if (this.selectedProduct()?._id === id) {
-          this.selectedProduct.set(response.data);
-        }
-
-        return response.data;
+      const product = response.product || response.data;
+      if (product) {
+        this.products.set(this.products().map((p) => (p._id === id ? product : p)));
+        if (this.selectedProduct()?._id === id) this.selectedProduct.set(product);
+        return product;
       }
-
       throw new Error('Failed to update product');
     } catch (err: any) {
-      const message = err.error?.message || 'Failed to update product';
+      const message = err.error?.message || err.message || 'Failed to update product';
       this.error.set(message);
       throw new Error(message);
     } finally {
@@ -254,10 +280,13 @@ export class ProductService {
    */
   async updateStock(id: string, size: string, stock: number): Promise<void> {
     try {
-      await firstValueFrom(this.http.put(`${this.API_URL}/products/${id}/stock`, { size, stock }));
-
-      // Refresh product
-      await this.getBySlug(id);
+      const response = await firstValueFrom(
+        this.http.put<ApiResponse<Product>>(`${this.API_URL}/products/${id}/stock`, { size, stock }),
+      );
+      if (response?.data) {
+        const updated = this.products().map((p) => (p._id === id ? response.data : p));
+        this.products.set(updated);
+      }
     } catch (err: any) {
       throw new Error(err.error?.message || 'Failed to update stock');
     }
@@ -269,13 +298,14 @@ export class ProductService {
   async uploadImages(files: File[]): Promise<string[]> {
     try {
       const formData = new FormData();
-      files.forEach((file) => formData.append('files', file));
+      files.forEach((file) => formData.append('images', file));
 
       const response = await firstValueFrom(
-        this.http.post<{ urls: string[] }>(`${this.API_URL}/upload/products`, formData),
+        this.http.post<any>(`${this.API_URL}/upload/products`, formData),
       );
 
-      return response.urls || [];
+      // API returns { results: [{url, public_id, ...}] }
+      return (response.results || []).map((r: any) => r.url).filter(Boolean);
     } catch (err: any) {
       throw new Error(err.error?.message || 'Failed to upload images');
     }

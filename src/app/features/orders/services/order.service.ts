@@ -43,10 +43,17 @@ export class OrderService {
     return all.filter((order) => {
       let matchesSearch = true;
       if (f.search) {
+        const q = f.search.toLowerCase();
+        const o = order as any;
         matchesSearch =
-          order._id.includes(f.search.toUpperCase()) ||
-          (order.user?.name?.toLowerCase().includes(f.search.toLowerCase()) ?? false) ||
-          (order.user?.email?.toLowerCase().includes(f.search.toLowerCase()) ?? false);
+          (order.orderNumber?.toLowerCase().includes(q) ?? false) ||
+          (order._id.toLowerCase().includes(q)) ||
+          (o.customerName?.toLowerCase().includes(q) ?? false) ||
+          (o.customerEmail?.toLowerCase().includes(q) ?? false) ||
+          (o.guestInfo?.email?.toLowerCase().includes(q) ?? false) ||
+          (o.guestInfo?.firstName?.toLowerCase().includes(q) ?? false) ||
+          (order.user?.email?.toLowerCase().includes(q) ?? false) ||
+          (order.user?.name?.toLowerCase().includes(q) ?? false);
       }
 
       const matchesStatus = !f.status || order.status === f.status;
@@ -61,9 +68,10 @@ export class OrderService {
         if (maxDate && orderDate > maxDate) matchesDate = false;
       }
 
-      const orderTotal =
-        order.total || order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      const matchesAmount = orderTotal >= f.minAmount && orderTotal <= f.maxAmount;
+      const orderTotal = this.getOrderTotal(order as any);
+      const matchesAmount =
+        (f.minAmount === 0 || orderTotal >= f.minAmount) &&
+        (f.maxAmount === Infinity || orderTotal <= f.maxAmount);
 
       return matchesSearch && matchesStatus && matchesDate && matchesAmount;
     });
@@ -148,13 +156,14 @@ export class OrderService {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<PaginatedResponse<Order>>(`${this.API_URL}/orders`, {
-          params: { page: page.toString(), limit: limit.toString() },
-        }),
+        this.http.get<{ success: boolean; data: Order[]; pagination: { currentPage: number; totalPages: number; totalItems: number; itemsPerPage: number } }>(
+          `${this.API_URL}/orders/admin/all`,
+          { params: { page: page.toString(), limit: limit.toString() } },
+        ),
       );
 
       this.orders.set(response.data || []);
-      this.totalOrders.set(response.pagination.total);
+      this.totalOrders.set(response.pagination?.totalItems ?? response.data?.length ?? 0);
       this.currentPage.set(page);
     } catch (err: any) {
       const message = err.error?.message || 'Failed to fetch orders';
@@ -174,12 +183,13 @@ export class OrderService {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<ApiResponse<Order>>(`${this.API_URL}/orders/${id}`),
+        this.http.get<any>(`${this.API_URL}/orders/admin/detail/${id}`),
       );
 
-      if (response.data) {
-        this.selectedOrder.set(response.data);
-        return response.data;
+      const order = response.data || response.order || null;
+      if (order) {
+        this.selectedOrder.set(order);
+        return order;
       }
       return null;
     } catch (err: any) {
@@ -220,7 +230,7 @@ export class OrderService {
 
     try {
       const response = await firstValueFrom(
-        this.http.patch<ApiResponse<Order>>(`${this.API_URL}/orders/${id}/status`, { status }),
+        this.http.put<ApiResponse<Order>>(`${this.API_URL}/orders/${id}/status`, { status }),
       );
 
       if (response.data) {
@@ -334,6 +344,32 @@ export class OrderService {
       cancelled: 'Cancelled',
     };
     return labels[status] || status;
+  }
+
+  /**
+   * Get order total — handles both response formats
+   * Backend returns pricing.total; legacy may use order.total
+   */
+  getOrderTotal(order: any): number {
+    const t = Number((order as any).pricing?.total ?? order.total ?? order.subtotal ?? 0);
+    return isNaN(t) ? 0 : t;
+  }
+
+  /**
+   * Get customer name from order (guest or registered)
+   */
+  getCustomerName(order: any): string {
+    if (order.user?.name) return order.user.name;
+    if (order.guestInfo) return `${order.guestInfo.firstName} ${order.guestInfo.lastName}`.trim();
+    if (order.customerName) return order.customerName;
+    return 'Cliente';
+  }
+
+  /**
+   * Get customer email from order
+   */
+  getCustomerEmail(order: any): string {
+    return order.user?.email || order.guestInfo?.email || order.customerEmail || '';
   }
 
   /**

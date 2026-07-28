@@ -109,23 +109,31 @@ export class CategoriesListComponent implements OnInit {
 
   // ── CRUD ────────────────────────────────────────────────────────
 
-  async deleteCategory(id: string): Promise<void> {
-    const category = this.categories().find((c) => c._id === id);
+  async deleteCategory(slug: string): Promise<void> {
+    const category = this.categories().find((c) => c.slug === slug);
     if (!category) return;
 
-    if (!confirm(`¿Eliminar la categoría "${category.name}"?`)) return;
+    if (!confirm(`¿Eliminar la categoría "${category.name}"? Esta acción no se puede deshacer.`)) return;
 
     this.loading.set(true);
     try {
-      const result = await this.categoryService.delete(id);
-      console.log('Category deleted:', result);
-      this.categories.update((cats) => cats.filter((c) => c._id !== id));
+      await this.categoryService.delete(slug);
+      this.categories.update((cats) => cats.filter((c) => c.slug !== slug));
       this.currentPage.set(1);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error al eliminar';
       this.error.set(msg);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async toggleCategory(slug: string): Promise<void> {
+    try {
+      await this.categoryService.toggle(slug);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al cambiar estado';
+      this.error.set(msg);
     }
   }
 

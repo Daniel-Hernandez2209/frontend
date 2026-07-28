@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { DashboardService } from '../../services/dashboard.service';
 import { WebsocketService } from '../../../../core/services/websocket.service';
 import { OrderService } from '../../../orders/services/order.service';
@@ -7,7 +7,7 @@ import { OrderService } from '../../../orders/services/order.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [DecimalPipe],
   templateUrl: 'dashboard.component.html',
   styleUrl: 'dashboard.component.css',
 })

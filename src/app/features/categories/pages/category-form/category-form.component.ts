@@ -31,7 +31,7 @@ export class CategoryFormComponent implements OnInit, OnDestroy {
   isSubmitting = signal(false);
   isEditMode = signal(false);
   isLoadingCategory = signal(false);
-  categoryId = signal<string | null>(null);
+  categoryId = signal<string | null>(null); // holds slug in edit mode
   imagePreview = signal<string | null>(null);
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);

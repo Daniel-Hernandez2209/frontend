@@ -30,23 +30,40 @@ export class ErrorInterceptor implements HttpInterceptor {
           statusText: error.statusText,
         });
 
-        // Manejo específico por código de error
-        if (error.status === 401) {
-          // Unauthorized - Intenta refresh automático
-          console.log('🔐 Token expirado, intentando refresh...');
-          this.handleUnauthorized();
-        } else if (error.status === 403) {
-          this.toast.error('❌ No tienes permiso para esta acción');
-        } else if (!req.url.includes('.well-known')) {
-          this.toast.error('❌ Recurso no encontrado');
-        } else if (error.status === 500) {
-          this.toast.error('❌ Error del servidor. Intenta más tarde');
-        } else if (error.status === 0) {
-          this.toast.error('❌ Error de conexión. Verifica tu internet');
-        } else {
-          // Generic error
-          const message = error.error?.message || error.message || 'Error desconocido';
-          this.toast.error(`❌ ${message}`);
+        // Requests marcadas como silenciosas no muestran toast
+        const silent = req.headers.has('X-Silent');
+
+        const isAuthEndpoint = req.url.includes('/auth/login') ||
+          req.url.includes('/auth/register') ||
+          req.url.includes('/auth/forgot-password') ||
+          req.url.includes('/auth/reset-password');
+
+        if (error.status === 401 && !isAuthEndpoint) {
+          const msg: string = error.error?.message || '';
+          const isTokenExpired = msg.toLowerCase().includes('expirado') || msg.toLowerCase().includes('expired');
+          const isAuthRequired = msg.toLowerCase().includes('autenticación requerida') || msg.toLowerCase().includes('no proporcionado');
+          if (isTokenExpired) {
+            this.handleUnauthorized();
+          } else if (!isAuthRequired) {
+            this.handleUnauthorized();
+          }
+        } else if (!silent) {
+          if (error.status === 403) {
+            this.toast.error('No tienes permiso para esta acción');
+          } else if (error.status === 404) {
+            // Solo mostrar toast para acciones explícitas del usuario, no para
+            // background loads (GET de datos que ya manejan su propio estado de error)
+            if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+              this.toast.error('Recurso no encontrado');
+            }
+          } else if (error.status === 500) {
+            this.toast.error('Error del servidor. Intenta más tarde');
+          } else if (error.status === 0) {
+            this.toast.error('Error de conexión. Verifica tu internet');
+          } else if (error.status >= 400) {
+            const message = error.error?.message || error.message || 'Error desconocido';
+            this.toast.error(message);
+          }
         }
 
         return throwError(() => error);

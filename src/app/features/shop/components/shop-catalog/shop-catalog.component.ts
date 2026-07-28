@@ -1,132 +1,113 @@
-import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { ShopService } from '../../services/shop.service';
-import { CartService } from '../../services/cart.service';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { RouterModule, ActivatedRoute } from '@angular/router';
+import { ShopService, Product } from '../../services/shop.service';
+import { LangService } from '../../../../core/services/lang.service';
+import { ShopNavbarComponent } from '../shop-navbar/shop-navbar.component';
+
+const WHATSAPP_NUMBER = '573146583690';
+const NEW_PRODUCT_DAYS = 45;
 
 @Component({
   selector: 'app-shop-catalog',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [DecimalPipe, RouterModule, ShopNavbarComponent],
   templateUrl: './shop-catalog.html',
   styleUrl: './shop-catalog.css',
 })
-export class ShopCatalogComponent {
+export class ShopCatalogComponent implements OnInit {
   shopService = inject(ShopService);
-  cartService = inject(CartService);
+  lang = inject(LangService);
+  private route = inject(ActivatedRoute);
 
   selectedCategory = '';
-  minPrice = 0;
-  maxPrice = 10000;
+  activeFilter = '';
+  private sortOption = signal<'relevance' | 'newest'>('relevance');
+  catalogAnimKey = signal(0);
+  private firstLoad = true;
 
-  // Signal para mostrar mensaje de éxito
-  addedToCartMessage = signal<string>('');
+  readonly heroImage = '/assets/portada.jpg';
+  readonly fallbackImg = 'https://placehold.co/400x533/f5f5f5/a3a3a3?text=ATHENA';
 
-  /**
-   * Buscar productos por texto
-   */
-  onSearch(event: any): void {
-    const query = (event.target as HTMLInputElement).value;
-    this.shopService.setSearchQuery(query);
+  heroPills = computed(() => this.lang.lang() === 'es'
+    ? ['100% Prendas Premium', 'Envíos a toda Colombia', 'Atención por WhatsApp']
+    : ['100% Premium Garments', 'Shipping across Colombia', 'WhatsApp Support']);
+
+  ngOnInit(): void {
+    this.route.queryParams.subscribe((params) => {
+      const filter = params['filter'] ?? '';
+      this.activeFilter = filter;
+      this.selectedCategory = '';
+      this.shopService.resetFilters();
+
+      if (filter === 'new') {
+        this.sortOption.set('newest');
+      } else if (filter === 'sale') {
+        this.shopService.setOnlyDiscounted(true);
+        this.sortOption.set('relevance');
+      } else {
+        this.sortOption.set('relevance');
+      }
+
+      if (!this.firstLoad || filter) {
+        setTimeout(() => {
+          document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 80);
+      }
+
+      this.catalogAnimKey.update((k) => k + 1);
+      this.firstLoad = false;
+    });
   }
 
-  /**
-   * Cambiar categoría seleccionada
-   */
+  sortedProducts = computed(() => {
+    const products = [...this.shopService.paginatedProducts()];
+    if (this.sortOption() === 'newest') {
+      return products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+    return products;
+  });
+
+  lookbookProducts = computed(() => this.shopService.getAllProducts().slice(0, 8));
+
+  sectionTitle = computed(() => {
+    const es = this.lang.lang() === 'es';
+    if (this.activeFilter === 'new') return es ? 'NUEVOS' : 'NEW IN';
+    if (this.activeFilter === 'sale') return es ? 'OFERTAS' : 'SALE';
+    return this.selectedCategory || (es ? 'COLECCIÓN COMPLETA' : 'FULL COLLECTION');
+  });
+
   onCategoryChange(category: string): void {
     this.selectedCategory = category;
     this.shopService.setCategory(category);
   }
 
-  /**
-   * Cambiar precio mínimo
-   */
-  onMinPriceChange(event: any): void {
-    this.minPrice = parseInt((event.target as HTMLInputElement).value, 10);
-    this.shopService.setPriceRange(this.minPrice, this.maxPrice);
+  isNew(product: Product): boolean {
+    const cutoff = Date.now() - NEW_PRODUCT_DAYS * 24 * 60 * 60 * 1000;
+    return new Date(product.createdAt).getTime() > cutoff;
   }
 
-  /**
-   * Cambiar precio máximo
-   */
-  onMaxPriceChange(event: any): void {
-    this.maxPrice = parseInt((event.target as HTMLInputElement).value, 10);
-    this.shopService.setPriceRange(this.minPrice, this.maxPrice);
+  openWhatsApp(product: Product, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const productUrl = `${window.location.origin}/store/product/${product.slug}`;
+    const msg = encodeURIComponent(
+      `Hola, estoy interesado en la prenda ${product.name}, quiero más información\n${productUrl}`,
+    );
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank', 'noopener');
   }
 
-  /**
-   * Limpiar todos los filtros
-   */
-  resetFilters(): void {
-    this.selectedCategory = '';
-    this.minPrice = 0;
-    this.maxPrice = 10000;
-    this.shopService.resetFilters();
-  }
-
-  /**
-   * Agregar producto al carrito
-   */
-  addToCart(product: any): void {
-    const displayPrice = this.shopService.getDisplayPrice(product);
-
-    this.cartService.addToCart({
-      productId: product._id,
-      productName: product.name,
-      sku: product.sku,
-      price: displayPrice,
-      image: product.images?.[0],
-      description: product.description,
-    });
-
-    // Mostrar mensaje de éxito
-    this.addedToCartMessage.set(`✅ ${product.name} added to cart!`);
-
-    // Limpiar el mensaje después de 3 segundos
-    setTimeout(() => {
-      this.addedToCartMessage.set('');
-    }, 3000);
-  }
-
-  /**
-   * Ir a página anterior
-   */
   previousPage(): void {
-    const current = this.shopService.currentPage();
-    if (current > 1) {
-      this.shopService.goToPage(current - 1);
-    }
+    const c = this.shopService.currentPage();
+    if (c > 1) this.shopService.goToPage(c - 1);
   }
 
-  /**
-   * Ir a página siguiente
-   */
   nextPage(): void {
-    const current = this.shopService.currentPage();
-    if (current < this.shopService.totalPages()) {
-      this.shopService.goToPage(current + 1);
-    }
+    const c = this.shopService.currentPage();
+    if (c < this.shopService.totalPages()) this.shopService.goToPage(c + 1);
   }
 
-  /**
-   * Ir a una página específica
-   */
-  goToPage(page: number): void {
-    this.shopService.goToPage(page);
-  }
-
-  /**
-   * Limpiar mensaje de carrito
-   */
-  clearMessage(): void {
-    this.addedToCartMessage.set('');
-  }
-
-  /**
-   * Reintentar cargar productos en caso de error
-   */
-  retryLoad(): void {
-    this.shopService.loadProducts();
-  }
+  goToPage(page: number): void { this.shopService.goToPage(page); }
+  retryLoad(): void { this.shopService.loadProducts(); }
+  onImgError(event: Event): void { (event.target as HTMLImageElement).src = this.fallbackImg; }
 }

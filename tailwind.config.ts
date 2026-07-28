@@ -8,12 +8,12 @@ const config: Config = {
     extend: {
       colors: {
         athena: {
-          primary: '#3b82f6', // Azul
-          secondary: '#8b5cf6', // Púrpura
-          accent: '#ec4899', // Rosa
-          success: '#10b981', // Verde
-          warning: '#f59e0b', // Ámbar
-          error: '#ef4444', // Rojo
+          primary: '#3b82f6',
+          secondary: '#8b5cf6',
+          accent: '#ec4899',
+          success: '#10b981',
+          warning: '#f59e0b',
+          error: '#ef4444',
         },
       },
     },
@@ -58,6 +58,6 @@ const config: Config = {
     utils: true,
     prefix: '',
   },
-};
+} as any;
 
 export default config;

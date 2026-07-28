@@ -9,16 +9,13 @@ import { SidebarComponent } from '../../shared/components/sidebar/sidebar.compon
   standalone: true,
   imports: [CommonModule, RouterOutlet, NavbarComponent, SidebarComponent],
   template: `
-    <div class="flex flex-col h-screen bg-base-200">
-      <!-- Navbar -->
-      <app-navbar></app-navbar>
+    <div class="flex h-screen overflow-hidden bg-base-200" data-theme="dark">
+      <!-- Sidebar -->
+      <app-sidebar></app-sidebar>
 
-      <!-- Main Content -->
-      <div class="flex flex-1 overflow-hidden">
-        <!-- Sidebar -->
-        <app-sidebar></app-sidebar>
-
-        <!-- Page Content -->
+      <!-- Right side: navbar + content -->
+      <div class="flex flex-col flex-1 overflow-hidden">
+        <app-navbar></app-navbar>
         <main class="flex-1 overflow-y-auto">
           <router-outlet></router-outlet>
         </main>

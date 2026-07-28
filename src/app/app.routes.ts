@@ -6,7 +6,7 @@ import { adminGuard } from '@core/guards/admin.guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: '/admin/dashboard',
+    redirectTo: '/store',
     pathMatch: 'full',
   },
   {
@@ -15,13 +15,27 @@ export const routes: Routes = [
       import('./features/auth/pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
-    path: 'store',
-    loadChildren: () => import('./features/shop/shop.routes').then((m) => m.SHOP_ROUTES),
+    path: 'auth/register',
+    loadComponent: () =>
+      import('./features/auth/pages/register/register.component').then((m) => m.RegisterComponent),
   },
   {
-    path: 'checkout',
+    path: 'auth/forgot-password',
     loadComponent: () =>
-      import('./features/shop/pages/checkout/checkout.component').then((m) => m.CheckoutComponent),
+      import('./features/auth/pages/forgot-password/forgot-password.component').then(
+        (m) => m.ForgotPasswordComponent,
+      ),
+  },
+  {
+    path: 'auth/reset-password',
+    loadComponent: () =>
+      import('./features/auth/pages/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent,
+      ),
+  },
+  {
+    path: 'store',
+    loadChildren: () => import('./features/shop/shop.routes').then((m) => m.SHOP_ROUTES),
   },
   {
     path: 'admin',

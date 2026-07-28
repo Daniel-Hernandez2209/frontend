@@ -2,21 +2,33 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { ApiService } from '../../../core/services/api.service';
 import { firstValueFrom } from 'rxjs';
 
+export interface ProductImage {
+  url: string;
+  alt?: string;
+  isPrimary?: boolean;
+}
+
 export interface Product {
   _id: string;
   name: string;
+  slug: string;
   sku: string;
   description: string;
   price: number;
   discountPrice?: number;
   category: string;
-  images: string[];
+  subcategory?: string;
+  images: ProductImage[];
   sizes: Array<{ size: string; stock: number }>;
+  colors?: Array<{ name: string; hex: string; image?: string }>;
   totalStock: number;
   isActive: boolean;
   isFeatured: boolean;
-  rating?: number;
-  reviews?: number;
+  rating?: { average: number; count: number };
+  material?: string;
+  tags?: string[];
+  views?: number;
+  sales?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,7 +48,8 @@ export class ShopService {
   private searchQuery = signal('');
   private selectedCategory = signal('');
   private minPrice = signal(0);
-  private maxPrice = signal(10000);
+  private maxPrice = signal(99_999_999);
+  private onlyDiscountedSignal = signal(false);
   public currentPage = signal(1);
   private pageSize = signal(12);
 
@@ -47,6 +60,7 @@ export class ShopService {
     const category = this.selectedCategory();
     const min = this.minPrice();
     const max = this.maxPrice();
+    const onlyDiscounted = this.onlyDiscountedSignal();
 
     if (search) {
       result = result.filter(
@@ -59,6 +73,10 @@ export class ShopService {
 
     if (category) {
       result = result.filter((p) => p.category === category);
+    }
+
+    if (onlyDiscounted) {
+      result = result.filter((p) => !!p.discountPrice);
     }
 
     result = result.filter((p) => {
@@ -80,7 +98,19 @@ export class ShopService {
   // Getters públicos
   isLoading = computed(() => this.loading());
   errorMessage = computed(() => this.error());
-  getCategories = computed(() => this.categories());
+  getCategories = computed(() => {
+    // Siempre derivar de los productos cargados para garantizar que aparecen todas
+    const fromProducts = [
+      ...new Set(
+        this.products()
+          .map((p) => p.category)
+          .filter(Boolean),
+      ),
+    ].sort();
+    if (fromProducts.length > 0) return fromProducts;
+    // Fallback: usar las categorías de la API si los productos aún no cargaron
+    return this.categories().sort();
+  });
 
   constructor() {
     this.loadProducts();
@@ -95,7 +125,7 @@ export class ShopService {
     try {
       // ✅ Ajusta la URL según tu ApiService (con o sin /api prefix)
       const response = await firstValueFrom(
-        this.apiService.get<{ products: Product[] }>('/products'),
+        this.apiService.get<{ products: Product[] }>('/products?limit=100'),
       );
       // ✅ Defensa: verifica que products exista en la respuesta
       const products = response?.products ?? [];
@@ -124,11 +154,15 @@ export class ShopService {
     }
   }
 
-  async getProductDetail(id: string): Promise<Product> {
+  async getProductDetail(slug: string): Promise<Product> {
     this.loading.set(true);
     this.error.set(null);
     try {
-      return await firstValueFrom(this.apiService.get<Product>(`/products/${id}`));
+      const response = await firstValueFrom(
+        this.apiService.get<{ success: boolean; product: Product }>(`/products/${slug}`),
+      );
+      if (!response?.product) throw new Error('Producto no encontrado');
+      return response.product;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Producto no encontrado';
       this.error.set(msg);
@@ -172,11 +206,17 @@ export class ShopService {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
+  setOnlyDiscounted(value: boolean): void {
+    this.onlyDiscountedSignal.set(value);
+    this.currentPage.set(1);
+  }
+
   resetFilters(): void {
     this.searchQuery.set('');
     this.selectedCategory.set('');
     this.minPrice.set(0);
-    this.maxPrice.set(10000);
+    this.maxPrice.set(99_999_999);
+    this.onlyDiscountedSignal.set(false);
     this.currentPage.set(1);
   }
 
@@ -191,15 +231,29 @@ export class ShopService {
   }
 
   hasStock(product: Product): boolean {
-    return product.totalStock > 0;
+    if (typeof product.totalStock === 'number') return product.totalStock > 0;
+    return (product.sizes ?? []).reduce((acc, s) => acc + s.stock, 0) > 0;
+  }
+
+  getPrimaryImage(product: Product): string {
+    if (!product.images?.length) return '';
+    const primary = product.images.find((img) => img.isPrimary);
+    return (primary ?? product.images[0]).url;
+  }
+
+  getHoverImage(product: Product): string {
+    if (!product.images || product.images.length < 2) return '';
+    const primary = product.images.find((img) => img.isPrimary) ?? product.images[0];
+    const other = product.images.find((img) => img !== primary);
+    return other?.url ?? '';
   }
 
   getRating(product: Product): number {
-    return product.rating ?? 0;
+    return product.rating?.average ?? 0;
   }
 
   getReviewCount(product: Product): number {
-    return product.reviews ?? 0;
+    return product.rating?.count ?? 0;
   }
 
   getAllProducts(): Product[] {

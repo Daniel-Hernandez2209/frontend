@@ -32,7 +32,7 @@ export const authGuard: CanActivateFn = (
 
   if (isAuthenticated && currentUser) {
     // Usuario autenticado, permitir acceso
-    console.log(`✅ Acceso concedido a ${currentUser.name}`);
+    console.log(`✅ Acceso concedido a ${currentUser.firstName} ${currentUser.lastName}`);
     return true;
   }
 

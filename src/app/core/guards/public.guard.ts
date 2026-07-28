@@ -34,7 +34,7 @@ export const publicGuard: CanActivateFn = (
 
   if (isAuthenticated && currentUser) {
     // Ya está autenticado, redirigir al dashboard
-    console.info(`ℹ️ Usuario ${currentUser.name} ya autenticado. Redirigiendo al dashboard...`);
+    console.info(`ℹ️ Usuario ${currentUser.firstName} ${currentUser.lastName} ya autenticado. Redirigiendo al dashboard...`);
     router.navigate(['/dashboard']);
     return false;
   }
