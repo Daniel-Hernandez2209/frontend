@@ -1,7 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { ShopService, Product } from '../../services/shop.service';
+import { ShopService } from '../../services/shop.service';
+import type { Product } from '../../../../shared/types/interfaces';
 import { LangService } from '../../../../core/services/lang.service';
 import { ShopNavbarComponent } from '../../components/shop-navbar/shop-navbar.component';
 
@@ -20,6 +21,11 @@ export class ProductDetailComponent implements OnInit {
   lang = inject(LangService);
 
   product = signal<Product | null>(null);
+  productValue = computed(() => {
+    const p = this.product();
+    if (!p) throw new Error('Product not loaded');
+    return p;
+  });
   loading = signal(true);
   error = signal<string | null>(null);
   imageIndex = signal(0);
@@ -45,6 +51,23 @@ export class ProductDetailComponent implements OnInit {
     return this.shopService.getDisplayPrice(product) * this.quantity();
   });
 
+  productTitle = computed(() => {
+    const product = this.product();
+    if (!product) return '';
+    return this.lang.lang() === 'es' ? product.name : product.nameEn || product.name;
+  });
+
+  productDescription = computed(() => {
+    const product = this.product();
+    if (!product) return '';
+    return this.lang.lang() === 'es'
+      ? product.description
+      : product.descriptionEn || product.description;
+  });
+
+  ratingAverage = computed(() => this.product()?.rating?.average ?? 0);
+  ratingCount = computed(() => this.product()?.rating?.count ?? 0);
+
   hasStock = computed(() => {
     const product = this.product();
     return product ? this.shopService.hasStock(product) : false;
@@ -57,7 +80,10 @@ export class ProductDetailComponent implements OnInit {
   private async loadProduct(): Promise<void> {
     try {
       const slug = this.route.snapshot.paramMap.get('id');
-      if (!slug) { this.error.set('Producto no encontrado'); return; }
+      if (!slug) {
+        this.error.set('Producto no encontrado');
+        return;
+      }
 
       const product = await this.shopService.getProductDetail(slug);
       this.product.set(product);
@@ -71,7 +97,9 @@ export class ProductDetailComponent implements OnInit {
     }
   }
 
-  selectImage(index: number): void { this.imageIndex.set(index); }
+  selectImage(index: number): void {
+    this.imageIndex.set(index);
+  }
 
   selectSize(size: string): void {
     this.selectedSize.set(size);
@@ -91,11 +119,13 @@ export class ProductDetailComponent implements OnInit {
     if (!product) return;
     const size = this.selectedSize();
     const qty = this.quantity();
-    const sizeInfo = size ? ` — Talla ${size}` : '';
+    const sizeInfo = size ? ` — ${this.lang.lang() === 'es' ? 'Talla' : 'Size'} ${size}` : '';
     const qtyInfo = qty > 1 ? ` x${qty}` : '';
     const productUrl = `${window.location.origin}/store/product/${product.slug}`;
     const msg = encodeURIComponent(
-      `Hola, estoy interesado en la prenda ${product.name}${sizeInfo}${qtyInfo}, quiero más información\n${productUrl}`,
+      this.lang.lang() === 'es'
+        ? `Hola, estoy interesado en la prenda ${product.name}${sizeInfo}${qtyInfo}, quiero más información\n${productUrl}`
+        : `Hello, I am interested in the item ${product.nameEn || product.name}${sizeInfo}${qtyInfo}, I would like more information\n${productUrl}`,
     );
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank', 'noopener');
   }

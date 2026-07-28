@@ -1,7 +1,8 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { ShopService, Product } from '../../services/shop.service';
+import { ShopService } from '../../services/shop.service';
+import type { Product } from '../../../../shared/types/interfaces';
 import { LangService } from '../../../../core/services/lang.service';
 import { ShopNavbarComponent } from '../shop-navbar/shop-navbar.component';
 
@@ -29,9 +30,11 @@ export class ShopCatalogComponent implements OnInit {
   readonly heroImage = '/assets/portada.jpg';
   readonly fallbackImg = 'https://placehold.co/400x533/f5f5f5/a3a3a3?text=ATHENA';
 
-  heroPills = computed(() => this.lang.lang() === 'es'
-    ? ['100% Prendas Premium', 'Envíos a toda Colombia', 'Atención por WhatsApp']
-    : ['100% Premium Garments', 'Shipping across Colombia', 'WhatsApp Support']);
+  heroPills = computed(() =>
+    this.lang.lang() === 'es'
+      ? ['100% Prendas Premium', 'Envíos a toda Colombia', 'Atención por WhatsApp']
+      : ['100% Premium Garments', 'Shipping across Colombia', 'WhatsApp Support'],
+  );
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
@@ -51,7 +54,9 @@ export class ShopCatalogComponent implements OnInit {
 
       if (!this.firstLoad || filter) {
         setTimeout(() => {
-          document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document
+            .getElementById('catalog')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 80);
       }
 
@@ -63,7 +68,9 @@ export class ShopCatalogComponent implements OnInit {
   sortedProducts = computed(() => {
     const products = [...this.shopService.paginatedProducts()];
     if (this.sortOption() === 'newest') {
-      return products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return products.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
     }
     return products;
   });
@@ -107,7 +114,13 @@ export class ShopCatalogComponent implements OnInit {
     if (c < this.shopService.totalPages()) this.shopService.goToPage(c + 1);
   }
 
-  goToPage(page: number): void { this.shopService.goToPage(page); }
-  retryLoad(): void { this.shopService.loadProducts(); }
-  onImgError(event: Event): void { (event.target as HTMLImageElement).src = this.fallbackImg; }
+  goToPage(page: number): void {
+    this.shopService.goToPage(page);
+  }
+  retryLoad(): void {
+    this.shopService.loadProducts();
+  }
+  onImgError(event: Event): void {
+    (event.target as HTMLImageElement).src = this.fallbackImg;
+  }
 }

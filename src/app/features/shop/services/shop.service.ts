@@ -1,37 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { ApiService } from '../../../core/services/api.service';
 import { firstValueFrom } from 'rxjs';
-
-export interface ProductImage {
-  url: string;
-  alt?: string;
-  isPrimary?: boolean;
-}
-
-export interface Product {
-  _id: string;
-  name: string;
-  slug: string;
-  sku: string;
-  description: string;
-  price: number;
-  discountPrice?: number;
-  category: string;
-  subcategory?: string;
-  images: ProductImage[];
-  sizes: Array<{ size: string; stock: number }>;
-  colors?: Array<{ name: string; hex: string; image?: string }>;
-  totalStock: number;
-  isActive: boolean;
-  isFeatured: boolean;
-  rating?: { average: number; count: number };
-  material?: string;
-  tags?: string[];
-  views?: number;
-  sales?: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Product } from '../../../shared/types/interfaces';
 
 @Injectable({
   providedIn: 'root',
